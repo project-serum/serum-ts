@@ -1,5 +1,6 @@
 import { Blob } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
+import BN from 'bn.js';
 
 class Zeros extends Blob {
   decode(b, offset) {
@@ -31,4 +32,22 @@ class PublicKeyLayout extends Blob {
 
 export function publicKeyLayout(property) {
   return new PublicKeyLayout(property);
+}
+
+class BNLayout extends Blob {
+  decode(b, offset) {
+    return new BN(super.decode(b, offset), 10, 'le');
+  }
+
+  encode(src, b, offset) {
+    return super.encode(src.toArrayLike(Buffer, 'le', this.span), b, offset);
+  }
+}
+
+export function u64(property) {
+  return new BNLayout(8, property);
+}
+
+export function u128(property) {
+  return new BNLayout(16, property);
 }

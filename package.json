@@ -59,6 +59,7 @@
   },
   "dependencies": {
     "@solana/web3.js": "^0.64.0",
+    "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   }
 }
