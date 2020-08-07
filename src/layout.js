@@ -1,4 +1,4 @@
-import { Blob } from 'buffer-layout';
+import { bits, Blob, Layout, u32 } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
@@ -50,4 +50,33 @@ export function u64(property) {
 
 export function u128(property) {
   return new BNLayout(16, property);
+}
+
+export class WideBits extends Layout {
+  constructor(property) {
+    super(8, property);
+    this._lower = bits(u32(), false);
+    this._upper = bits(u32(), false);
+  }
+
+  addBoolean(property) {
+    if (this._lower.fields.length < 32) {
+      this._lower.addBoolean(property);
+    } else {
+      this._upper.addBoolean(property);
+    }
+  }
+
+  decode(b, offset = 0) {
+    const lowerDecoded = this._lower.decode(b, offset);
+    const upperDecoded = this._upper.decode(b, offset + this._lower.span);
+    return { ...lowerDecoded, ...upperDecoded };
+  }
+
+  encode(src, b, offset = 0) {
+    return (
+      this._lower.encode(src, b, offset) +
+      this._upper.encode(src, b, offset + this._lower.span)
+    );
+  }
 }
