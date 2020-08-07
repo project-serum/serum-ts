@@ -7,8 +7,8 @@ export class Slab {
     this.nodes = nodes;
   }
 
-  static from(buffer) {
-    const { header, nodes } = SLAB_LAYOUT.decode(buffer);
+  static from(buffer, offset = 0) {
+    const { header, nodes } = SLAB_LAYOUT.decode(buffer, offset);
     return new Slab(header, nodes);
   }
 

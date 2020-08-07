@@ -1,4 +1,4 @@
-import { Slab } from './index';
+import { Slab } from './slab';
 import BN from 'bn.js';
 
 const SLAB_BUFFER = Buffer.from(
