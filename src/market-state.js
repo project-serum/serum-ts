@@ -2,16 +2,17 @@ import { seq, struct } from 'buffer-layout';
 import { publicKeyLayout, u128, u64, WideBits } from './layout';
 import { SLAB_LAYOUT } from './slab-layout';
 
+const ACCOUNT_FLAGS_LAYOUT = new WideBits();
+ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('market');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('openOrders');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('requestQueue');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('eventQueue');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('bids');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('asks');
+
 export function accountFlags(property = 'accountFlags') {
-  const layout = new WideBits(property);
-  layout.addBoolean('initialized');
-  layout.addBoolean('market');
-  layout.addBoolean('openOrders');
-  layout.addBoolean('requestQueue');
-  layout.addBoolean('eventQueue');
-  layout.addBoolean('bids');
-  layout.addBoolean('asks');
-  return layout;
+  return ACCOUNT_FLAGS_LAYOUT.replicate(property);
 }
 
 export const MARKET_STATE_LAYOUT = struct([
