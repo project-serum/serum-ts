@@ -10,7 +10,7 @@ describe('slab', () => {
   let slab;
 
   it('parses', () => {
-    slab = Slab.from(SLAB_BUFFER);
+    slab = Slab.decode(SLAB_BUFFER);
     expect(slab).toBeTruthy();
     expect(slab.header.bumpIndex).toBe(9);
     expect(slab.nodes).toHaveLength(9);
@@ -39,5 +39,19 @@ describe('slab', () => {
     expect(slab.get(new BN('123456789012345678901234567889'))).toBeNull();
     expect(slab.get(new BN('123456789012345678901234567891'))).toBeNull();
     expect(slab.get(new BN('99999999999999999999999999999'))).toBeNull();
+  });
+
+  it('iterates', () => {
+    expect(Array.from(slab)).toHaveLength(4);
+  });
+
+  it('iterates in order', () => {
+    let previous = null;
+    for (let item of slab) {
+      if (previous) {
+        expect(item.key.gt(previous.key)).toBeTruthy();
+      }
+      previous = item;
+    }
   });
 });
