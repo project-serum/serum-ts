@@ -80,3 +80,10 @@ export class WideBits extends Layout {
     );
   }
 }
+
+export function setLayoutDecoder(layout, decoder) {
+  const originalDecode = layout.decode;
+  layout.decode = function decode(b, offset = 0) {
+    return decoder(originalDecode.call(this, b, offset));
+  };
+}

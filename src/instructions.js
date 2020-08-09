@@ -1,5 +1,10 @@
 import { blob, Layout, struct, u16, u32, u8, union } from 'buffer-layout';
 import { u64 } from './layout';
+import { PublicKey } from '@solana/web3.js';
+
+export const DEX_PROGRAM_ID = new PublicKey(
+  '6iM2JjaPVViB2u82aVjf3ZfHDNHQ4G635XgnvgN6CNhY',
+);
 
 class VersionedLayout extends Layout {
   constructor(version, inner, property) {
