@@ -1,4 +1,4 @@
-import { seq, struct } from 'buffer-layout';
+import { blob, seq, struct, u8 } from 'buffer-layout';
 import {
   publicKeyLayout,
   setLayoutDecoder,
@@ -54,15 +54,13 @@ export const MARKET_STATE_LAYOUT = struct([
 ]);
 
 export class Market {
-  constructor(decoded) {
+  constructor(decoded, baseMintDecimals, quoteMintDecimals) {
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
       throw new Error('Invalid market state');
     }
     this._decoded = decoded;
-
-    // TODO: populate these
-    this._baseMintDecimals = 0;
-    this._quoteMintDecimals = 0;
+    this._baseMintDecimals = baseMintDecimals;
+    this._quoteMintDecimals = quoteMintDecimals;
   }
 
   static decode(buffer) {
@@ -74,8 +72,12 @@ export class Market {
     if (!owner.equals(DEX_PROGRAM_ID)) {
       throw new Error('Address not owned by program');
     }
-    return MARKET_STATE_LAYOUT.decode(data);
-    // TODO: also load mint account info
+    const decoded = MARKET_STATE_LAYOUT.decode(data);
+    const [baseMintDecimals, quoteMintDecimals] = Promise.all([
+      getMintDecimals(decoded.baseMint),
+      getMintDecimals(decoded.quoteMint),
+    ]);
+    return new Market(decoded, baseMintDecimals, quoteMintDecimals);
   }
 
   async loadBids(connection) {
@@ -86,6 +88,17 @@ export class Market {
   async loadAsks(connection) {
     const { data } = await connection.getAccountInfo(this._decoded.asks);
     return Orderbook.decode(this, data);
+  }
+
+  async placeOrder(
+    connection,
+    { owner, payer, side, price, size, orderType = 'limit' },
+  ) {
+    throw new Error('not yet implemented');
+  }
+
+  async cancelOrder(connection, order) {
+    throw new Error('not yet implemented');
   }
 
   priceBnToNumber(price) {
@@ -111,8 +124,6 @@ export class Market {
     );
   }
 }
-
-setLayoutDecoder(MARKET_STATE_LAYOUT, (decoded) => new Market(decoded));
 
 export const OPEN_ORDERS_LAYOUT = struct([
   accountFlags('accountFlags'),
@@ -154,7 +165,7 @@ export class Orderbook {
     return new Orderbook(market, accountFlags, slab);
   }
 
-  getLevels(depth) {
+  getL2(depth) {
     const descending = this.isBids;
     const levels = []; // (price, size)
     for (const { key, quantity } of this.slab.items(descending)) {
@@ -172,6 +183,20 @@ export class Orderbook {
       this.market.baseSizeBnToNumber(size.mul(this.market.baseLotSize)),
     ]);
   }
+
+  *[Symbol.iterator]() {
+    for (const { key, ownerSlot, owner, quantity } of this.slab) {
+      const price = getPriceFromKey(key);
+      yield {
+        orderId: key,
+        ownerSlot,
+        owner,
+        price: this.market.priceBnToNumber(price),
+        quantity: this.market.baseSizeBnToNumber(quantity),
+        side: this.isBids ? 'buy' : 'sell',
+      };
+    }
+  }
 }
 
 function getPriceFromKey(key) {
@@ -183,4 +208,12 @@ function divideBnToNumber(numerator, denominator) {
   const rem = numerator.umod(denominator);
   const gcd = rem.gcd(denominator);
   return quotient + rem.div(gcd).toNumber() / denominator.div(gcd).toNumber();
+}
+
+const MINT_LAYOUT = struct([blob(36), u8('decimals'), blob(3)]);
+
+export async function getMintDecimals(connection, mint) {
+  const { data } = await connection.getAccountInfo(mint);
+  const { decimals } = MINT_LAYOUT.decode(data);
+  return decimals;
 }
