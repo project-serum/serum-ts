@@ -1,1 +1,2 @@
-export { MarketState, Orderbook } from './market-state';
+export { Market, Orderbook } from './market';
+export { DexInstructions } from './instructions';

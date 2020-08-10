@@ -1,4 +1,4 @@
-import { bits, Blob, Layout, u32 } from 'buffer-layout';
+import { bits, Blob, Layout, u32, UInt } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
@@ -103,6 +103,39 @@ export class VersionedLayout extends Layout {
   getSpan(b, offset = 0) {
     return 1 + this.inner.getSpan(b, offset + 1);
   }
+}
+
+class EnumLayout extends UInt {
+  constructor(values, span, property) {
+    super(span, property);
+    this.values = values;
+  }
+
+  encode(src, b, offset) {
+    if (this.values[src] !== undefined) {
+      return super.encode(this.values[src], b, offset);
+    }
+    throw new Error('Invalid ' + this.property);
+  }
+
+  decode(b, offset) {
+    const decodedValue = super.decode(b, offset);
+    const entry = Object.entries(this.values).find(
+      ([key, value]) => value === decodedValue,
+    );
+    if (entry) {
+      return entry[0];
+    }
+    throw new Error('Invalid ' + this.property);
+  }
+}
+
+export function sideLayout(property) {
+  return new EnumLayout({ buy: 0, sell: 1 }, 1, property);
+}
+
+export function orderTypeLayout(property) {
+  return new EnumLayout({ limit: 0, ioc: 1, postOnly: 2 }, 1, property);
 }
 
 export function setLayoutDecoder(layout, decoder) {

@@ -15,11 +15,9 @@
     "prepare": "run-s build",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
-    "test:lint": "eslint .",
-    "test:unit": "cross-env CI=1 react-scripts test --env=jsdom",
-    "test:watch": "react-scripts test --env=jsdom",
-    "predeploy": "cd example && yarn install && yarn run build",
-    "deploy": "gh-pages -d example/build"
+    "test:lint": "eslint src",
+    "test:unit": "cross-env CI=1 react-scripts test",
+    "test:watch": "react-scripts test"
   },
   "devDependencies": {
     "@babel/cli": "^7.10.5",

@@ -1,4 +1,4 @@
-import { accountFlags } from './market-state';
+import { accountFlags } from './market';
 
 describe('accountFlags', () => {
   const layout = accountFlags();
