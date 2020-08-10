@@ -1,34 +1,10 @@
 import { blob, Layout, struct, u16, u32, u8, union } from 'buffer-layout';
-import { u64 } from './layout';
+import { u64, VersionedLayout } from './layout';
 import { PublicKey } from '@solana/web3.js';
 
 export const DEX_PROGRAM_ID = new PublicKey(
   '6iM2JjaPVViB2u82aVjf3ZfHDNHQ4G635XgnvgN6CNhY',
 );
-
-class VersionedLayout extends Layout {
-  constructor(version, inner, property) {
-    super(inner.span > 0 ? inner.span + 1 : inner.span, property);
-    this.version = version;
-    this.inner = inner;
-  }
-
-  decode(b, offset = 0) {
-    if (b.readUInt8(offset) !== this._version) {
-      throw new Error('invalid version');
-    }
-    return this.inner.decode(b, offset + 1);
-  }
-
-  encode(src, b, offset = 0) {
-    b.writeUInt8(this.version, offset);
-    return 1 + this.inner.encode(src, b, offset + 1);
-  }
-
-  getSpan(b, offset = 0) {
-    return 1 + this.inner.getSpan(b, offset + 1);
-  }
-}
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
   0,

@@ -81,9 +81,41 @@ export class WideBits extends Layout {
   }
 }
 
+export class VersionedLayout extends Layout {
+  constructor(version, inner, property) {
+    super(inner.span > 0 ? inner.span + 1 : inner.span, property);
+    this.version = version;
+    this.inner = inner;
+  }
+
+  decode(b, offset = 0) {
+    if (b.readUInt8(offset) !== this._version) {
+      throw new Error('invalid version');
+    }
+    return this.inner.decode(b, offset + 1);
+  }
+
+  encode(src, b, offset = 0) {
+    b.writeUInt8(this.version, offset);
+    return 1 + this.inner.encode(src, b, offset + 1);
+  }
+
+  getSpan(b, offset = 0) {
+    return 1 + this.inner.getSpan(b, offset + 1);
+  }
+}
+
 export function setLayoutDecoder(layout, decoder) {
   const originalDecode = layout.decode;
   layout.decode = function decode(b, offset = 0) {
     return decoder(originalDecode.call(this, b, offset));
   };
+}
+
+export function setLayoutEncoder(layout, encoder) {
+  const originalEncode = layout.encode;
+  layout.encode = function encode(src, b, offset) {
+    return originalEncode(encoder(src), b, offset);
+  };
+  return layout;
 }
