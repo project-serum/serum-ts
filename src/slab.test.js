@@ -47,7 +47,7 @@ describe('slab', () => {
 
   it('iterates in order', () => {
     let previous = null;
-    for (let item of slab) {
+    for (const item of slab) {
       if (previous) {
         expect(item.key.gt(previous.key)).toBeTruthy();
       }

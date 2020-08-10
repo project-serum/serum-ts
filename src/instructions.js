@@ -1,9 +1,17 @@
-import { blob, Layout, struct, u16, u32, u8, union } from 'buffer-layout';
-import { u64, VersionedLayout } from './layout';
-import { PublicKey } from '@solana/web3.js';
+import { blob, struct, u16, u32, u8, union } from 'buffer-layout';
+import {
+  orderTypeLayout,
+  publicKeyLayout,
+  sideLayout,
+  u128,
+  u64,
+  VersionedLayout,
+  zeros,
+} from './layout';
+import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  '6iM2JjaPVViB2u82aVjf3ZfHDNHQ4G635XgnvgN6CNhY',
+  '9o1FisE366msTQcEvXapyMorTLmvezrxSD8DnM5e5XKw',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
@@ -24,12 +32,12 @@ INSTRUCTION_LAYOUT.inner.addVariant(
 INSTRUCTION_LAYOUT.inner.addVariant(
   1,
   struct([
-    u8('side'), // buy = 0, sell = 1
-    blob(3),
+    sideLayout('side'),
+    zeros(3),
     u64('limitPrice'),
     u64('maxQuantity'),
-    u8('orderType'), // limit = 0, ioc = 1, postOnly = 2
-    blob(3),
+    orderTypeLayout('orderType'),
+    zeros(3),
   ]),
   'newOrder',
 );
@@ -43,9 +51,156 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   struct([u16('limit'), blob(2)]),
   'consumeEvents',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(4, struct([]), 'cancelOrder');
+INSTRUCTION_LAYOUT.inner.addVariant(
+  4,
+  struct([
+    sideLayout('side'),
+    zeros(3),
+    u128('orderId'),
+    publicKeyLayout('owner'),
+    u8('ownerSlot'),
+  ]),
+  'cancelOrder',
+);
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
   return b.slice(0, INSTRUCTION_LAYOUT.encode(instruction, b));
+}
+
+export class DexInstructions {
+  static initializeMarket({
+    market,
+    requestQueue,
+    eventQueue,
+    bids,
+    asks,
+    baseVault,
+    quoteVault,
+    baseMint,
+    quoteMint,
+    baseLotSize,
+    quoteLotSize,
+    feeRateBps,
+    vaultSignerNonce,
+    quoteDustThreshold,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
+        { pubkey: bids, isSigner: false, isWritable: true },
+        { pubkey: asks, isSigner: false, isWritable: true },
+        { pubkey: baseVault, isSigner: false, isWritable: true },
+        { pubkey: quoteVault, isSigner: false, isWritable: true },
+        { pubkey: baseMint, isSigner: false, isWritable: false },
+        { pubkey: quoteMint, isSigner: false, isWritable: false },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({
+        initializeMarket: {
+          baseLotSize,
+          quoteLotSize,
+          feeRateBps,
+          vaultSignerNonce,
+          quoteDustThreshold,
+        },
+      }),
+    });
+  }
+
+  static newOrder({
+    market,
+    openOrders,
+    payer,
+    owner,
+    requestQueue,
+    baseVault,
+    quoteVault,
+    side,
+    limitPrice,
+    maxQuantity,
+    orderType,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: payer, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
+        { pubkey: baseVault, isSigner: false, isWritable: false },
+        { pubkey: quoteVault, isSigner: false, isWritable: false },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({
+        newOrder: { side, limitPrice, maxQuantity, orderType },
+      }),
+    });
+  }
+
+  static matchOrders({
+    market,
+    requestQueue,
+    eventQueue,
+    bids,
+    asks,
+    baseVault,
+    quoteVault,
+    limit,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
+        { pubkey: bids, isSigner: false, isWritable: true },
+        { pubkey: asks, isSigner: false, isWritable: true },
+        { pubkey: baseVault, isSigner: false, isWritable: true },
+        { pubkey: quoteVault, isSigner: false, isWritable: true },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({ matchOrders: { limit } }),
+    });
+  }
+
+  static consumeEvents({ market, eventQueue, openOrdersAccounts, limit }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
+        ...openOrdersAccounts.map((account) => ({
+          pubkey: account,
+          isSigner: false,
+          isWritable: true,
+        })),
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({ consumeEvents: { limit } }),
+    });
+  }
+
+  static cancelOrder({
+    market,
+    openOrders,
+    owner,
+    requestQueue,
+    side,
+    orderId,
+    ownerSlot,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({
+        cancelOrder: { side, orderId, owner, ownerSlot },
+      }),
+    });
+  }
 }

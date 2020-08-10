@@ -8,6 +8,7 @@ import {
 } from './layout';
 import { SLAB_LAYOUT } from './slab';
 import { DEX_PROGRAM_ID } from './instructions';
+import BN from 'bn.js';
 
 const ACCOUNT_FLAGS_LAYOUT = new WideBits();
 ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
@@ -52,7 +53,7 @@ export const MARKET_STATE_LAYOUT = struct([
   u64('quoteLotSize'),
 ]);
 
-export class MarketState {
+export class Market {
   constructor(decoded) {
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
       throw new Error('Invalid market state');
@@ -74,6 +75,7 @@ export class MarketState {
       throw new Error('Address not owned by program');
     }
     return MARKET_STATE_LAYOUT.decode(data);
+    // TODO: also load mint account info
   }
 
   async loadBids(connection) {
@@ -95,14 +97,14 @@ export class MarketState {
     );
   }
 
-  baseBnToNumber(size) {
+  baseSizeBnToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.baseLotSize),
       new BN(10).pow(this._baseMintDecimals),
     );
   }
 
-  quoteBnToNumber(size) {
+  quoteSizeBnToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.quoteLotSize),
       new BN(10).pow(this._quoteMintDecimals),
@@ -110,7 +112,7 @@ export class MarketState {
   }
 }
 
-setLayoutDecoder(MARKET_STATE_LAYOUT, (decoded) => new MarketState(decoded));
+setLayoutDecoder(MARKET_STATE_LAYOUT, (decoded) => new Market(decoded));
 
 export const OPEN_ORDERS_LAYOUT = struct([
   accountFlags('accountFlags'),
@@ -129,6 +131,8 @@ export const OPEN_ORDERS_LAYOUT = struct([
 
   seq(u128(), 128, 'orders'),
 ]);
+
+export class OpenOrders {}
 
 export const ORDERBOOK_LAYOUT = struct([
   accountFlags('accountFlags'),
@@ -153,7 +157,7 @@ export class Orderbook {
   getLevels(depth) {
     const descending = this.isBids;
     const levels = []; // (price, size)
-    for (let { key, quantity } of this.slab.items(descending)) {
+    for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].equals(price)) {
         levels[levels.length - 1].iadd(quantity);
@@ -165,7 +169,7 @@ export class Orderbook {
     }
     return levels.map(([price, size]) => [
       this.market.priceBnToNumber(price),
-      this.market.baseBnToNumber(size.mul(this.market.baseLotSize)),
+      this.market.baseSizeBnToNumber(size.mul(this.market.baseLotSize)),
     ]);
   }
 }

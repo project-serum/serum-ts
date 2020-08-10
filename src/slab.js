@@ -69,7 +69,7 @@ export class Slab {
     return SLAB_LAYOUT.decode(buffer);
   }
 
-  get = (searchKey) => {
+  get(searchKey) {
     if (this.header.leafCount === 0) {
       return null;
     }
@@ -101,7 +101,7 @@ export class Slab {
         throw new Error('Invalid slab');
       }
     }
-  };
+  }
 
   [Symbol.iterator]() {
     return this.items(false);

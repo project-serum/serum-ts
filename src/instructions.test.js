@@ -1,9 +1,9 @@
-import { encodeInstruction, INSTRUCTION_LAYOUT } from './instructions';
+import { encodeInstruction } from './instructions';
 import BN from 'bn.js';
 
 describe('instruction', () => {
   it('encodes initialize market', () => {
-    let b = encodeInstruction({
+    const b = encodeInstruction({
       initializeMarket: {
         baseLotSize: new BN(10),
         quoteLotSize: new BN(100000),
@@ -18,12 +18,12 @@ describe('instruction', () => {
   });
 
   it('encodes new order', () => {
-    let b = encodeInstruction({
+    const b = encodeInstruction({
       newOrder: {
-        side: 1, // buy
+        side: 'sell',
         limitPrice: new BN(10),
         maxQuantity: new BN(5),
-        orderType: 2, // postOnly
+        orderType: 'postOnly',
       },
     });
     expect(b.toString('hex')).toEqual(
