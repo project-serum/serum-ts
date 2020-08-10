@@ -11,8 +11,9 @@
   },
   "scripts": {
     "build": "yarn babel src --out-dir lib",
+    "clean": "rm -rf lib",
     "start": "yarn babel src --out-dir lib --watch",
-    "prepare": "run-s build",
+    "prepare": "run-s clean build",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
     "test:lint": "eslint src",
