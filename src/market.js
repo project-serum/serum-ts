@@ -1,11 +1,5 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import {
-  publicKeyLayout,
-  setLayoutDecoder,
-  u128,
-  u64,
-  WideBits,
-} from './layout';
+import { publicKeyLayout, u128, u64, WideBits } from './layout';
 import { SLAB_LAYOUT } from './slab';
 import { DEX_PROGRAM_ID } from './instructions';
 import BN from 'bn.js';

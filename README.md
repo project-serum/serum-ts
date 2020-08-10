@@ -36,7 +36,7 @@ await market.placeOrder(connection, {
 });
 
 for (let order of await market.loadBids(connection)) {
-  if (order.owner.equals(owner.publicKey())) {
+  if (order.owner.equals(owner.publicKey)) {
     await market.cancelOrder(connection, order);
   }
 }
