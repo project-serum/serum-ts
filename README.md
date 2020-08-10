@@ -1,4 +1,4 @@
-![npm (scoped)](https://img.shields.io/npm/v/@project-serum/serum)
+[![npm (scoped)](https://img.shields.io/npm/v/@project-serum/serum)](https://www.npmjs.com/package/@project-serum/serum)
 [![Build Status](https://travis-ci.com/project-serum/serum-js.svg?token=1ySaVeP6gHs8QRr2VTEi&branch=master)](https://travis-ci.com/project-serum/serum-js)
 
 # Serum JS Client Library
