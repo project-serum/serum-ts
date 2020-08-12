@@ -45,6 +45,8 @@ export const MARKET_STATE_LAYOUT = struct([
 
   u64('baseLotSize'),
   u64('quoteLotSize'),
+
+  u64('feeRateBps'),
 ]);
 
 export class Market {
@@ -67,9 +69,9 @@ export class Market {
       throw new Error('Address not owned by program');
     }
     const decoded = MARKET_STATE_LAYOUT.decode(data);
-    const [baseMintDecimals, quoteMintDecimals] = Promise.all([
-      getMintDecimals(decoded.baseMint),
-      getMintDecimals(decoded.quoteMint),
+    const [baseMintDecimals, quoteMintDecimals] = await Promise.all([
+      getMintDecimals(connection, decoded.baseMint),
+      getMintDecimals(connection, decoded.quoteMint),
     ]);
     return new Market(decoded, baseMintDecimals, quoteMintDecimals);
   }

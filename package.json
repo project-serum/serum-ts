@@ -10,9 +10,9 @@
     "node": ">=10"
   },
   "scripts": {
-    "build": "yarn babel src --out-dir lib",
+    "build": "babel src --out-dir lib",
+    "start": "babel src --out-dir lib --watch",
     "clean": "rm -rf lib",
-    "start": "yarn babel src --out-dir lib --watch",
     "prepare": "run-s clean build",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
@@ -57,7 +57,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@solana/web3.js": "^0.66.3",
+    "@solana/web3.js": "^0.68",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
