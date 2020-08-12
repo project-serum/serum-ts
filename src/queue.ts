@@ -10,6 +10,8 @@ import BN from 'bn.js';
 import { PublicKey } from '@solana/web3.js';
 
 const REQUEST_QUEUE_HEADER = struct([
+  blob(5),
+
   accountFlagsLayout('accountFlags'),
   u32('head'),
   zeros(4),
@@ -37,6 +39,8 @@ const REQUEST = struct([
 ]);
 
 const EVENT_QUEUE_HEADER = struct([
+  blob(5),
+
   accountFlagsLayout('accountFlags'),
   u32('head'),
   zeros(4),

@@ -15,6 +15,8 @@ import { decodeEventQueue, decodeRequestQueue } from './queue';
 import { Buffer } from 'buffer';
 
 export const MARKET_STATE_LAYOUT = struct([
+  blob(5),
+
   accountFlagsLayout('accountFlags'),
 
   publicKeyLayout('ownAddress'),
@@ -44,6 +46,8 @@ export const MARKET_STATE_LAYOUT = struct([
   u64('quoteLotSize'),
 
   u64('feeRateBps'),
+
+  blob(7),
 ]);
 
 export class Market {
@@ -386,6 +390,8 @@ export interface OrderParams<T = Account> {
 }
 
 export const OPEN_ORDERS_LAYOUT = struct([
+  blob(5),
+
   accountFlagsLayout('accountFlags'),
 
   publicKeyLayout('market'),
@@ -401,6 +407,8 @@ export const OPEN_ORDERS_LAYOUT = struct([
   u128('isBidBits'),
 
   seq(u128(), 128, 'orders'),
+
+  blob(7),
 ]);
 
 export class OpenOrders {
@@ -499,8 +507,10 @@ export class OpenOrders {
 }
 
 export const ORDERBOOK_LAYOUT = struct([
+  blob(5),
   accountFlagsLayout('accountFlags'),
   SLAB_LAYOUT.replicate('slab'),
+  blob(7),
 ]);
 
 export class Orderbook {
