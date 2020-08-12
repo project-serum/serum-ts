@@ -9,6 +9,7 @@ import {
   zeros,
 } from './layout';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
   '9o1FisE366msTQcEvXapyMorTLmvezrxSD8DnM5e5XKw',
@@ -130,8 +131,9 @@ export class DexInstructions {
         { pubkey: payer, isSigner: false, isWritable: true },
         { pubkey: owner, isSigner: true, isWritable: false },
         { pubkey: requestQueue, isSigner: false, isWritable: true },
-        { pubkey: baseVault, isSigner: false, isWritable: false },
-        { pubkey: quoteVault, isSigner: false, isWritable: false },
+        { pubkey: baseVault, isSigner: false, isWritable: true },
+        { pubkey: quoteVault, isSigner: false, isWritable: true },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       ],
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({

@@ -1,8 +1,14 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
 import { publicKeyLayout, u128, u64, WideBits } from './layout';
 import { SLAB_LAYOUT } from './slab';
-import { DEX_PROGRAM_ID } from './instructions';
+import { DEX_PROGRAM_ID, DexInstructions } from './instructions';
 import BN from 'bn.js';
+import {
+  Account,
+  PublicKey,
+  SystemProgram,
+  Transaction,
+} from '@solana/web3.js';
 
 const ACCOUNT_FLAGS_LAYOUT = new WideBits();
 ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
@@ -59,8 +65,8 @@ export class Market {
     this._quoteMintDecimals = quoteMintDecimals;
   }
 
-  static decode(buffer) {
-    return MARKET_STATE_LAYOUT.decode(buffer);
+  static get LAYOUT() {
+    return MARKET_STATE_LAYOUT;
   }
 
   static async load(connection, address) {
@@ -69,11 +75,34 @@ export class Market {
       throw new Error('Address not owned by program');
     }
     const decoded = MARKET_STATE_LAYOUT.decode(data);
+    if (
+      !decoded.accountFlags.initialized ||
+      !decoded.accountFlags.market ||
+      !decoded.ownAddress.equals(address)
+    ) {
+      throw new Error('Invalid market');
+    }
     const [baseMintDecimals, quoteMintDecimals] = await Promise.all([
       getMintDecimals(connection, decoded.baseMint),
       getMintDecimals(connection, decoded.quoteMint),
     ]);
     return new Market(decoded, baseMintDecimals, quoteMintDecimals);
+  }
+
+  get address() {
+    return this._decoded.ownAddress;
+  }
+
+  get publicKey() {
+    return this.address;
+  }
+
+  get baseMintAddress() {
+    return this._decoded.baseMint;
+  }
+
+  get quoteMintAddress() {
+    return this._decoded.quoteMint;
   }
 
   async loadBids(connection) {
@@ -86,18 +115,98 @@ export class Market {
     return Orderbook.decode(this, data);
   }
 
+  async findBaseTokenAccountsForOwner(connection, ownerAddress) {
+    return (
+      await connection.getTokenAccountsByOwner(ownerAddress, {
+        mint: this.baseMintAddress,
+      })
+    ).value;
+  }
+
+  async findQuoteTokenAccountsForOwner(connection, ownerAddress) {
+    return (
+      await connection.getTokenAccountsByOwner(ownerAddress, {
+        mint: this.quoteMintAddress,
+      })
+    ).value;
+  }
+
+  async findOpenOrdersAccountsForOwner(connection, ownerAddress) {
+    return OpenOrders.findForMarketAndOwner(
+      connection,
+      this.address,
+      ownerAddress,
+    );
+  }
+
   async placeOrder(
     connection,
     { owner, payer, side, price, size, orderType = 'limit' },
   ) {
-    throw new Error('not yet implemented');
+    const { transaction, signers } = await this.makePlaceOrderTransaction(
+      connection,
+      {
+        owner,
+        payer,
+        side,
+        price,
+        size,
+        orderType,
+      },
+    );
+    return await connection.sendTransaction(transaction, signers);
+  }
+
+  async makePlaceOrderTransaction(
+    connection,
+    { owner, payer, side, price, size, orderType = 'limit' },
+  ) {
+    const ownerAddress = owner.publicKey ?? owner;
+    const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
+      connection,
+      ownerAddress,
+    ); // TODO: cache this
+    const transaction = new Transaction();
+    const signers = [owner];
+    let openOrdersAddress;
+    if (openOrdersAccounts.length === 0) {
+      const newOpenOrdersAccount = new Account();
+      transaction.add(
+        await OpenOrders.makeCreateAccountTransaction(
+          connection,
+          this.address,
+          ownerAddress,
+          newOpenOrdersAccount.publicKey,
+        ),
+      );
+      openOrdersAddress = newOpenOrdersAccount.publicKey;
+      signers.push(newOpenOrdersAccount);
+    } else {
+      openOrdersAddress = openOrdersAccounts[0].address;
+    }
+    transaction.add(
+      DexInstructions.newOrder({
+        market: this.address,
+        requestQueue: this._decoded.requestQueue,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        openOrders: openOrdersAddress,
+        owner: ownerAddress,
+        payer,
+        side,
+        limitPrice: this.priceNumberToLots(price),
+        maxQuantity: this.baseSizeNumberToLots(size),
+        orderType,
+      }),
+    );
+    return { transaction, signers };
   }
 
   async cancelOrder(connection, order) {
     throw new Error('not yet implemented');
   }
 
-  priceBnToNumber(price) {
+  priceLotsToNumber(price) {
     return divideBnToNumber(
       price
         .mul(this._decoded.quoteLotSize)
@@ -106,18 +215,46 @@ export class Market {
     );
   }
 
-  baseSizeBnToNumber(size) {
+  priceNumberToLots(price) {
+    return new BN(
+      Math.round(
+        (price *
+          Math.pow(10, this._quoteMintDecimals) *
+          this._decoded.baseLotSize.toNumber()) /
+          (Math.pow(10, this._baseMintDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
+      ),
+    );
+  }
+
+  baseSizeLotsToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.baseLotSize),
       new BN(10).pow(this._baseMintDecimals),
     );
   }
 
-  quoteSizeBnToNumber(size) {
+  baseSizeNumberToLots(size) {
+    const native = new BN(
+      Math.round(size * Math.pow(10, this._baseMintDecimals)),
+    );
+    // rounds down to the nearest lot size
+    return native.div(this._decoded.baseLotSize);
+  }
+
+  quoteSizeLotsToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.quoteLotSize),
       new BN(10).pow(this._quoteMintDecimals),
     );
+  }
+
+  quoteSizeNumberToLots(size) {
+    const native = new BN(
+      Math.round(size * Math.pow(10, this._quoteMintDecimals)),
+    );
+    // rounds down to the nearest lot size
+    return native.div(this._decoded.quoteLotSize);
   }
 }
 
@@ -139,7 +276,85 @@ export const OPEN_ORDERS_LAYOUT = struct([
   seq(u128(), 128, 'orders'),
 ]);
 
-export class OpenOrders {}
+export class OpenOrders {
+  constructor(address, decoded) {
+    this.address = address;
+    Object.assign(this, decoded);
+  }
+
+  static get LAYOUT() {
+    return OPEN_ORDERS_LAYOUT;
+  }
+
+  static async findForMarketAndOwner(connection, marketAddress, ownerAddress) {
+    const filters = [
+      {
+        memcmp: {
+          offset: OPEN_ORDERS_LAYOUT.offsetOf('market'),
+          bytes: marketAddress.toBase58(),
+        },
+      },
+      {
+        memcmp: {
+          offset: OPEN_ORDERS_LAYOUT.offsetOf('owner'),
+          bytes: ownerAddress.toBase58(),
+        },
+      },
+      {
+        dataSize: OPEN_ORDERS_LAYOUT.span,
+      },
+    ];
+    const accounts = await getFilteredProgramAccounts(
+      connection,
+      DEX_PROGRAM_ID,
+      filters,
+    );
+    return accounts.map(({ publicKey, accountInfo }) =>
+      OpenOrders.fromAccountInfo(publicKey, accountInfo),
+    );
+  }
+
+  static async load(connection, address) {
+    const accountInfo = await connection.getAccountInfo(address);
+    if (accountInfo === null) {
+      throw new Error('Open orders account not found');
+    }
+    return OpenOrders.fromAccountInfo(connection, accountInfo);
+  }
+
+  static fromAccountInfo(address, accountInfo) {
+    const { owner, data } = accountInfo;
+    if (!owner.equals(DEX_PROGRAM_ID)) {
+      throw new Error('Address not owned by program');
+    }
+    const decoded = OPEN_ORDERS_LAYOUT.decode(data);
+    if (!decoded.accountFlags.initialized || !decoded.accountFlags.openOrders) {
+      throw new Error('Invalid open orders account');
+    }
+    return new OpenOrders(address, decoded);
+  }
+
+  static async makeCreateAccountTransaction(
+    connection,
+    marketAddress,
+    ownerAddress,
+    newAccountAddress,
+  ) {
+    return SystemProgram.createAccount({
+      fromPubkey: ownerAddress,
+      newAccountPubkey: newAccountAddress,
+      lamports: await connection.getMinimumBalanceForRentExemption(
+        OPEN_ORDERS_LAYOUT.span,
+      ),
+      space: OPEN_ORDERS_LAYOUT.span,
+      programId: DEX_PROGRAM_ID,
+    });
+  }
+
+  get publicKey() {
+    return this.address;
+  }
+}
 
 export const ORDERBOOK_LAYOUT = struct([
   accountFlags('accountFlags'),
@@ -174,9 +389,11 @@ export class Orderbook {
         levels.push([price, quantity]);
       }
     }
-    return levels.map(([price, size]) => [
-      this.market.priceBnToNumber(price),
-      this.market.baseSizeBnToNumber(size.mul(this.market.baseLotSize)),
+    return levels.map(([priceLots, sizeLots]) => [
+      this.market.priceLotsToNumber(priceLots),
+      this.market.baseSizeLotsToNumber(sizeLots.mul(this.market.baseLotSize)),
+      priceLots,
+      sizeLots,
     ]);
   }
 
@@ -187,8 +404,10 @@ export class Orderbook {
         orderId: key,
         ownerSlot,
         owner,
-        price: this.market.priceBnToNumber(price),
-        quantity: this.market.baseSizeBnToNumber(quantity),
+        price: this.market.priceLotsToNumber(price),
+        priceLots: price,
+        size: this.market.baseSizeLotsToNumber(quantity),
+        sizeLots: quantity,
         side: this.isBids ? 'buy' : 'sell',
       };
     }
@@ -212,4 +431,29 @@ export async function getMintDecimals(connection, mint) {
   const { data } = await connection.getAccountInfo(mint);
   const { decimals } = MINT_LAYOUT.decode(data);
   return decimals;
+}
+
+async function getFilteredProgramAccounts(connection, programId, filters) {
+  const resp = await connection._rpcRequest('getProgramAccounts', [
+    programId.toBase58(),
+    {
+      commitment: connection.commitment,
+      filters,
+      encoding: 'binary64',
+    },
+  ]);
+  if (resp.error) {
+    throw new Error(resp.error.message);
+  }
+  return resp.result.map(
+    ({ pubkey, account: { data, executable, owner, lamports } }) => ({
+      publicKey: new PublicKey(pubkey),
+      accountInfo: {
+        data: Buffer.from(data, 'base64'),
+        executable,
+        owner: new PublicKey(owner),
+        lamports,
+      },
+    }),
+  );
 }

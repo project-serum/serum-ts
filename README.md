@@ -24,7 +24,7 @@ for (let order of asks) {
     order.orderId,
     order.owner.toBase58(),
     order.price,
-    order.quantity,
+    order.size,
     order.side,
   );
 }
