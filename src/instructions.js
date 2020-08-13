@@ -34,29 +34,18 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   1,
   struct([
     sideLayout('side'),
-    zeros(3),
     u64('limitPrice'),
     u64('maxQuantity'),
     orderTypeLayout('orderType'),
-    zeros(3),
   ]),
   'newOrder',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(
-  2,
-  struct([u16('limit'), blob(2)]),
-  'matchOrders',
-);
-INSTRUCTION_LAYOUT.inner.addVariant(
-  3,
-  struct([u16('limit'), blob(2)]),
-  'consumeEvents',
-);
+INSTRUCTION_LAYOUT.inner.addVariant(2, struct([u16('limit')]), 'matchOrders');
+INSTRUCTION_LAYOUT.inner.addVariant(3, struct([u16('limit')]), 'consumeEvents');
 INSTRUCTION_LAYOUT.inner.addVariant(
   4,
   struct([
     sideLayout('side'),
-    zeros(3),
     u128('orderId'),
     publicKeyLayout('owner'),
     u8('ownerSlot'),
@@ -128,9 +117,9 @@ export class DexInstructions {
       keys: [
         { pubkey: market, isSigner: false, isWritable: false },
         { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
         { pubkey: payer, isSigner: false, isWritable: true },
         { pubkey: owner, isSigner: true, isWritable: false },
-        { pubkey: requestQueue, isSigner: false, isWritable: true },
         { pubkey: baseVault, isSigner: false, isWritable: true },
         { pubkey: quoteVault, isSigner: false, isWritable: true },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
@@ -170,13 +159,13 @@ export class DexInstructions {
   static consumeEvents({ market, eventQueue, openOrdersAccounts, limit }) {
     return new TransactionInstruction({
       keys: [
-        { pubkey: market, isSigner: false, isWritable: true },
-        { pubkey: eventQueue, isSigner: false, isWritable: true },
         ...openOrdersAccounts.map((account) => ({
           pubkey: account,
           isSigner: false,
           isWritable: true,
         })),
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
       ],
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({ consumeEvents: { limit } }),
