@@ -53,10 +53,10 @@ function encodeTokenInstructionData(instruction) {
 
 export function initializeMint({
   mint,
-  amount,
+  amount = 0,
   decimals,
-  initialAccount,
-  mintOwner,
+  initialAccount = null,
+  mintOwner = null,
 }) {
   const keys = [{ pubkey: mint, isSigner: false, isWritable: true }];
   if (amount) {
