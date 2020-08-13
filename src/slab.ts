@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import { blob, offset, seq, struct, u32, u8, union } from 'buffer-layout';
 import { publicKeyLayout, setLayoutDecoder, u128, u64, zeros } from './layout';
+import { PublicKey } from '@solana/web3.js';
 
 const SLAB_HEADER_LAYOUT = struct(
   [
@@ -60,16 +61,19 @@ export const SLAB_LAYOUT = struct([
 ]);
 
 export class Slab {
+  private header: any;
+  private nodes: any;
+
   constructor(header, nodes) {
     this.header = header;
     this.nodes = nodes;
   }
 
-  static decode(buffer) {
+  static decode(buffer: Buffer) {
     return SLAB_LAYOUT.decode(buffer);
   }
 
-  get(searchKey) {
+  get(searchKey: BN | number) {
     if (this.header.leafCount === 0) {
       return null;
     }
@@ -107,7 +111,9 @@ export class Slab {
     return this.items(false);
   }
 
-  *items(descending = false) {
+  *items(
+    descending = false,
+  ): Generator<{ ownerSlot: number; key: BN; owner: PublicKey; quantity: BN }> {
     if (this.header.leafCount === 0) {
       return;
     }

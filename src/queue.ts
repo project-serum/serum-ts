@@ -74,7 +74,7 @@ function decodeQueue(headerLayout, nodeLayout, buffer) {
   const allocLen = Math.floor(
     (buffer.length - headerLayout.span) / nodeLayout.span,
   );
-  const nodes: Array<any> = [];
+  const nodes: any[] = [];
   for (let i = 0; i < header.count; ++i) {
     const nodeIndex = (header.head + i) % allocLen;
     nodes.push(
@@ -95,7 +95,7 @@ export function decodeRequestQueue(buffer: Buffer) {
   return nodes;
 }
 
-export function decodeEventQueue(buffer: Buffer): Array<Event> {
+export function decodeEventQueue(buffer: Buffer): Event[] {
   const { header, nodes } = decodeQueue(EVENT_QUEUE_HEADER, EVENT, buffer);
   if (!header.accountFlags.initialized || !header.accountFlags.eventQueue) {
     throw new Error('Invalid events queue');
