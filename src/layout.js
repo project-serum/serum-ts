@@ -131,11 +131,11 @@ class EnumLayout extends UInt {
 }
 
 export function sideLayout(property) {
-  return new EnumLayout({ buy: 0, sell: 1 }, 1, property);
+  return new EnumLayout({ buy: 0, sell: 1 }, 4, property);
 }
 
 export function orderTypeLayout(property) {
-  return new EnumLayout({ limit: 0, ioc: 1, postOnly: 2 }, 1, property);
+  return new EnumLayout({ limit: 0, ioc: 1, postOnly: 2 }, 4, property);
 }
 
 export function setLayoutDecoder(layout, decoder) {

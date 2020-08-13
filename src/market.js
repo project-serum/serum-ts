@@ -61,8 +61,8 @@ export class Market {
       throw new Error('Invalid market state');
     }
     this._decoded = decoded;
-    this._baseMintDecimals = baseMintDecimals;
-    this._quoteMintDecimals = quoteMintDecimals;
+    this._baseSplTokenDecimals = baseMintDecimals;
+    this._quoteSplTokenDecimals = quoteMintDecimals;
   }
 
   static get LAYOUT() {
@@ -202,16 +202,62 @@ export class Market {
     return { transaction, signers };
   }
 
-  async cancelOrder(connection, order) {
-    throw new Error('not yet implemented');
+  async cancelOrder(connection, owner, order) {
+    const transaction = await this.makeCancelOrderTransaction(
+      connection,
+      order,
+    );
+    return await connection.sendTransaction(transaction, [owner]);
+  }
+
+  async makeCancelOrderTransaction(connection, order) {
+    const openOrdersAccount = await this.findOpenOrdersAccountForOrder(
+      connection,
+      order,
+    );
+    if (openOrdersAccount === null) {
+      throw new Error('Order not found');
+    }
+    const transaction = new Transaction();
+    transaction.add(
+      DexInstructions.cancelOrder({
+        market: this.address,
+        openOrders: openOrdersAccount.address,
+        owner: order.owner,
+        requestQueue: this._decoded.requestQueue,
+        side: order.side,
+        orderId: order.orderId,
+        ownerSlot: order.ownerSlot,
+      }),
+    );
+    return transaction;
+  }
+
+  async findOpenOrdersAccountForOrder(connection, order) {
+    const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
+      connection,
+      order.owner,
+    );
+    for (const account of openOrdersAccounts) {
+      if (account.orders.some((orderId) => orderId.eq(order.orderId))) {
+        return account;
+      }
+    }
+    return null;
+  }
+
+  get _baseSplTokenMultiplier() {
+    return new BN(10).pow(new BN(this._baseSplTokenDecimals));
+  }
+
+  get _quoteSplTokenMultiplier() {
+    return new BN(10).pow(new BN(this._quoteSplTokenDecimals));
   }
 
   priceLotsToNumber(price) {
     return divideBnToNumber(
-      price
-        .mul(this._decoded.quoteLotSize)
-        .mul(new BN(10).pow(this._baseMintDecimals)),
-      this._decoded.baseLotSize.mul(new BN(10).pow(this._quoteMintDecimals)),
+      price.mul(this._decoded.quoteLotSize).mul(this._baseSplTokenMultiplier),
+      this._decoded.baseLotSize.mul(this._quoteSplTokenMultiplier),
     );
   }
 
@@ -219,9 +265,9 @@ export class Market {
     return new BN(
       Math.round(
         (price *
-          Math.pow(10, this._quoteMintDecimals) *
+          Math.pow(10, this._quoteSplTokenDecimals) *
           this._decoded.baseLotSize.toNumber()) /
-          (Math.pow(10, this._baseMintDecimals) *
+          (Math.pow(10, this._baseSplTokenDecimals) *
             this._decoded.quoteLotSize.toNumber()),
       ),
     );
@@ -230,13 +276,13 @@ export class Market {
   baseSizeLotsToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.baseLotSize),
-      new BN(10).pow(this._baseMintDecimals),
+      this._baseSplTokenMultiplier,
     );
   }
 
   baseSizeNumberToLots(size) {
     const native = new BN(
-      Math.round(size * Math.pow(10, this._baseMintDecimals)),
+      Math.round(size * Math.pow(10, this._baseSplTokenDecimals)),
     );
     // rounds down to the nearest lot size
     return native.div(this._decoded.baseLotSize);
@@ -245,16 +291,33 @@ export class Market {
   quoteSizeLotsToNumber(size) {
     return divideBnToNumber(
       size.mul(this._decoded.quoteLotSize),
-      new BN(10).pow(this._quoteMintDecimals),
+      this._quoteSplTokenMultiplier,
     );
   }
 
   quoteSizeNumberToLots(size) {
     const native = new BN(
-      Math.round(size * Math.pow(10, this._quoteMintDecimals)),
+      Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)),
     );
     // rounds down to the nearest lot size
     return native.div(this._decoded.quoteLotSize);
+  }
+
+  async matchOrders(connection, feePayer, limit) {
+    const tx = new Transaction();
+    tx.add(
+      DexInstructions.matchOrders({
+        market: this.address,
+        requestQueue: this._decoded.requestQueue,
+        eventQueue: this._decoded.eventQueue,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        limit,
+      }),
+    );
+    return await connection.sendTransaction(tx, [feePayer]);
   }
 }
 
@@ -264,11 +327,11 @@ export const OPEN_ORDERS_LAYOUT = struct([
   publicKeyLayout('market'),
   publicKeyLayout('owner'),
 
-  // These are in native (i.e. not lot) units
-  u64('baseTotal'),
-  u64('baseFree'),
-  u64('quoteTotal'),
-  u64('quoteFree'),
+  // These are in spl-token (i.e. not lot) units
+  u64('baseTokenFree'),
+  u64('baseTokenTotal'),
+  u64('quoteTokenFree'),
+  u64('quoteTokenTotal'),
 
   u128('freeSlotBits'),
   u128('isBidBits'),
