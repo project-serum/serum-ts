@@ -8,7 +8,7 @@ WIP
 `yarn add @project-serum/serum`
 
 ```js
-import { Connection, PublicKey } from '@solana/web3.js';
+import { Account, Connection, PublicKey } from '@solana/web3.js';
 import { Market } from '@project-serum/serum';
 
 let connection = new Connection('https://testnet.solana.com');
@@ -44,5 +44,15 @@ for (let order of await market.loadBids(connection)) {
   if (order.owner.equals(owner.publicKey)) {
     await market.cancelOrder(connection, owner, order);
   }
+}
+
+for (let fill of await market.loadFills(connection)) {
+  console.log(
+    fill.orderId,
+    fill.owner.toBase58(),
+    fill.price,
+    fill.size,
+    fill.side,
+  );
 }
 ```

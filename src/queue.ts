@@ -69,34 +69,62 @@ export interface Event {
   owner: PublicKey;
 }
 
-function decodeQueue(headerLayout, nodeLayout, buffer) {
+function decodeQueue(
+  headerLayout,
+  nodeLayout,
+  buffer: Buffer,
+  history?: number,
+) {
   const header = headerLayout.decode(buffer);
   const allocLen = Math.floor(
     (buffer.length - headerLayout.span) / nodeLayout.span,
   );
   const nodes: any[] = [];
-  for (let i = 0; i < header.count; ++i) {
-    const nodeIndex = (header.head + i) % allocLen;
-    nodes.push(
-      nodeLayout.decode(
-        buffer,
-        headerLayout.span + nodeIndex * nodeLayout.span,
-      ),
-    );
+  if (history) {
+    for (let i = 0; i < Math.min(history, allocLen); ++i) {
+      const nodeIndex =
+        (header.head + header.count + allocLen - 1 - i) % allocLen;
+      nodes.push(
+        nodeLayout.decode(
+          buffer,
+          headerLayout.span + nodeIndex * nodeLayout.span,
+        ),
+      );
+    }
+  } else {
+    for (let i = 0; i < header.count; ++i) {
+      const nodeIndex = (header.head + i) % allocLen;
+      nodes.push(
+        nodeLayout.decode(
+          buffer,
+          headerLayout.span + nodeIndex * nodeLayout.span,
+        ),
+      );
+    }
   }
   return { header, nodes };
 }
 
-export function decodeRequestQueue(buffer: Buffer) {
-  const { header, nodes } = decodeQueue(REQUEST_QUEUE_HEADER, REQUEST, buffer);
+export function decodeRequestQueue(buffer: Buffer, history?: number) {
+  const { header, nodes } = decodeQueue(
+    REQUEST_QUEUE_HEADER,
+    REQUEST,
+    buffer,
+    history,
+  );
   if (!header.accountFlags.initialized || !header.accountFlags.requestQueue) {
     throw new Error('Invalid requests queue');
   }
   return nodes;
 }
 
-export function decodeEventQueue(buffer: Buffer): Event[] {
-  const { header, nodes } = decodeQueue(EVENT_QUEUE_HEADER, EVENT, buffer);
+export function decodeEventQueue(buffer: Buffer, history?: number): Event[] {
+  const { header, nodes } = decodeQueue(
+    EVENT_QUEUE_HEADER,
+    EVENT,
+    buffer,
+    history,
+  );
   if (!header.accountFlags.initialized || !header.accountFlags.eventQueue) {
     throw new Error('Invalid events queue');
   }

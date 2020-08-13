@@ -272,6 +272,35 @@ export class Market {
     return decodeEventQueue(data);
   }
 
+  async loadFills(connection: Connection, limit = 100) {
+    // TODO: once there's a separate source of fills use that instead
+    const { data } = throwIfNull(
+      await connection.getAccountInfo(this._decoded.eventQueue),
+    );
+    const events = decodeEventQueue(data, limit);
+    return events
+      .filter((event) => event.eventFlags.fill && event.quantityPaid.gtn(0))
+      .map((event) =>
+        event.eventFlags.bid
+          ? {
+              ...event,
+              size: this.baseSizeLotsToNumber(event.quantityReleased),
+              price: this.priceLotsToNumber(
+                event.quantityPaid.divRound(event.quantityReleased),
+              ),
+              side: 'buy',
+            }
+          : {
+              ...event,
+              size: this.baseSizeLotsToNumber(event.quantityPaid),
+              price: this.priceLotsToNumber(
+                event.quantityReleased.divRound(event.quantityPaid),
+              ),
+              side: 'sell',
+            },
+      );
+  }
+
   private get _baseSplTokenMultiplier() {
     return new BN(10).pow(new BN(this._baseSplTokenDecimals));
   }
