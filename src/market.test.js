@@ -1,7 +1,7 @@
-import { accountFlags } from './market';
+import { accountFlagsLayout } from './layout';
 
 describe('accountFlags', () => {
-  const layout = accountFlags();
+  const layout = accountFlagsLayout();
   it('parses', () => {
     const b = Buffer.from('0000000000000000', 'hex');
     expect(layout.getSpan(b)).toBe(8);

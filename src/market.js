@@ -1,5 +1,5 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import { publicKeyLayout, u128, u64, WideBits } from './layout';
+import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
 import { SLAB_LAYOUT } from './slab';
 import { DEX_PROGRAM_ID, DexInstructions } from './instructions';
 import BN from 'bn.js';
@@ -10,21 +10,8 @@ import {
   Transaction,
 } from '@solana/web3.js';
 
-const ACCOUNT_FLAGS_LAYOUT = new WideBits();
-ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('market');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('openOrders');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('requestQueue');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('eventQueue');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('bids');
-ACCOUNT_FLAGS_LAYOUT.addBoolean('asks');
-
-export function accountFlags(property = 'accountFlags') {
-  return ACCOUNT_FLAGS_LAYOUT.replicate(property);
-}
-
 export const MARKET_STATE_LAYOUT = struct([
-  accountFlags('accountFlags'),
+  accountFlagsLayout('accountFlags'),
 
   publicKeyLayout('ownAddress'),
 
@@ -322,7 +309,7 @@ export class Market {
 }
 
 export const OPEN_ORDERS_LAYOUT = struct([
-  accountFlags('accountFlags'),
+  accountFlagsLayout('accountFlags'),
 
   publicKeyLayout('market'),
   publicKeyLayout('owner'),
@@ -420,7 +407,7 @@ export class OpenOrders {
 }
 
 export const ORDERBOOK_LAYOUT = struct([
-  accountFlags('accountFlags'),
+  accountFlagsLayout('accountFlags'),
   SLAB_LAYOUT.replicate('slab'),
 ]);
 
@@ -445,7 +432,7 @@ export class Orderbook {
     for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].equals(price)) {
-        levels[levels.length - 1].iadd(quantity);
+        levels[levels.length - 1][1].iadd(quantity);
       } else if (levels.length === depth) {
         break;
       } else {

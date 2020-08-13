@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { bits, Blob, Layout, u32, UInt } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
@@ -136,6 +138,19 @@ export function sideLayout(property) {
 
 export function orderTypeLayout(property) {
   return new EnumLayout({ limit: 0, ioc: 1, postOnly: 2 }, 4, property);
+}
+
+const ACCOUNT_FLAGS_LAYOUT = new WideBits();
+ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('market');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('openOrders');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('requestQueue');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('eventQueue');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('bids');
+ACCOUNT_FLAGS_LAYOUT.addBoolean('asks');
+
+export function accountFlagsLayout(property = 'accountFlags') {
+  return ACCOUNT_FLAGS_LAYOUT.replicate(property);
 }
 
 export function setLayoutDecoder(layout, decoder) {

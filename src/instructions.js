@@ -1,4 +1,4 @@
-import { blob, struct, u16, u32, u8, union } from 'buffer-layout';
+import { struct, u16, u32, u8, union } from 'buffer-layout';
 import {
   orderTypeLayout,
   publicKeyLayout,
@@ -6,7 +6,6 @@ import {
   u128,
   u64,
   VersionedLayout,
-  zeros,
 } from './layout';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
