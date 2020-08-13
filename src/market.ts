@@ -121,6 +121,16 @@ export class Market {
     return Orderbook.decode(this, data);
   }
 
+  async loadOrdersForOwner(connection: Connection, ownerAddress: PublicKey) {
+    const [bids, asks] = await Promise.all([
+      this.loadBids(connection),
+      this.loadAsks(connection),
+    ]);
+    return [...bids, ...asks].filter((order) =>
+      order.owner.equals(ownerAddress),
+    );
+  }
+
   async findBaseTokenAccountsForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
@@ -527,6 +537,10 @@ export class Orderbook {
     this.slab = slab;
   }
 
+  static get LAYOUT() {
+    return ORDERBOOK_LAYOUT;
+  }
+
   static decode(market: Market, buffer: Buffer) {
     const { accountFlags, slab } = ORDERBOOK_LAYOUT.decode(buffer);
     return new Orderbook(market, accountFlags, slab);
@@ -564,7 +578,7 @@ export class Orderbook {
         priceLots: price,
         size: this.market.baseSizeLotsToNumber(quantity),
         sizeLots: quantity,
-        side: this.isBids ? 'buy' : 'sell',
+        side: (this.isBids ? 'buy' : 'sell') as 'buy' | 'sell',
       };
     }
   }

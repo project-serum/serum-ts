@@ -3,9 +3,23 @@
 
 # Serum JS Client Library
 
-WIP
+JavaScript client library for interacting with the Project Serum DEX.
 
-`yarn add @project-serum/serum`
+## Installation
+
+Using npm:
+
+```
+npm install @solana/web3.js @project-serum/serum
+```
+
+Using yarn:
+
+```
+yarn add @solana/web3.js @project-serum/serum
+```
+
+## Usage
 
 ```js
 import { Account, Connection, PublicKey } from '@solana/web3.js';
@@ -14,23 +28,28 @@ import { Market } from '@project-serum/serum';
 let connection = new Connection('https://testnet.solana.com');
 let marketAddress = new PublicKey('...');
 let market = await Market.load(connection, marketAddress);
+
+// Fetching orderbooks
 let bids = await market.loadBids(connection);
 let asks = await market.loadAsks(connection);
+// L2 orderbook data
 for (let [price, size] of bids.getL2(20)) {
   console.log(price, size);
 }
+// Full orderbook data
 for (let order of asks) {
   console.log(
     order.orderId,
     order.owner.toBase58(),
     order.price,
     order.size,
-    order.side,
+    order.side, // 'buy' or 'sell'
   );
 }
 
+// Placing orders
 let owner = new Account('...');
-let payer = new PublicKey('...');
+let payer = new PublicKey('...'); // spl-token account
 await market.placeOrder(connection, {
   owner,
   payer,
@@ -40,12 +59,15 @@ await market.placeOrder(connection, {
   orderType: 'limit', // 'limit', 'ioc', 'postOnly'
 });
 
-for (let order of await market.loadBids(connection)) {
-  if (order.owner.equals(owner.publicKey)) {
-    await market.cancelOrder(connection, owner, order);
-  }
+// Retrieving open orders by owner
+let myOrders = await market.loadOrdersForOwner(connection, owner.publicKey);
+
+// Cancelling orders
+for (let order of myOrders) {
+  await market.cancelOrder(connection, owner, order);
 }
 
+// Retrieving fills
 for (let fill of await market.loadFills(connection)) {
   console.log(
     fill.orderId,

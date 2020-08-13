@@ -1,2 +1,3 @@
-export { Market, Orderbook } from './market';
+export { Market, Orderbook, OpenOrders } from './market';
 export { DexInstructions } from './instructions';
+export * as TokenInstructions from './token-instructions';
