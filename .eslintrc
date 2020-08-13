@@ -1,8 +1,9 @@
 {
-  "parser": "babel-eslint",
+  "parser": "@typescript-eslint/parser",
   "extends": [
-    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
     "standard",
+    "prettier/@typescript-eslint",
     "plugin:prettier/recommended",
     "prettier/standard"
   ],
@@ -12,13 +13,11 @@
   },
   "parserOptions": {
     "ecmaVersion": 2020,
-    "ecmaFeatures": {
-      "legacyDecorators": true,
-      "jsx": true
-    }
+    "sourceType": "module"
   },
   "rules": {
-    "space-before-function-paren": 0,
-    "import/export": 0
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/no-explicit-any": "off"
   }
 }
