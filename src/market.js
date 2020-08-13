@@ -9,6 +9,7 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
+import { decodeEventQueue, decodeRequestQueue } from './queue';
 
 export const MARKET_STATE_LAYOUT = struct([
   accountFlagsLayout('accountFlags'),
@@ -231,6 +232,18 @@ export class Market {
       }
     }
     return null;
+  }
+
+  async loadRequestQueue(connection) {
+    const { data } = await connection.getAccountInfo(
+      this._decoded.requestQueue,
+    );
+    return decodeRequestQueue(data);
+  }
+
+  async loadEventQueue(connection) {
+    const { data } = await connection.getAccountInfo(this._decoded.eventQueue);
+    return decodeEventQueue(data);
   }
 
   get _baseSplTokenMultiplier() {
