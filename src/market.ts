@@ -210,6 +210,12 @@ export class Market {
     } else {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
+    if (this.baseSizeNumberToLots(size).lte(new BN(0))) {
+      throw new Error('size too small');
+    }
+    if (this.priceNumberToLots(price).lte(new BN(0))) {
+      throw new Error('invalid price');
+    }
     transaction.add(
       DexInstructions.newOrder({
         market: this.address,
@@ -370,6 +376,14 @@ export class Market {
     );
     // rounds down to the nearest lot size
     return native.div(this._decoded.quoteLotSize);
+  }
+
+  get minOrderSize() {
+    return this.baseSizeLotsToNumber(new BN(1));
+  }
+
+  get tickSize() {
+    return this.priceLotsToNumber(new BN(1));
   }
 
   async matchOrders(connection: Connection, feePayer: Account, limit: number) {
