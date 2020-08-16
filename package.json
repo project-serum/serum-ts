@@ -1,11 +1,12 @@
 {
   "name": "@project-serum/serum",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
   "repository": "project-serum/serum-js",
   "main": "lib/index.js",
   "source": "src/index.js",
+  "types": "lib/index.d.ts",
   "engines": {
     "node": ">=10"
   },
