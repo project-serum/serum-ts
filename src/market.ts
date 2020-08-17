@@ -122,12 +122,15 @@ export class Market {
   }
 
   async loadOrdersForOwner(connection: Connection, ownerAddress: PublicKey) {
-    const [bids, asks] = await Promise.all([
+    const [bids, asks, openOrdersAccounts] = await Promise.all([
       this.loadBids(connection),
       this.loadAsks(connection),
+      this.findOpenOrdersAccountsForOwner(connection, ownerAddress),
     ]);
     return [...bids, ...asks].filter((order) =>
-      order.owner.equals(ownerAddress),
+      openOrdersAccounts.some((openOrders) =>
+        order.owner.equals(openOrders.address),
+      ),
     );
   }
 
