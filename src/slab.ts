@@ -40,7 +40,7 @@ SLAB_NODE_LAYOUT.addVariant(
     u8('ownerSlot'), // Index into OPEN_ORDERS_LAYOUT.orders
     blob(3),
     u128('key'), // (price, seqNum)
-    publicKeyLayout('owner'),
+    publicKeyLayout('owner'), // Open orders account
     u64('quantity'), // In units of lot size
   ]),
   'leafNode',
