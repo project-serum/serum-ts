@@ -51,6 +51,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   ]),
   'cancelOrder',
 );
+INSTRUCTION_LAYOUT.inner.addVariant(5, struct([]), 'settleFunds');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -190,6 +191,35 @@ export class DexInstructions {
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({
         cancelOrder: { side, orderId, openOrders, openOrdersSlot },
+      }),
+    });
+  }
+
+  static settleFunds({
+    market,
+    openOrders,
+    owner,
+    baseVault,
+    quoteVault,
+    baseWallet,
+    quoteWallet,
+    vaultSigner,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: baseVault, isSigner: false, isWritable: true },
+        { pubkey: quoteVault, isSigner: false, isWritable: true },
+        { pubkey: baseWallet, isSigner: false, isWritable: true },
+        { pubkey: quoteWallet, isSigner: false, isWritable: true },
+        { pubkey: vaultSigner, isSigner: false, isWritable: false },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({
+        settleFunds: {},
       }),
     });
   }
