@@ -11,7 +11,7 @@ import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  'HLP6LmVgK16Bkpjgc4BdGmVNNc8m6pKSkdknbHxp2KMZ',
+  'DXgi6RmREQNFnWRV4gP28CQFdp4k8f6YSqGjH6fgJLDq',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
