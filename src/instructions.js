@@ -46,8 +46,8 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   struct([
     sideLayout('side'),
     u128('orderId'),
-    publicKeyLayout('owner'),
-    u8('ownerSlot'),
+    publicKeyLayout('openOrders'),
+    u8('openOrdersSlot'),
   ]),
   'cancelOrder',
 );
@@ -178,18 +178,18 @@ export class DexInstructions {
     requestQueue,
     side,
     orderId,
-    ownerSlot,
+    openOrdersSlot,
   }) {
     return new TransactionInstruction({
       keys: [
         { pubkey: market, isSigner: false, isWritable: false },
         { pubkey: openOrders, isSigner: false, isWritable: true },
-        { pubkey: owner, isSigner: true, isWritable: false },
         { pubkey: requestQueue, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
       ],
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({
-        cancelOrder: { side, orderId, owner, ownerSlot },
+        cancelOrder: { side, orderId, openOrders, openOrdersSlot },
       }),
     });
   }

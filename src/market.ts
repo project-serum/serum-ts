@@ -10,6 +10,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionSignature,
 } from '@solana/web3.js';
 import { decodeEventQueue, decodeRequestQueue } from './queue';
 import { Buffer } from 'buffer';
@@ -54,21 +55,35 @@ export class Market {
   private _decoded: any;
   private _baseSplTokenDecimals: number;
   private _quoteSplTokenDecimals: number;
+  private _skipPreflight: boolean;
+  private _confirmations: number;
 
-  constructor(decoded, baseMintDecimals: number, quoteMintDecimals: number) {
+  constructor(
+    decoded,
+    baseMintDecimals: number,
+    quoteMintDecimals: number,
+    options: MarketOptions = {},
+  ) {
+    const { skipPreflight = false, confirmations = 0 } = options;
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
       throw new Error('Invalid market state');
     }
     this._decoded = decoded;
     this._baseSplTokenDecimals = baseMintDecimals;
     this._quoteSplTokenDecimals = quoteMintDecimals;
+    this._skipPreflight = skipPreflight;
+    this._confirmations = confirmations;
   }
 
   static get LAYOUT() {
     return MARKET_STATE_LAYOUT;
   }
 
-  static async load(connection: Connection, address: PublicKey) {
+  static async load(
+    connection: Connection,
+    address: PublicKey,
+    options: MarketOptions = {},
+  ) {
     const { owner, data } = throwIfNull(
       await connection.getAccountInfo(address),
       'Market not found',
@@ -88,7 +103,7 @@ export class Market {
       getMintDecimals(connection, decoded.baseMint),
       getMintDecimals(connection, decoded.quoteMint),
     ]);
-    return new Market(decoded, baseMintDecimals, quoteMintDecimals);
+    return new Market(decoded, baseMintDecimals, quoteMintDecimals, options);
   }
 
   get address(): PublicKey {
@@ -129,7 +144,7 @@ export class Market {
     ]);
     return [...bids, ...asks].filter((order) =>
       openOrdersAccounts.some((openOrders) =>
-        order.owner.equals(openOrders.address),
+        order.openOrdersAddress.equals(openOrders.address),
       ),
     );
   }
@@ -182,7 +197,7 @@ export class Market {
         orderType,
       },
     );
-    return await connection.sendTransaction(transaction, signers);
+    return await this._sendTransaction(connection, transaction, signers);
   }
 
   async makePlaceOrderTransaction<T extends PublicKey | Account>(
@@ -237,48 +252,47 @@ export class Market {
     return { transaction, signers };
   }
 
-  async cancelOrder(connection: Connection, owner: Account, order) {
-    const transaction = await this.makeCancelOrderTransaction(
-      connection,
-      order,
-    );
-    return await connection.sendTransaction(transaction, [owner]);
+  private async _sendTransaction(
+    connection: Connection,
+    transaction: Transaction,
+    signers: Array<Account>,
+  ): Promise<TransactionSignature> {
+    const signature = await connection.sendTransaction(transaction, signers, {
+      skipPreflight: this._skipPreflight,
+    });
+    if (this._confirmations > 0) {
+      await connection.confirmTransaction(signature, this._confirmations);
+    }
+    return signature;
   }
 
-  async makeCancelOrderTransaction(connection: Connection, order) {
-    const openOrdersAccount = await this.findOpenOrdersAccountForOrder(
+  async cancelOrder(connection: Connection, owner: Account, order: Order) {
+    const transaction = await this.makeCancelOrderTransaction(
       connection,
+      owner.publicKey,
       order,
     );
-    if (openOrdersAccount === null) {
-      throw new Error('Order not found');
-    }
+    return await this._sendTransaction(connection, transaction, [owner]);
+  }
+
+  async makeCancelOrderTransaction(
+    connection: Connection,
+    owner: PublicKey,
+    order: Order,
+  ) {
     const transaction = new Transaction();
     transaction.add(
       DexInstructions.cancelOrder({
         market: this.address,
-        openOrders: openOrdersAccount.address,
-        owner: order.owner,
+        owner,
+        openOrders: order.openOrdersAddress,
         requestQueue: this._decoded.requestQueue,
         side: order.side,
         orderId: order.orderId,
-        ownerSlot: order.ownerSlot,
+        openOrdersSlot: order.openOrdersSlot,
       }),
     );
     return transaction;
-  }
-
-  async findOpenOrdersAccountForOrder(connection: Connection, order) {
-    const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
-      connection,
-      order.owner,
-    );
-    for (const account of openOrdersAccounts) {
-      if (account.orders.some((orderId) => orderId.eq(order.orderId))) {
-        return account;
-      }
-    }
-    return null;
   }
 
   async loadRequestQueue(connection: Connection) {
@@ -403,8 +417,13 @@ export class Market {
         limit,
       }),
     );
-    return await connection.sendTransaction(tx, [feePayer]);
+    return await this._sendTransaction(connection, tx, [feePayer]);
   }
+}
+
+export interface MarketOptions {
+  skipPreflight?: boolean;
+  confirmations?: number;
 }
 
 export interface OrderParams<T = Account> {
@@ -584,13 +603,13 @@ export class Orderbook {
     ]);
   }
 
-  *[Symbol.iterator]() {
+  *[Symbol.iterator](): Generator<Order> {
     for (const { key, ownerSlot, owner, quantity } of this.slab) {
       const price = getPriceFromKey(key);
       yield {
         orderId: key,
-        ownerSlot,
-        owner,
+        openOrdersAddress: owner,
+        openOrdersSlot: ownerSlot,
         price: this.market.priceLotsToNumber(price),
         priceLots: price,
         size: this.market.baseSizeLotsToNumber(quantity),
@@ -599,6 +618,17 @@ export class Orderbook {
       };
     }
   }
+}
+
+export interface Order {
+  orderId: BN;
+  openOrdersAddress: PublicKey;
+  openOrdersSlot: number;
+  price: number;
+  priceLots: BN;
+  size: number;
+  sizeLots: BN;
+  side: 'buy' | 'sell';
 }
 
 function getPriceFromKey(key) {

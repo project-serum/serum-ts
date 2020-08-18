@@ -30,12 +30,12 @@ REQUEST_FLAGS.addBoolean('ioc');
 
 const REQUEST = struct([
   REQUEST_FLAGS,
-  u8('ownerSlot'),
+  u8('openOrdersSlot'),
   blob(6),
   u64('maxBaseSizeOrCancelId'),
   u64('maxQuoteSize'),
   u128('orderId'),
-  publicKeyLayout('owner'),
+  publicKeyLayout('openOrders'),
 ]);
 
 const EVENT_QUEUE_HEADER = struct([
@@ -56,21 +56,23 @@ EVENT_FLAGS.addBoolean('maker');
 
 const EVENT = struct([
   EVENT_FLAGS,
-  u8('ownerSlot'),
+  u8('openOrdersSlot'),
   blob(6),
   u64('quantityReleased'),
   u64('quantityPaid'),
   u128('orderId'),
-  publicKeyLayout('owner'),
+  publicKeyLayout('openOrders'),
 ]);
 
 export interface Event {
-  eventFlags: any;
-  ownerSlot: number;
+  eventFlags: { fill: boolean; out: boolean; bid: boolean; maker: boolean };
+
+  orderId: BN;
+  openOrders: PublicKey;
+  openOrdersSlot: number;
+
   quantityReleased: BN;
   quantityPaid: BN;
-  orderId: BN;
-  owner: PublicKey;
 }
 
 function decodeQueue(
