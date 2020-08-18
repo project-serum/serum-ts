@@ -261,7 +261,13 @@ export class Market {
       skipPreflight: this._skipPreflight,
     });
     if (this._confirmations > 0) {
-      await connection.confirmTransaction(signature, this._confirmations);
+      const { value } = await connection.confirmTransaction(
+        signature,
+        this._confirmations,
+      );
+      if (value?.err) {
+        throw new Error(JSON.stringify(value.err));
+      }
     }
     return signature;
   }
@@ -293,6 +299,55 @@ export class Market {
       }),
     );
     return transaction;
+  }
+
+  async settleFunds(
+    connection: Connection,
+    owner: Account,
+    openOrders: OpenOrders,
+    baseWallet: PublicKey,
+    quoteWallet: PublicKey,
+  ) {
+    if (!openOrders.owner.equals(owner.publicKey)) {
+      throw new Error('Invalid open orders account');
+    }
+    const transaction = await this.makeSettleFundsTransaction(
+      connection,
+      openOrders,
+      baseWallet,
+      quoteWallet,
+    );
+    return await this._sendTransaction(connection, transaction, [owner]);
+  }
+
+  async makeSettleFundsTransaction(
+    connection: Connection,
+    openOrders: OpenOrders,
+    baseWallet: PublicKey,
+    quoteWallet: PublicKey,
+  ) {
+    const tx = new Transaction();
+    // @ts-ignore
+    const vaultSigner = await PublicKey.createProgramAddress(
+      [
+        this.address.toBuffer(),
+        this._decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
+      ],
+      DEX_PROGRAM_ID,
+    );
+    tx.add(
+      DexInstructions.settleFunds({
+        market: this.address,
+        openOrders: openOrders.address,
+        owner: openOrders.owner,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        baseWallet,
+        quoteWallet,
+        vaultSigner,
+      }),
+    );
+    return tx;
   }
 
   async loadRequestQueue(connection: Connection) {
