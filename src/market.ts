@@ -722,7 +722,7 @@ async function getFilteredProgramAccounts(
     {
       commitment: connection.commitment,
       filters,
-      encoding: 'binary64',
+      encoding: 'base64',
     },
   ]);
   if (resp.error) {
@@ -732,7 +732,7 @@ async function getFilteredProgramAccounts(
     ({ pubkey, account: { data, executable, owner, lamports } }) => ({
       publicKey: new PublicKey(pubkey),
       accountInfo: {
-        data: Buffer.from(data, 'base64'),
+        data: Buffer.from(data[0], 'base64'),
         executable,
         owner: new PublicKey(owner),
         lamports,
