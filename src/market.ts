@@ -10,6 +10,7 @@ import {
   PublicKey,
   SystemProgram,
   Transaction,
+  TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js';
 import { decodeEventQueue, decodeRequestQueue } from './queue';
@@ -458,20 +459,22 @@ export class Market {
     return this.priceLotsToNumber(new BN(1));
   }
 
+  makeMatchOrdersInstruction(limit: number): TransactionInstruction {
+    return DexInstructions.matchOrders({
+      market: this.address,
+      requestQueue: this._decoded.requestQueue,
+      eventQueue: this._decoded.eventQueue,
+      bids: this._decoded.bids,
+      asks: this._decoded.asks,
+      baseVault: this._decoded.baseVault,
+      quoteVault: this._decoded.quoteVault,
+      limit,
+    });
+  }
+
   async matchOrders(connection: Connection, feePayer: Account, limit: number) {
     const tx = new Transaction();
-    tx.add(
-      DexInstructions.matchOrders({
-        market: this.address,
-        requestQueue: this._decoded.requestQueue,
-        eventQueue: this._decoded.eventQueue,
-        bids: this._decoded.bids,
-        asks: this._decoded.asks,
-        baseVault: this._decoded.baseVault,
-        quoteVault: this._decoded.quoteVault,
-        limit,
-      }),
-    );
+    tx.add(this.makeMatchOrdersInstruction(limit));
     return await this._sendTransaction(connection, tx, [feePayer]);
   }
 }
