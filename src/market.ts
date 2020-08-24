@@ -143,11 +143,18 @@ export class Market {
       this.loadAsks(connection),
       this.findOpenOrdersAccountsForOwner(connection, ownerAddress),
     ]);
-    return [...bids, ...asks].filter((order) =>
+    const orders = [...bids, ...asks].filter((order) =>
       openOrdersAccounts.some((openOrders) =>
         order.openOrdersAddress.equals(openOrders.address),
       ),
     );
+    // return orders;
+    return orders.map((order) => ({
+      ...order,
+      clientId: openOrdersAccounts.find((openOrders) =>
+        order.openOrdersAddress.equals(openOrders.address),
+      )?.clientIds[order.openOrdersSlot],
+    }));
   }
 
   async findBaseTokenAccountsForOwner(
@@ -185,7 +192,15 @@ export class Market {
 
   async placeOrder(
     connection: Connection,
-    { owner, payer, side, price, size, orderType = 'limit' }: OrderParams,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+    }: OrderParams,
   ) {
     const { transaction, signers } = await this.makePlaceOrderTransaction(
       connection,
@@ -196,6 +211,7 @@ export class Market {
         price,
         size,
         orderType,
+        clientId,
       },
     );
     return await this._sendTransaction(connection, transaction, signers);
@@ -203,7 +219,15 @@ export class Market {
 
   async makePlaceOrderTransaction<T extends PublicKey | Account>(
     connection: Connection,
-    { owner, payer, side, price, size, orderType = 'limit' }: OrderParams<T>,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+    }: OrderParams<T>,
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -248,6 +272,7 @@ export class Market {
         limitPrice: this.priceNumberToLots(price),
         maxQuantity: this.baseSizeNumberToLots(size),
         orderType,
+        clientId,
       }),
     );
     return { transaction, signers };
@@ -271,6 +296,40 @@ export class Market {
       }
     }
     return signature;
+  }
+
+  async cancelOrderByClientId(
+    connection: Connection,
+    owner: Account,
+    openOrders: PublicKey,
+    clientId: BN,
+  ) {
+    const transaction = await this.makeCancelOrderByClientIdTransaction(
+      connection,
+      owner.publicKey,
+      openOrders,
+      clientId,
+    );
+    return await this._sendTransaction(connection, transaction, [owner]);
+  }
+
+  async makeCancelOrderByClientIdTransaction(
+    connection: Connection,
+    owner: PublicKey,
+    openOrders: PublicKey,
+    clientId: BN,
+  ) {
+    const transaction = new Transaction();
+    transaction.add(
+      DexInstructions.cancelOrderByClientId({
+        market: this.address,
+        owner,
+        openOrders,
+        requestQueue: this._decoded.requestQueue,
+        clientId,
+      }),
+    );
+    return transaction;
   }
 
   async cancelOrder(connection: Connection, owner: Account, order: Order) {
@@ -372,23 +431,33 @@ export class Market {
     );
     const events = decodeEventQueue(data, limit);
     return events
-      .filter((event) => event.eventFlags.fill && event.quantityPaid.gtn(0))
+      .filter(
+        (event) => event.eventFlags.fill && event.nativeQuantityPaid.gtn(0),
+      )
       .map((event) =>
         event.eventFlags.bid
           ? {
               ...event,
-              size: this.baseSizeLotsToNumber(event.quantityReleased),
-              price: this.priceLotsToNumber(
-                event.quantityPaid.divRound(event.quantityReleased),
-              ),
+              size: this.baseSplSizeToNumber(event.nativeQuantityReleased),
+              price: event.nativeQuantityPaid
+                .mul(this._quoteSplTokenMultiplier)
+                .divRound(
+                  event.nativeQuantityReleased.mul(
+                    this._baseSplTokenMultiplier,
+                  ),
+                )
+                .toNumber(),
               side: 'buy',
             }
           : {
               ...event,
-              size: this.baseSizeLotsToNumber(event.quantityPaid),
-              price: this.priceLotsToNumber(
-                event.quantityReleased.divRound(event.quantityPaid),
-              ),
+              size: this.baseSplSizeToNumber(event.nativeQuantityPaid),
+              price: event.nativeQuantityReleased
+                .mul(this._quoteSplTokenMultiplier)
+                .divRound(
+                  event.nativeQuantityPaid.mul(this._baseSplTokenMultiplier),
+                )
+                .toNumber(),
               side: 'sell',
             },
       );
@@ -419,6 +488,14 @@ export class Market {
             this._decoded.quoteLotSize.toNumber()),
       ),
     );
+  }
+
+  baseSplSizeToNumber(size: BN) {
+    return divideBnToNumber(size, this._baseSplTokenMultiplier);
+  }
+
+  quoteSplSizeToNumber(size: BN) {
+    return divideBnToNumber(size, this._quoteSplTokenMultiplier);
   }
 
   baseSizeLotsToNumber(size: BN) {
@@ -491,6 +568,7 @@ export interface OrderParams<T = Account> {
   price: number;
   size: number;
   orderType?: 'limit' | 'ioc' | 'postOnly';
+  clientId?: BN;
 }
 
 export const OPEN_ORDERS_LAYOUT = struct([
@@ -511,6 +589,7 @@ export const OPEN_ORDERS_LAYOUT = struct([
   u128('isBidBits'),
 
   seq(u128(), 128, 'orders'),
+  seq(u64(), 128, 'clientIds'),
 
   blob(7),
 ]);
@@ -526,6 +605,7 @@ export class OpenOrders {
   quoteTokenTotal!: BN;
 
   orders!: BN[];
+  clientIds!: BN[];
 
   constructor(address: PublicKey, decoded) {
     this.address = address;
@@ -662,12 +742,13 @@ export class Orderbook {
   }
 
   *[Symbol.iterator](): Generator<Order> {
-    for (const { key, ownerSlot, owner, quantity } of this.slab) {
+    for (const { key, ownerSlot, owner, quantity, feeTier } of this.slab) {
       const price = getPriceFromKey(key);
       yield {
         orderId: key,
         openOrdersAddress: owner,
         openOrdersSlot: ownerSlot,
+        feeTier,
         price: this.market.priceLotsToNumber(price),
         priceLots: price,
         size: this.market.baseSizeLotsToNumber(quantity),
@@ -685,6 +766,7 @@ export interface Order {
   price: number;
   priceLots: BN;
   size: number;
+  feeTier: number;
   sizeLots: BN;
   side: 'buy' | 'sell';
 }
