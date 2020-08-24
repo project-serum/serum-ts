@@ -38,7 +38,8 @@ SLAB_NODE_LAYOUT.addVariant(
   2,
   struct([
     u8('ownerSlot'), // Index into OPEN_ORDERS_LAYOUT.orders
-    blob(3),
+    u8('feeTier'),
+    blob(2),
     u128('key'), // (price, seqNum)
     publicKeyLayout('owner'), // Open orders account
     u64('quantity'), // In units of lot size
@@ -113,7 +114,13 @@ export class Slab {
 
   *items(
     descending = false,
-  ): Generator<{ ownerSlot: number; key: BN; owner: PublicKey; quantity: BN }> {
+  ): Generator<{
+    ownerSlot: number;
+    key: BN;
+    owner: PublicKey;
+    quantity: BN;
+    feeTier: number;
+  }> {
     if (this.header.leafCount === 0) {
       return;
     }

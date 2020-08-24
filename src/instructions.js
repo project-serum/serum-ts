@@ -11,7 +11,7 @@ import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  '8FxUAcZc27zBH39TfH1G7qVqDTZn3Bm4ym1qxWnAsdKa',
+  '3v9kjrBLN7Awr9BGC2qmFnWLM1EgMAdNm2rXLQFUcQ2d',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
@@ -36,6 +36,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
     u64('limitPrice'),
     u64('maxQuantity'),
     orderTypeLayout('orderType'),
+    u64('clientId'),
   ]),
   'newOrder',
 );
@@ -52,6 +53,11 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   'cancelOrder',
 );
 INSTRUCTION_LAYOUT.inner.addVariant(5, struct([]), 'settleFunds');
+INSTRUCTION_LAYOUT.inner.addVariant(
+  6,
+  struct([u64('clientId')]),
+  'cancelOrderByClientId',
+);
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -112,6 +118,7 @@ export class DexInstructions {
     limitPrice,
     maxQuantity,
     orderType,
+    clientId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -126,7 +133,9 @@ export class DexInstructions {
       ],
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({
-        newOrder: { side, limitPrice, maxQuantity, orderType },
+        newOrder: clientId
+          ? { side, limitPrice, maxQuantity, orderType, clientId }
+          : { side, limitPrice, maxQuantity, orderType },
       }),
     });
   }
@@ -191,6 +200,27 @@ export class DexInstructions {
       programId: DEX_PROGRAM_ID,
       data: encodeInstruction({
         cancelOrder: { side, orderId, openOrders, openOrdersSlot },
+      }),
+    });
+  }
+
+  static cancelOrderByClientId({
+    market,
+    openOrders,
+    owner,
+    requestQueue,
+    clientId,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: requestQueue, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+      ],
+      programId: DEX_PROGRAM_ID,
+      data: encodeInstruction({
+        cancelOrderByClientId: { clientId },
       }),
     });
   }

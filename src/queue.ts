@@ -31,9 +31,10 @@ REQUEST_FLAGS.addBoolean('ioc');
 const REQUEST = struct([
   REQUEST_FLAGS,
   u8('openOrdersSlot'),
-  blob(6),
+  u8('feeTier'),
+  blob(5),
   u64('maxBaseSizeOrCancelId'),
-  u64('maxQuoteSize'),
+  u64('nativeQuoteQuantityLocked'),
   u128('orderId'),
   publicKeyLayout('openOrders'),
 ]);
@@ -46,6 +47,8 @@ const EVENT_QUEUE_HEADER = struct([
   zeros(4),
   u32('count'),
   zeros(4),
+  u32('seqNum'),
+  zeros(4),
 ]);
 
 const EVENT_FLAGS = bits(u8(), false, 'eventFlags');
@@ -57,9 +60,11 @@ EVENT_FLAGS.addBoolean('maker');
 const EVENT = struct([
   EVENT_FLAGS,
   u8('openOrdersSlot'),
-  blob(6),
-  u64('quantityReleased'),
-  u64('quantityPaid'),
+  u8('feeTier'),
+  blob(5),
+  u64('nativeQuantityReleased'),
+  u64('nativeQuantityPaid'),
+  u64('nativeFeeOrRebate'),
   u128('orderId'),
   publicKeyLayout('openOrders'),
 ]);
@@ -70,9 +75,11 @@ export interface Event {
   orderId: BN;
   openOrders: PublicKey;
   openOrdersSlot: number;
+  feeTier: number;
 
-  quantityReleased: BN;
-  quantityPaid: BN;
+  nativeQuantityReleased: BN;
+  nativeQuantityPaid: BN;
+  nativeFeeOrRebate: BN;
 }
 
 function decodeQueue(
