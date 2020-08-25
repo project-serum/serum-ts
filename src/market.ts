@@ -449,10 +449,6 @@ export class Market {
 
   parseFillEvent(event) {
     let size, price, side, priceBeforeFees;
-    let feeCost = event.nativeFeeOrRebate;
-    if (event.eventFlags.maker) {
-      feeCost = feeCost.neg();
-    }
     if (event.eventFlags.bid) {
       side = 'buy';
       priceBeforeFees = event.eventFlags.maker
@@ -485,7 +481,8 @@ export class Market {
       side,
       price,
       feeCost:
-        this.quoteSplSizeToNumber(feeCost) * (event.eventFlags.maker ? -1 : 1),
+        this.quoteSplSizeToNumber(event.nativeFeeOrRebate) *
+        (event.eventFlags.maker ? -1 : 1),
       size,
     };
   }
