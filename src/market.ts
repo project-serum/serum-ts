@@ -448,13 +448,18 @@ export class Market {
   }
 
   parseFillEvent(event) {
-    let size, price, side;
+    let size, price, side, priceBeforeFees;
+    let feeCost = event.nativeFeeOrRebate;
+    if (event.eventFlags.maker) {
+      feeCost = feeCost.neg();
+    }
     if (event.eventFlags.bid) {
       side = 'buy';
+      priceBeforeFees = event.eventFlags.maker
+        ? event.nativeQuantityPaid.add(event.nativeFeeOrRebate)
+        : event.nativeQuantityPaid.sub(event.nativeFeeOrRebate);
       price = divideBnToNumber(
-        event.nativeQuantityPaid
-          .sub(event.nativeFeeOrRebate)
-          .mul(this._baseSplTokenMultiplier),
+        priceBeforeFees.mul(this._baseSplTokenMultiplier),
         this._quoteSplTokenMultiplier.mul(event.nativeQuantityReleased),
       );
       size = divideBnToNumber(
@@ -463,10 +468,11 @@ export class Market {
       );
     } else {
       side = 'sell';
+      priceBeforeFees = event.eventFlags.maker
+        ? event.nativeQuantityReleased.sub(event.nativeFeeOrRebate)
+        : event.nativeQuantityReleased.add(event.nativeFeeOrRebate);
       price = divideBnToNumber(
-        event.nativeQuantityReleased
-          .add(event.nativeFeeOrRebate)
-          .mul(this._baseSplTokenMultiplier),
+        priceBeforeFees.mul(this._baseSplTokenMultiplier),
         this._quoteSplTokenMultiplier.mul(event.nativeQuantityPaid),
       );
       size = divideBnToNumber(
@@ -478,7 +484,8 @@ export class Market {
       ...event,
       side,
       price,
-      feeCost: this.quoteSplSizeToNumber(event.nativeFeeOrRebate),
+      feeCost:
+        this.quoteSplSizeToNumber(feeCost) * (event.eventFlags.maker ? -1 : 1),
       size,
     };
   }
