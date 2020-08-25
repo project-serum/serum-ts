@@ -137,18 +137,28 @@ export class Market {
     return Orderbook.decode(this, data);
   }
 
-  async loadOrdersForOwner(connection: Connection, ownerAddress: PublicKey) {
+  async loadOrdersForOwner(
+    connection: Connection,
+    ownerAddress: PublicKey,
+  ): Promise<Order[]> {
     const [bids, asks, openOrdersAccounts] = await Promise.all([
       this.loadBids(connection),
       this.loadAsks(connection),
       this.findOpenOrdersAccountsForOwner(connection, ownerAddress),
     ]);
+    return this.filterForOpenOrders(bids, asks, openOrdersAccounts);
+  }
+
+  filterForOpenOrders(
+    bids: Orderbook,
+    asks: Orderbook,
+    openOrdersAccounts: OpenOrders[],
+  ): Order[] {
     const orders = [...bids, ...asks].filter((order) =>
       openOrdersAccounts.some((openOrders) =>
         order.openOrdersAddress.equals(openOrders.address),
       ),
     );
-    // return orders;
     return orders.map((order) => ({
       ...order,
       clientId: openOrdersAccounts.find((openOrders) =>
@@ -434,33 +444,43 @@ export class Market {
       .filter(
         (event) => event.eventFlags.fill && event.nativeQuantityPaid.gtn(0),
       )
-      .map((event) =>
-        event.eventFlags.bid
-          ? {
-              ...event,
-              size: this.baseSplSizeToNumber(event.nativeQuantityReleased),
-              price: event.nativeQuantityPaid
-                .mul(this._quoteSplTokenMultiplier)
-                .divRound(
-                  event.nativeQuantityReleased.mul(
-                    this._baseSplTokenMultiplier,
-                  ),
-                )
-                .toNumber(),
-              side: 'buy',
-            }
-          : {
-              ...event,
-              size: this.baseSplSizeToNumber(event.nativeQuantityPaid),
-              price: event.nativeQuantityReleased
-                .mul(this._quoteSplTokenMultiplier)
-                .divRound(
-                  event.nativeQuantityPaid.mul(this._baseSplTokenMultiplier),
-                )
-                .toNumber(),
-              side: 'sell',
-            },
+      .map(this.parseFillEvent.bind(this));
+  }
+
+  parseFillEvent(event) {
+    let size, price, side;
+    if (event.eventFlags.bid) {
+      side = 'buy';
+      price = divideBnToNumber(
+        event.nativeQuantityPaid
+          .sub(event.nativeFeeOrRebate)
+          .mul(this._baseSplTokenMultiplier),
+        this._quoteSplTokenMultiplier.mul(event.nativeQuantityReleased),
       );
+      size = divideBnToNumber(
+        event.nativeQuantityReleased,
+        this._baseSplTokenMultiplier,
+      );
+    } else {
+      side = 'sell';
+      price = divideBnToNumber(
+        event.nativeQuantityReleased
+          .add(event.nativeFeeOrRebate)
+          .mul(this._baseSplTokenMultiplier),
+        this._quoteSplTokenMultiplier.mul(event.nativeQuantityPaid),
+      );
+      size = divideBnToNumber(
+        event.nativeQuantityPaid,
+        this._baseSplTokenMultiplier,
+      );
+    }
+    return {
+      ...event,
+      side,
+      price,
+      feeCost: this.quoteSplSizeToNumber(event.nativeFeeOrRebate),
+      size,
+    };
   }
 
   private get _baseSplTokenMultiplier() {

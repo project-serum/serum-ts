@@ -62,8 +62,8 @@ const EVENT = struct([
   u8('openOrdersSlot'),
   u8('feeTier'),
   blob(5),
-  u64('nativeQuantityReleased'),
-  u64('nativeQuantityPaid'),
+  u64('nativeQuantityReleased'), // Amount the user received
+  u64('nativeQuantityPaid'), // Amount the user paid
   u64('nativeFeeOrRebate'),
   u128('orderId'),
   publicKeyLayout('openOrders'),
