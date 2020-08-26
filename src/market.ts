@@ -263,29 +263,58 @@ export class Market {
     } else {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
+    const placeOrderInstruction = this.makePlaceOrderInstruction(
+      connection,
+      {
+        owner,
+        payer,
+        side,
+        price,
+        size,
+        orderType,
+        clientId,
+      },
+      openOrdersAddress,
+    );
+    transaction.add(placeOrderInstruction);
+    return { transaction, signers };
+  }
+
+  makePlaceOrderInstruction<T extends PublicKey | Account>(
+    connection: Connection,
+    {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType = 'limit',
+      clientId,
+    }: OrderParams<T>,
+    openOrdersAddress,
+  ): TransactionInstruction {
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
     if (this.baseSizeNumberToLots(size).lte(new BN(0))) {
       throw new Error('size too small');
     }
     if (this.priceNumberToLots(price).lte(new BN(0))) {
       throw new Error('invalid price');
     }
-    transaction.add(
-      DexInstructions.newOrder({
-        market: this.address,
-        requestQueue: this._decoded.requestQueue,
-        baseVault: this._decoded.baseVault,
-        quoteVault: this._decoded.quoteVault,
-        openOrders: openOrdersAddress,
-        owner: ownerAddress,
-        payer,
-        side,
-        limitPrice: this.priceNumberToLots(price),
-        maxQuantity: this.baseSizeNumberToLots(size),
-        orderType,
-        clientId,
-      }),
-    );
-    return { transaction, signers };
+    return DexInstructions.newOrder({
+      market: this.address,
+      requestQueue: this._decoded.requestQueue,
+      baseVault: this._decoded.baseVault,
+      quoteVault: this._decoded.quoteVault,
+      openOrders: openOrdersAddress,
+      owner: ownerAddress,
+      payer,
+      side,
+      limitPrice: this.priceNumberToLots(price),
+      maxQuantity: this.baseSizeNumberToLots(size),
+      orderType,
+      clientId,
+    });
   }
 
   private async _sendTransaction(
