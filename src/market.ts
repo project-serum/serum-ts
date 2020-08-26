@@ -386,18 +386,24 @@ export class Market {
     order: Order,
   ) {
     const transaction = new Transaction();
-    transaction.add(
-      DexInstructions.cancelOrder({
-        market: this.address,
-        owner,
-        openOrders: order.openOrdersAddress,
-        requestQueue: this._decoded.requestQueue,
-        side: order.side,
-        orderId: order.orderId,
-        openOrdersSlot: order.openOrdersSlot,
-      }),
-    );
+    transaction.add(this.makeCanceOrderInstruction(connection, owner, order));
     return transaction;
+  }
+
+  makeCanceOrderInstruction(
+    connection: Connection,
+    owner: PublicKey,
+    order: Order,
+  ) {
+    return DexInstructions.cancelOrder({
+      market: this.address,
+      owner,
+      openOrders: order.openOrdersAddress,
+      requestQueue: this._decoded.requestQueue,
+      side: order.side,
+      orderId: order.orderId,
+      openOrdersSlot: order.openOrdersSlot,
+    });
   }
 
   async settleFunds(
