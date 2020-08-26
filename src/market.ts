@@ -440,7 +440,12 @@ export class Market {
       ],
       DEX_PROGRAM_ID,
     );
-    const settleInstruction = this.makeSettleInstruction(openOrders, baseWallet, quoteWallet, vaultSigner)
+    const settleInstruction = this.makeSettleInstruction(
+      openOrders,
+      baseWallet,
+      quoteWallet,
+      vaultSigner,
+    );
     tx.add(settleInstruction);
     return tx;
   }
