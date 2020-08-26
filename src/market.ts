@@ -440,19 +440,27 @@ export class Market {
       ],
       DEX_PROGRAM_ID,
     );
-    tx.add(
-      DexInstructions.settleFunds({
-        market: this.address,
-        openOrders: openOrders.address,
-        owner: openOrders.owner,
-        baseVault: this._decoded.baseVault,
-        quoteVault: this._decoded.quoteVault,
-        baseWallet,
-        quoteWallet,
-        vaultSigner,
-      }),
-    );
+    const settleInstruction = this.makeSettleInstruction(openOrders, baseWallet, quoteWallet, vaultSigner)
+    tx.add(settleInstruction);
     return tx;
+  }
+
+  makeSettleInstruction(
+    openOrders: OpenOrders,
+    baseWallet: PublicKey,
+    quoteWallet: PublicKey,
+    vaultSigner: any,
+  ): TransactionInstruction {
+    return DexInstructions.settleFunds({
+      market: this.address,
+      openOrders: openOrders.address,
+      owner: openOrders.owner,
+      baseVault: this._decoded.baseVault,
+      quoteVault: this._decoded.quoteVault,
+      baseWallet,
+      quoteWallet,
+      vaultSigner,
+    });
   }
 
   async loadRequestQueue(connection: Connection) {
