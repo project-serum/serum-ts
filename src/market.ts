@@ -793,6 +793,7 @@ export interface Order {
   feeTier: number;
   sizeLots: BN;
   side: 'buy' | 'sell';
+  clientId?: BN;
 }
 
 function getPriceFromKey(key) {
