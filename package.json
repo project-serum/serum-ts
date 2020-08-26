@@ -51,7 +51,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
-    "@solana/web3.js": "^0.71.6",
+    "@solana/web3.js": "^0.71.9",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
