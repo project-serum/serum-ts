@@ -58,12 +58,14 @@ export class Market {
   private _quoteSplTokenDecimals: number;
   private _skipPreflight: boolean;
   private _confirmations: number;
+  private _programId: PublicKey;
 
   constructor(
     decoded,
     baseMintDecimals: number,
     quoteMintDecimals: number,
     options: MarketOptions = {},
+    programId: PublicKey = DEX_PROGRAM_ID,
   ) {
     const { skipPreflight = false, confirmations = 0 } = options;
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
@@ -74,6 +76,7 @@ export class Market {
     this._quoteSplTokenDecimals = quoteMintDecimals;
     this._skipPreflight = skipPreflight;
     this._confirmations = confirmations;
+    this._programId = programId;
   }
 
   static get LAYOUT() {
@@ -84,13 +87,14 @@ export class Market {
     connection: Connection,
     address: PublicKey,
     options: MarketOptions = {},
+    programId: PublicKey = DEX_PROGRAM_ID,
   ) {
     const { owner, data } = throwIfNull(
       await connection.getAccountInfo(address),
       'Market not found',
     );
-    if (!owner.equals(DEX_PROGRAM_ID)) {
-      throw new Error('Address not owned by program');
+    if (!owner.equals(programId)) {
+      throw new Error('Address not owned by program: ' + owner.toBase58());
     }
     const decoded = MARKET_STATE_LAYOUT.decode(data);
     if (
@@ -104,7 +108,13 @@ export class Market {
       getMintDecimals(connection, decoded.baseMint),
       getMintDecimals(connection, decoded.quoteMint),
     ]);
-    return new Market(decoded, baseMintDecimals, quoteMintDecimals, options);
+    return new Market(
+      decoded,
+      baseMintDecimals,
+      quoteMintDecimals,
+      options,
+      programId,
+    );
   }
 
   get address(): PublicKey {
@@ -197,6 +207,7 @@ export class Market {
       connection,
       this.address,
       ownerAddress,
+      this._programId,
     );
   }
 
@@ -256,6 +267,7 @@ export class Market {
           this.address,
           ownerAddress,
           newOpenOrdersAccount.publicKey,
+          this._programId,
         ),
       );
       openOrdersAddress = newOpenOrdersAccount.publicKey;
@@ -314,6 +326,7 @@ export class Market {
       maxQuantity: this.baseSizeNumberToLots(size),
       orderType,
       clientId,
+      programId: this._programId,
     });
   }
 
@@ -366,6 +379,7 @@ export class Market {
         openOrders,
         requestQueue: this._decoded.requestQueue,
         clientId,
+        programId: this._programId,
       }),
     );
     return transaction;
@@ -403,6 +417,7 @@ export class Market {
       side: order.side,
       orderId: order.orderId,
       openOrdersSlot: order.openOrdersSlot,
+      programId: this._programId,
     });
   }
 
@@ -438,7 +453,7 @@ export class Market {
         this.address.toBuffer(),
         this._decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
       ],
-      DEX_PROGRAM_ID,
+      this._programId,
     );
     const settleInstruction = this.makeSettleInstruction(
       openOrders,
@@ -465,6 +480,7 @@ export class Market {
       baseWallet,
       quoteWallet,
       vaultSigner,
+      programId: this._programId,
     });
   }
 
@@ -618,6 +634,7 @@ export class Market {
       baseVault: this._decoded.baseVault,
       quoteVault: this._decoded.quoteVault,
       limit,
+      programId: this._programId,
     });
   }
 
@@ -667,6 +684,8 @@ export const OPEN_ORDERS_LAYOUT = struct([
 ]);
 
 export class OpenOrders {
+  private _programId: PublicKey;
+
   address: PublicKey;
   market!: PublicKey;
   owner!: PublicKey;
@@ -679,8 +698,13 @@ export class OpenOrders {
   orders!: BN[];
   clientIds!: BN[];
 
-  constructor(address: PublicKey, decoded) {
+  constructor(
+    address: PublicKey,
+    decoded,
+    programId: PublicKey = DEX_PROGRAM_ID,
+  ) {
     this.address = address;
+    this._programId = programId;
     Object.assign(this, decoded);
   }
 
@@ -692,6 +716,7 @@ export class OpenOrders {
     connection: Connection,
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
+    programId: PublicKey = DEX_PROGRAM_ID,
   ) {
     const filters = [
       {
@@ -712,32 +737,40 @@ export class OpenOrders {
     ];
     const accounts = await getFilteredProgramAccounts(
       connection,
-      DEX_PROGRAM_ID,
+      programId,
       filters,
     );
     return accounts.map(({ publicKey, accountInfo }) =>
-      OpenOrders.fromAccountInfo(publicKey, accountInfo),
+      OpenOrders.fromAccountInfo(publicKey, accountInfo, programId),
     );
   }
 
-  static async load(connection: Connection, address: PublicKey) {
+  static async load(
+    connection: Connection,
+    address: PublicKey,
+    programId: PublicKey = DEX_PROGRAM_ID,
+  ) {
     const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo === null) {
       throw new Error('Open orders account not found');
     }
-    return OpenOrders.fromAccountInfo(address, accountInfo);
+    return OpenOrders.fromAccountInfo(address, accountInfo, programId);
   }
 
-  static fromAccountInfo(address: PublicKey, accountInfo: AccountInfo<Buffer>) {
+  static fromAccountInfo(
+    address: PublicKey,
+    accountInfo: AccountInfo<Buffer>,
+    programId: PublicKey = DEX_PROGRAM_ID,
+  ) {
     const { owner, data } = accountInfo;
-    if (!owner.equals(DEX_PROGRAM_ID)) {
+    if (!owner.equals(programId)) {
       throw new Error('Address not owned by program');
     }
     const decoded = OPEN_ORDERS_LAYOUT.decode(data);
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.openOrders) {
       throw new Error('Invalid open orders account');
     }
-    return new OpenOrders(address, decoded);
+    return new OpenOrders(address, decoded, programId);
   }
 
   static async makeCreateAccountTransaction(
@@ -745,6 +778,7 @@ export class OpenOrders {
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
     newAccountAddress: PublicKey,
+    programId: PublicKey = DEX_PROGRAM_ID,
   ) {
     return SystemProgram.createAccount({
       fromPubkey: ownerAddress,
@@ -753,7 +787,7 @@ export class OpenOrders {
         OPEN_ORDERS_LAYOUT.span,
       ),
       space: OPEN_ORDERS_LAYOUT.span,
-      programId: DEX_PROGRAM_ID,
+      programId,
     });
   }
 

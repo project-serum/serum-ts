@@ -80,6 +80,7 @@ export class DexInstructions {
     feeRateBps,
     vaultSignerNonce,
     quoteDustThreshold,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -93,7 +94,7 @@ export class DexInstructions {
         { pubkey: baseMint, isSigner: false, isWritable: false },
         { pubkey: quoteMint, isSigner: false, isWritable: false },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({
         initializeMarket: {
           baseLotSize,
@@ -119,6 +120,7 @@ export class DexInstructions {
     maxQuantity,
     orderType,
     clientId,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -131,7 +133,7 @@ export class DexInstructions {
         { pubkey: quoteVault, isSigner: false, isWritable: true },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({
         newOrder: clientId
           ? { side, limitPrice, maxQuantity, orderType, clientId }
@@ -149,6 +151,7 @@ export class DexInstructions {
     baseVault,
     quoteVault,
     limit,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -160,12 +163,18 @@ export class DexInstructions {
         { pubkey: baseVault, isSigner: false, isWritable: true },
         { pubkey: quoteVault, isSigner: false, isWritable: true },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({ matchOrders: { limit } }),
     });
   }
 
-  static consumeEvents({ market, eventQueue, openOrdersAccounts, limit }) {
+  static consumeEvents({
+    market,
+    eventQueue,
+    openOrdersAccounts,
+    limit,
+    programId = DEX_PROGRAM_ID,
+  }) {
     return new TransactionInstruction({
       keys: [
         ...openOrdersAccounts.map((account) => ({
@@ -176,7 +185,7 @@ export class DexInstructions {
         { pubkey: market, isSigner: false, isWritable: true },
         { pubkey: eventQueue, isSigner: false, isWritable: true },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({ consumeEvents: { limit } }),
     });
   }
@@ -189,6 +198,7 @@ export class DexInstructions {
     side,
     orderId,
     openOrdersSlot,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -197,7 +207,7 @@ export class DexInstructions {
         { pubkey: requestQueue, isSigner: false, isWritable: true },
         { pubkey: owner, isSigner: true, isWritable: false },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({
         cancelOrder: { side, orderId, openOrders, openOrdersSlot },
       }),
@@ -210,6 +220,7 @@ export class DexInstructions {
     owner,
     requestQueue,
     clientId,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -218,7 +229,7 @@ export class DexInstructions {
         { pubkey: requestQueue, isSigner: false, isWritable: true },
         { pubkey: owner, isSigner: true, isWritable: false },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({
         cancelOrderByClientId: { clientId },
       }),
@@ -234,6 +245,7 @@ export class DexInstructions {
     baseWallet,
     quoteWallet,
     vaultSigner,
+    programId = DEX_PROGRAM_ID,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -247,7 +259,7 @@ export class DexInstructions {
         { pubkey: vaultSigner, isSigner: false, isWritable: false },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
       ],
-      programId: DEX_PROGRAM_ID,
+      programId,
       data: encodeInstruction({
         settleFunds: {},
       }),
