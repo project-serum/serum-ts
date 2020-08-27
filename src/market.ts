@@ -400,11 +400,11 @@ export class Market {
     order: Order,
   ) {
     const transaction = new Transaction();
-    transaction.add(this.makeCanceOrderInstruction(connection, owner, order));
+    transaction.add(this.makeCancelOrderInstruction(connection, owner, order));
     return transaction;
   }
 
-  makeCanceOrderInstruction(
+  makeCancelOrderInstruction(
     connection: Connection,
     owner: PublicKey,
     order: Order,
