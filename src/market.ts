@@ -889,7 +889,7 @@ function divideBnToNumber(numerator: BN, denominator: BN): number {
   return quotient + rem.div(gcd).toNumber() / denominator.div(gcd).toNumber();
 }
 
-const MINT_LAYOUT = struct([blob(36), u8('decimals'), blob(3)]);
+const MINT_LAYOUT = struct([blob(44), u8('decimals'), blob(37)]);
 
 export async function getMintDecimals(
   connection: Connection,
