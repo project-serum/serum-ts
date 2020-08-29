@@ -11,7 +11,7 @@ import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  '3v9kjrBLN7Awr9BGC2qmFnWLM1EgMAdNm2rXLQFUcQ2d',
+  '9JipvuvjcirpYf8mzYQtozXeYtQLWY67LaZCiANSMNgs',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
@@ -124,7 +124,7 @@ export class DexInstructions {
   }) {
     return new TransactionInstruction({
       keys: [
-        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: market, isSigner: false, isWritable: true },
         { pubkey: openOrders, isSigner: false, isWritable: true },
         { pubkey: requestQueue, isSigner: false, isWritable: true },
         { pubkey: payer, isSigner: false, isWritable: true },
