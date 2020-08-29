@@ -2,7 +2,7 @@ import * as BufferLayout from 'buffer-layout';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
-  'TokenSVp5gheXUvJ6jGWGeCsgPKgnE3YgdGKRVCMY9o',
+  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 );
 
 export const WRAPPED_SOL_MINT = new PublicKey(
