@@ -34,7 +34,7 @@ LAYOUT.addVariant(
 LAYOUT.addVariant(
   4,
   BufferLayout.struct([BufferLayout.nu64('amount')]),
-  'approve'
+  'approve',
 );
 LAYOUT.addVariant(
   7,
