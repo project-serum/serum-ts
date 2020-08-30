@@ -15,7 +15,7 @@ import {
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  'DwLanAMC2Z6v5uRAT3gE73trckVihyscbiWadGUnH8MQ',
+  '5sBco58q1hJroiGW8Rus351GRf7DG2bPXRrby3xg6x35',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
