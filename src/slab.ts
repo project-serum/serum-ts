@@ -22,7 +22,7 @@ const SLAB_HEADER_LAYOUT = struct(
   'header',
 );
 
-const SLAB_NODE_LAYOUT = union(u32('tag'), blob(60), 'node');
+const SLAB_NODE_LAYOUT = union(u32('tag'), blob(68), 'node');
 SLAB_NODE_LAYOUT.addVariant(0, struct([]), 'uninitialized');
 SLAB_NODE_LAYOUT.addVariant(
   1,
@@ -43,6 +43,7 @@ SLAB_NODE_LAYOUT.addVariant(
     u128('key'), // (price, seqNum)
     publicKeyLayout('owner'), // Open orders account
     u64('quantity'), // In units of lot size
+    u64('clientOrderId'),
   ]),
   'leafNode',
 );
