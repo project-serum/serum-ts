@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/serum",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
   "repository": "project-serum/serum-js",
