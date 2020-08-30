@@ -32,6 +32,11 @@ LAYOUT.addVariant(
   'transfer',
 );
 LAYOUT.addVariant(
+  4,
+  BufferLayout.struct([BufferLayout.nu64('amount')]),
+  'approve'
+);
+LAYOUT.addVariant(
   7,
   BufferLayout.struct([BufferLayout.nu64('amount')]),
   'mintTo',
