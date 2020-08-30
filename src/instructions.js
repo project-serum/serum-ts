@@ -7,11 +7,15 @@ import {
   u64,
   VersionedLayout,
 } from './layout';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import {
+  PublicKey,
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+} from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export const DEX_PROGRAM_ID = new PublicKey(
-  '9JipvuvjcirpYf8mzYQtozXeYtQLWY67LaZCiANSMNgs',
+  'DwLanAMC2Z6v5uRAT3gE73trckVihyscbiWadGUnH8MQ',
 );
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
@@ -132,6 +136,7 @@ export class DexInstructions {
         { pubkey: baseVault, isSigner: false, isWritable: true },
         { pubkey: quoteVault, isSigner: false, isWritable: true },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
       ],
       programId,
       data: encodeInstruction({

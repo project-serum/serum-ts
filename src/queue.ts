@@ -37,6 +37,7 @@ const REQUEST = struct([
   u64('nativeQuoteQuantityLocked'),
   u128('orderId'),
   publicKeyLayout('openOrders'),
+  u64('clientOrderId'),
 ]);
 
 const EVENT_QUEUE_HEADER = struct([
@@ -67,6 +68,7 @@ const EVENT = struct([
   u64('nativeFeeOrRebate'),
   u128('orderId'),
   publicKeyLayout('openOrders'),
+  u64('clientOrderId'),
 ]);
 
 export interface Event {
