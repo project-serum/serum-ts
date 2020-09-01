@@ -1006,7 +1006,7 @@ export async function getMintDecimals(
   mint: PublicKey,
 ): Promise<number> {
   if (mint.equals(WRAPPED_SOL_MINT)) {
-    return 6;
+    return 9;
   }
   const { data } = throwIfNull(
     await connection.getAccountInfo(mint),
