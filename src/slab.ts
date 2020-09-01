@@ -121,6 +121,7 @@ export class Slab {
     owner: PublicKey;
     quantity: BN;
     feeTier: number;
+    clientOrderId: BN;
   }> {
     if (this.header.leafCount === 0) {
       return;
