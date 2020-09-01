@@ -11,7 +11,7 @@ export const TOKEN_PROGRAM_ID = new PublicKey(
 );
 
 export const WRAPPED_SOL_MINT = new PublicKey(
-  'So11111111111111111111111111111111111111111',
+  'So11111111111111111111111111111111111111112',
 );
 
 const LAYOUT = BufferLayout.union(BufferLayout.u8('instruction'));
@@ -46,6 +46,7 @@ LAYOUT.addVariant(
   BufferLayout.struct([BufferLayout.nu64('amount')]),
   'burn',
 );
+LAYOUT.addVariant(9, BufferLayout.struct([]), 'closeAccount');
 
 const instructionMaxSpan = Math.max(
   ...Object.values(LAYOUT.registry).map((r) => r.span),
@@ -137,6 +138,21 @@ export function mintTo({ mint, destination, amount, mintAuthority }) {
     keys,
     data: encodeTokenInstructionData({
       mintTo: { amount },
+    }),
+    programId: TOKEN_PROGRAM_ID,
+  });
+}
+
+export function closeAccount({ source, destination, owner }) {
+  const keys = [
+    { pubkey: source, isSigner: false, isWritable: true },
+    { pubkey: destination, isSigner: false, isWritable: true },
+    { pubkey: owner, isSigner: true, isWritable: false },
+  ];
+  return new TransactionInstruction({
+    keys,
+    data: encodeTokenInstructionData({
+      closeAccount: {},
     }),
     programId: TOKEN_PROGRAM_ID,
   });
