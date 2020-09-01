@@ -164,17 +164,11 @@ export class Market {
     asks: Orderbook,
     openOrdersAccounts: OpenOrders[],
   ): Order[] {
-    const orders = [...bids, ...asks].filter((order) =>
+    return [...bids, ...asks].filter((order) =>
       openOrdersAccounts.some((openOrders) =>
         order.openOrdersAddress.equals(openOrders.address),
       ),
     );
-    return orders.map((order) => ({
-      ...order,
-      clientId: openOrdersAccounts.find((openOrders) =>
-        order.openOrdersAddress.equals(openOrders.address),
-      )?.clientIds[order.openOrdersSlot],
-    }));
   }
 
   async findBaseTokenAccountsForOwner(
