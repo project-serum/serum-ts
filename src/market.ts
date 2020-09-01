@@ -586,6 +586,29 @@ export class Market {
     return { transaction, signers };
   }
 
+  async matchOrders(connection: Connection, feePayer: Account, limit: number) {
+    const tx = this.makeMatchOrdersTransaction(limit);
+    return await this._sendTransaction(connection, tx, [feePayer]);
+  }
+
+  makeMatchOrdersTransaction(limit: number): Transaction {
+    const tx = new Transaction();
+    tx.add(
+      DexInstructions.matchOrders({
+        market: this.address,
+        requestQueue: this._decoded.requestQueue,
+        eventQueue: this._decoded.eventQueue,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        limit,
+        programId: this._programId,
+      }),
+    );
+    return tx;
+  }
+
   async loadRequestQueue(connection: Connection) {
     const { data } = throwIfNull(
       await connection.getAccountInfo(this._decoded.requestQueue),
@@ -724,26 +747,6 @@ export class Market {
 
   get tickSize() {
     return this.priceLotsToNumber(new BN(1));
-  }
-
-  makeMatchOrdersInstruction(limit: number): TransactionInstruction {
-    return DexInstructions.matchOrders({
-      market: this.address,
-      requestQueue: this._decoded.requestQueue,
-      eventQueue: this._decoded.eventQueue,
-      bids: this._decoded.bids,
-      asks: this._decoded.asks,
-      baseVault: this._decoded.baseVault,
-      quoteVault: this._decoded.quoteVault,
-      limit,
-      programId: this._programId,
-    });
-  }
-
-  async matchOrders(connection: Connection, feePayer: Account, limit: number) {
-    const tx = new Transaction();
-    tx.add(this.makeMatchOrdersInstruction(limit));
-    return await this._sendTransaction(connection, tx, [feePayer]);
   }
 }
 
