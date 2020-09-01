@@ -842,10 +842,18 @@ export class Orderbook {
   }
 
   *[Symbol.iterator](): Generator<Order> {
-    for (const { key, ownerSlot, owner, quantity, feeTier } of this.slab) {
+    for (const {
+      key,
+      ownerSlot,
+      owner,
+      quantity,
+      feeTier,
+      clientOrderId,
+    } of this.slab) {
       const price = getPriceFromKey(key);
       yield {
         orderId: key,
+        clientId: clientOrderId,
         openOrdersAddress: owner,
         openOrdersSlot: ownerSlot,
         feeTier,
