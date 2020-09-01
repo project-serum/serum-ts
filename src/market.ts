@@ -180,7 +180,18 @@ export class Market {
   async findBaseTokenAccountsForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
+    includeUnwrappedSol = false,
   ): Promise<Array<{ pubkey: PublicKey; account: AccountInfo<Buffer> }>> {
+    if (this.baseMintAddress.equals(WRAPPED_SOL_MINT) && includeUnwrappedSol) {
+      const [wrapped, unwrapped] = await Promise.all([
+        this.findBaseTokenAccountsForOwner(connection, ownerAddress, false),
+        connection.getAccountInfo(ownerAddress),
+      ]);
+      if (unwrapped !== null) {
+        return [{ pubkey: ownerAddress, account: unwrapped }, ...wrapped];
+      }
+      return wrapped;
+    }
     return (
       await connection.getTokenAccountsByOwner(ownerAddress, {
         mint: this.baseMintAddress,
@@ -191,7 +202,18 @@ export class Market {
   async findQuoteTokenAccountsForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
+    includeUnwrappedSol = false,
   ): Promise<{ pubkey: PublicKey; account: AccountInfo<Buffer> }[]> {
+    if (this.quoteMintAddress.equals(WRAPPED_SOL_MINT) && includeUnwrappedSol) {
+      const [wrapped, unwrapped] = await Promise.all([
+        this.findQuoteTokenAccountsForOwner(connection, ownerAddress, false),
+        connection.getAccountInfo(ownerAddress),
+      ]);
+      if (unwrapped !== null) {
+        return [{ pubkey: ownerAddress, account: unwrapped }, ...wrapped];
+      }
+      return wrapped;
+    }
     return (
       await connection.getTokenAccountsByOwner(ownerAddress, {
         mint: this.quoteMintAddress,
