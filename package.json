@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/serum",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
   "repository": "project-serum/serum-js",
@@ -15,6 +15,7 @@
     "start": "tsc --watch",
     "clean": "rm -rf lib",
     "prepare": "run-s clean build",
+    "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
     "test:lint": "eslint src",
