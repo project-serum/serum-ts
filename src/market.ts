@@ -7,6 +7,7 @@ import {
   Account,
   AccountInfo,
   Connection,
+  LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
   Transaction,
@@ -306,13 +307,24 @@ export class Market {
         (side === 'sell' && this.baseMintAddress.equals(WRAPPED_SOL_MINT))
       ) {
         wrappedSolAccount = new Account();
+        let lamports;
+        if (side === 'buy') {
+          lamports = Math.round(price * size * 1.01 * LAMPORTS_PER_SOL);
+          if (openOrdersAccounts.length > 0) {
+            lamports -= openOrdersAccounts[0].quoteTokenFree.toNumber();
+          }
+        } else {
+          lamports = Math.round(size * LAMPORTS_PER_SOL);
+          if (openOrdersAccounts.length > 0) {
+            lamports -= openOrdersAccounts[0].baseTokenFree.toNumber();
+          }
+        }
+        lamports = Math.max(lamports, 0) + 1e7;
         transaction.add(
           SystemProgram.createAccount({
             fromPubkey: ownerAddress,
             newAccountPubkey: wrappedSolAccount.publicKey,
-            lamports:
-              // TODO: calculate the amount we need and use that instead
-              (await connection.getBalance(ownerAddress, 'recent')) - 100000,
+            lamports,
             space: 165,
             programId: TOKEN_PROGRAM_ID,
           }),
