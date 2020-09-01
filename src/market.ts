@@ -15,6 +15,12 @@ import {
 } from '@solana/web3.js';
 import { decodeEventQueue, decodeRequestQueue } from './queue';
 import { Buffer } from 'buffer';
+import {
+  closeAccount,
+  initializeAccount,
+  TOKEN_PROGRAM_ID,
+  WRAPPED_SOL_MINT,
+} from './token-instructions';
 
 export const MARKET_STATE_LAYOUT = struct([
   blob(5),
@@ -252,6 +258,7 @@ export class Market {
     ); // TODO: cache this
     const transaction = new Transaction();
     const signers: (T | Account)[] = [owner];
+
     let openOrdersAddress;
     if (openOrdersAccounts.length === 0) {
       const newOpenOrdersAccount = new Account();
@@ -269,11 +276,43 @@ export class Market {
     } else {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
+
+    let wrappedSolAccount: Account | null = null;
+    if (payer.equals(ownerAddress)) {
+      if (
+        (side === 'buy' && this.quoteMintAddress.equals(WRAPPED_SOL_MINT)) ||
+        (side === 'sell' && this.baseMintAddress.equals(WRAPPED_SOL_MINT))
+      ) {
+        wrappedSolAccount = new Account();
+        transaction.add(
+          SystemProgram.createAccount({
+            fromPubkey: ownerAddress,
+            newAccountPubkey: wrappedSolAccount.publicKey,
+            lamports:
+              // TODO: calculate the amount we need and use that instead
+              (await connection.getBalance(ownerAddress, 'recent')) - 100000,
+            space: 165,
+            programId: TOKEN_PROGRAM_ID,
+          }),
+        );
+        transaction.add(
+          initializeAccount({
+            account: wrappedSolAccount.publicKey,
+            mint: WRAPPED_SOL_MINT,
+            owner: ownerAddress,
+          }),
+        );
+        signers.push(wrappedSolAccount);
+      } else {
+        throw new Error('Invalid payer account');
+      }
+    }
+
     const placeOrderInstruction = this.makePlaceOrderInstruction(
       connection,
       {
         owner,
-        payer,
+        payer: wrappedSolAccount?.publicKey ?? payer,
         side,
         price,
         size,
@@ -283,6 +322,17 @@ export class Market {
       openOrdersAddress,
     );
     transaction.add(placeOrderInstruction);
+
+    if (wrappedSolAccount) {
+      transaction.add(
+        closeAccount({
+          source: wrappedSolAccount.publicKey,
+          destination: ownerAddress,
+          owner: ownerAddress,
+        }),
+      );
+    }
+
     return { transaction, signers };
   }
 
@@ -425,13 +475,15 @@ export class Market {
     if (!openOrders.owner.equals(owner.publicKey)) {
       throw new Error('Invalid open orders account');
     }
-    const transaction = await this.makeSettleFundsTransaction(
+    const { transaction, signers } = await this.makeSettleFundsTransaction(
       connection,
       openOrders,
       baseWallet,
       quoteWallet,
     );
-    return await this._sendTransaction(connection, transaction, [owner]);
+    signers[0] = owner;
+    // @ts-ignore
+    return await this._sendTransaction(connection, transaction, signers);
   }
 
   async makeSettleFundsTransaction(
@@ -440,7 +492,6 @@ export class Market {
     baseWallet: PublicKey,
     quoteWallet: PublicKey,
   ) {
-    const tx = new Transaction();
     // @ts-ignore
     const vaultSigner = await PublicKey.createProgramAddress(
       [
@@ -449,33 +500,68 @@ export class Market {
       ],
       this._programId,
     );
-    const settleInstruction = this.makeSettleInstruction(
-      openOrders,
-      baseWallet,
-      quoteWallet,
-      vaultSigner,
-    );
-    tx.add(settleInstruction);
-    return tx;
-  }
 
-  makeSettleInstruction(
-    openOrders: OpenOrders,
-    baseWallet: PublicKey,
-    quoteWallet: PublicKey,
-    vaultSigner: any,
-  ): TransactionInstruction {
-    return DexInstructions.settleFunds({
-      market: this.address,
-      openOrders: openOrders.address,
-      owner: openOrders.owner,
-      baseVault: this._decoded.baseVault,
-      quoteVault: this._decoded.quoteVault,
-      baseWallet,
-      quoteWallet,
-      vaultSigner,
-      programId: this._programId,
-    });
+    const transaction = new Transaction();
+    const signers: [Account | PublicKey] = [openOrders.owner];
+
+    let wrappedSolAccount: Account | null = null;
+    if (
+      (this.baseMintAddress.equals(WRAPPED_SOL_MINT) &&
+        baseWallet.equals(openOrders.owner)) ||
+      (this.quoteMintAddress.equals(WRAPPED_SOL_MINT) &&
+        quoteWallet.equals(openOrders.owner))
+    ) {
+      wrappedSolAccount = new Account();
+      transaction.add(
+        SystemProgram.createAccount({
+          fromPubkey: openOrders.owner,
+          newAccountPubkey: wrappedSolAccount.publicKey,
+          lamports: await connection.getMinimumBalanceForRentExemption(165),
+          space: 165,
+          programId: TOKEN_PROGRAM_ID,
+        }),
+      );
+      transaction.add(
+        initializeAccount({
+          account: wrappedSolAccount.publicKey,
+          mint: WRAPPED_SOL_MINT,
+          owner: openOrders.owner,
+        }),
+      );
+      signers.push(wrappedSolAccount);
+    }
+
+    transaction.add(
+      DexInstructions.settleFunds({
+        market: this.address,
+        openOrders: openOrders.address,
+        owner: openOrders.owner,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        baseWallet:
+          baseWallet.equals(openOrders.owner) && wrappedSolAccount
+            ? wrappedSolAccount.publicKey
+            : baseWallet,
+        quoteWallet:
+          quoteWallet.equals(openOrders.owner) && wrappedSolAccount
+            ? wrappedSolAccount.publicKey
+            : quoteWallet,
+        vaultSigner,
+        programId: this._programId,
+      }),
+    );
+
+    if (wrappedSolAccount) {
+      transaction.add(
+        closeAccount({
+          source: wrappedSolAccount.publicKey,
+          destination: openOrders.owner,
+          owner: openOrders.owner,
+        }),
+      );
+    }
+
+    return { transaction, signers };
   }
 
   async loadRequestQueue(connection: Connection) {
@@ -897,6 +983,9 @@ export async function getMintDecimals(
   connection: Connection,
   mint: PublicKey,
 ): Promise<number> {
+  if (mint.equals(WRAPPED_SOL_MINT)) {
+    return 6;
+  }
   const { data } = throwIfNull(
     await connection.getAccountInfo(mint),
     'mint not found',
