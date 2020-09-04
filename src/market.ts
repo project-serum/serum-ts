@@ -66,6 +66,9 @@ export class Market {
   private _skipPreflight: boolean;
   private _confirmations: number;
   private _programId: PublicKey;
+  private _openOrdersAccountsCache: {
+    [publickKey: string]: { accounts: OpenOrders[]; ts: number };
+  };
 
   constructor(
     decoded,
@@ -84,6 +87,7 @@ export class Market {
     this._skipPreflight = skipPreflight;
     this._confirmations = confirmations;
     this._programId = programId;
+    this._openOrdersAccountsCache = {};
   }
 
   static get LAYOUT() {
@@ -157,11 +161,16 @@ export class Market {
   async loadOrdersForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
+    cacheDurationMs = 0,
   ): Promise<Order[]> {
     const [bids, asks, openOrdersAccounts] = await Promise.all([
       this.loadBids(connection),
       this.loadAsks(connection),
-      this.findOpenOrdersAccountsForOwner(connection, ownerAddress),
+      this.findOpenOrdersAccountsForOwner(
+        connection,
+        ownerAddress,
+        cacheDurationMs,
+      ),
     ]);
     return this.filterForOpenOrders(bids, asks, openOrdersAccounts);
   }
@@ -225,13 +234,27 @@ export class Market {
   async findOpenOrdersAccountsForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
+    cacheDurationMs = 0,
   ): Promise<OpenOrders[]> {
-    return OpenOrders.findForMarketAndOwner(
+    const strOwner = ownerAddress.toBase58();
+    const now = new Date().getTime();
+    if (
+      strOwner in this._openOrdersAccountsCache &&
+      now - this._openOrdersAccountsCache[strOwner].ts < cacheDurationMs
+    ) {
+      return this._openOrdersAccountsCache[strOwner].accounts;
+    }
+    const openOrdersAccountsForOwner = await OpenOrders.findForMarketAndOwner(
       connection,
       this.address,
       ownerAddress,
       this._programId,
     );
+    this._openOrdersAccountsCache[strOwner] = {
+      accounts: openOrdersAccountsForOwner,
+      ts: now,
+    };
+    return openOrdersAccountsForOwner;
   }
 
   async placeOrder(
@@ -272,12 +295,14 @@ export class Market {
       orderType = 'limit',
       clientId,
     }: OrderParams<T>,
+    cacheDurationMs = 0,
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
       connection,
       ownerAddress,
+      cacheDurationMs,
     ); // TODO: cache this
     const transaction = new Transaction();
     const signers: (T | Account)[] = [owner];
@@ -296,6 +321,8 @@ export class Market {
       );
       openOrdersAddress = newOpenOrdersAccount.publicKey;
       signers.push(newOpenOrdersAccount);
+      // refresh the cache of open order accounts on next fetch
+      this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
     } else {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
