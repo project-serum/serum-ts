@@ -29,13 +29,15 @@ export const WRAPPED_SOL_MINT = new PublicKey(
   'So11111111111111111111111111111111111111112',
 );
 
-export const SRM_MINT = new PublicKey(
-  'SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt',
-);
-
 export const MSRM_MINT = new PublicKey(
   'MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L',
 );
+export const MSRM_DECIMALS = 0;
+
+export const SRM_MINT = new PublicKey(
+  'SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt',
+);
+export const SRM_DECIMALS = 6;
 
 const LAYOUT = BufferLayout.union(BufferLayout.u8('instruction'));
 LAYOUT.addVariant(

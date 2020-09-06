@@ -125,19 +125,28 @@ export class DexInstructions {
     orderType,
     clientId,
     programId,
+    feeDiscountPubkey = null,
   }) {
+    const keys = [
+      { pubkey: market, isSigner: false, isWritable: true },
+      { pubkey: openOrders, isSigner: false, isWritable: true },
+      { pubkey: requestQueue, isSigner: false, isWritable: true },
+      { pubkey: payer, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+      { pubkey: baseVault, isSigner: false, isWritable: true },
+      { pubkey: quoteVault, isSigner: false, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ];
+    if (feeDiscountPubkey) {
+      keys.push({
+        pubkey: feeDiscountPubkey,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
     return new TransactionInstruction({
-      keys: [
-        { pubkey: market, isSigner: false, isWritable: true },
-        { pubkey: openOrders, isSigner: false, isWritable: true },
-        { pubkey: requestQueue, isSigner: false, isWritable: true },
-        { pubkey: payer, isSigner: false, isWritable: true },
-        { pubkey: owner, isSigner: true, isWritable: false },
-        { pubkey: baseVault, isSigner: false, isWritable: true },
-        { pubkey: quoteVault, isSigner: false, isWritable: true },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-      ],
+      keys,
       programId,
       data: encodeInstruction({
         newOrder: clientId
