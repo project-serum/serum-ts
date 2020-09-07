@@ -144,6 +144,14 @@ export class Market {
     return this._decoded.quoteMint;
   }
 
+  get bidsAddress(): PublicKey {
+    return this._decoded.bids;
+  }
+
+  get asksAddress(): PublicKey {
+    return this._decoded.asks;
+  }
+
   async loadBids(connection: Connection): Promise<Orderbook> {
     const { data } = throwIfNull(
       await connection.getAccountInfo(this._decoded.bids),
