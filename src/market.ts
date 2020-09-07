@@ -860,6 +860,32 @@ export class OpenOrders {
     return OPEN_ORDERS_LAYOUT;
   }
 
+  static async findForOwner(
+    connection: Connection,
+    ownerAddress: PublicKey,
+    programId: PublicKey,
+  ) {
+    const filters = [
+      {
+        memcmp: {
+          offset: OPEN_ORDERS_LAYOUT.offsetOf('owner'),
+          bytes: ownerAddress.toBase58(),
+        },
+      },
+      {
+        dataSize: OPEN_ORDERS_LAYOUT.span,
+      },
+    ];
+    const accounts = await getFilteredProgramAccounts(
+      connection,
+      programId,
+      filters,
+    );
+    return accounts.map(({ publicKey, accountInfo }) =>
+      OpenOrders.fromAccountInfo(publicKey, accountInfo, programId),
+    );
+  }
+
   static async findForMarketAndOwner(
     connection: Connection,
     marketAddress: PublicKey,
