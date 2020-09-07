@@ -7,16 +7,8 @@ import {
   u64,
   VersionedLayout,
 } from './layout';
-import {
-  PublicKey,
-  SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { SYSVAR_RENT_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
-
-export const DEX_PROGRAM_ID = new PublicKey(
-  '4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn',
-);
 
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
   0,
@@ -84,7 +76,7 @@ export class DexInstructions {
     feeRateBps,
     vaultSignerNonce,
     quoteDustThreshold,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -124,7 +116,7 @@ export class DexInstructions {
     maxQuantity,
     orderType,
     clientId,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -156,7 +148,7 @@ export class DexInstructions {
     baseVault,
     quoteVault,
     limit,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -178,7 +170,7 @@ export class DexInstructions {
     eventQueue,
     openOrdersAccounts,
     limit,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -203,7 +195,7 @@ export class DexInstructions {
     side,
     orderId,
     openOrdersSlot,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -225,7 +217,7 @@ export class DexInstructions {
     owner,
     requestQueue,
     clientId,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [
@@ -250,7 +242,7 @@ export class DexInstructions {
     baseWallet,
     quoteWallet,
     vaultSigner,
-    programId = DEX_PROGRAM_ID,
+    programId,
   }) {
     return new TransactionInstruction({
       keys: [

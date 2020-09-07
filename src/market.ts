@@ -1,7 +1,7 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
 import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
 import { Slab, SLAB_LAYOUT } from './slab';
-import { DEX_PROGRAM_ID, DexInstructions } from './instructions';
+import { DexInstructions } from './instructions';
 import BN from 'bn.js';
 import {
   Account,
@@ -75,7 +75,7 @@ export class Market {
     baseMintDecimals: number,
     quoteMintDecimals: number,
     options: MarketOptions = {},
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     const { skipPreflight = false, confirmations = 0 } = options;
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
@@ -98,7 +98,7 @@ export class Market {
     connection: Connection,
     address: PublicKey,
     options: MarketOptions = {},
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     const { owner, data } = throwIfNull(
       await connection.getAccountInfo(address),
@@ -842,11 +842,7 @@ export class OpenOrders {
   orders!: BN[];
   clientIds!: BN[];
 
-  constructor(
-    address: PublicKey,
-    decoded,
-    programId: PublicKey = DEX_PROGRAM_ID,
-  ) {
+  constructor(address: PublicKey, decoded, programId: PublicKey) {
     this.address = address;
     this._programId = programId;
     Object.assign(this, decoded);
@@ -860,7 +856,7 @@ export class OpenOrders {
     connection: Connection,
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     const filters = [
       {
@@ -892,7 +888,7 @@ export class OpenOrders {
   static async load(
     connection: Connection,
     address: PublicKey,
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     const accountInfo = await connection.getAccountInfo(address);
     if (accountInfo === null) {
@@ -904,7 +900,7 @@ export class OpenOrders {
   static fromAccountInfo(
     address: PublicKey,
     accountInfo: AccountInfo<Buffer>,
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     const { owner, data } = accountInfo;
     if (!owner.equals(programId)) {
@@ -922,7 +918,7 @@ export class OpenOrders {
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
     newAccountAddress: PublicKey,
-    programId: PublicKey = DEX_PROGRAM_ID,
+    programId: PublicKey,
   ) {
     return SystemProgram.createAccount({
       fromPubkey: ownerAddress,

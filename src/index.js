@@ -1,4 +1,5 @@
 export { Market, Orderbook, OpenOrders } from './market';
-export { DexInstructions, DEX_PROGRAM_ID } from './instructions';
+export { DexInstructions } from './instructions';
+export { TOKEN_MINTS, MARKETS } from './tokens_and_markets';
 export { decodeEventQueue, decodeRequestQueue } from './queue';
 export * as TokenInstructions from './token-instructions';
