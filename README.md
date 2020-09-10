@@ -40,7 +40,6 @@ for (let [price, size] of bids.getL2(20)) {
 for (let order of asks) {
   console.log(
     order.orderId,
-    order.owner.toBase58(),
     order.price,
     order.size,
     order.side, // 'buy' or 'sell'
@@ -71,7 +70,6 @@ for (let order of myOrders) {
 for (let fill of await market.loadFills(connection)) {
   console.log(
     fill.orderId,
-    fill.owner.toBase58(),
     fill.price,
     fill.size,
     fill.side,
