@@ -60,6 +60,10 @@ export function encodeInstruction(instruction) {
   return b.slice(0, INSTRUCTION_LAYOUT.encode(instruction, b));
 }
 
+export function decodeInstruction(message) {
+  return INSTRUCTION_LAYOUT.decode(message);
+}
+
 export class DexInstructions {
   static initializeMarket({
     market,
