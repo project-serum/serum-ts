@@ -91,9 +91,9 @@ export class VersionedLayout extends Layout {
   }
 
   decode(b, offset = 0) {
-    if (b.readUInt8(offset) !== this._version) {
-      throw new Error('invalid version');
-    }
+    // if (b.readUInt8(offset) !== this._version) {
+    //   throw new Error('invalid version');
+    // }
     return this.inner.decode(b, offset + 1);
   }
 
