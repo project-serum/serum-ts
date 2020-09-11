@@ -10,6 +10,10 @@ import {
 import { SYSVAR_RENT_PUBKEY, TransactionInstruction } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
+// NOTE: Update these if the position of arguments for the settleFunds instruction changes
+export const SETTLE_FUNDS_BASE_WALLET_INDEX = 5;
+export const SETTLE_FUNDS_QUOTE_WALLET_INDEX = 6;
+
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
   0,
   union(u32('instruction')),
