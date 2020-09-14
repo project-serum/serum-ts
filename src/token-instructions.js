@@ -6,6 +6,21 @@ import {
 } from '@solana/web3.js';
 import { publicKeyLayout } from './layout';
 
+// NOTE: Update these if the position of arguments for the initializeAccount instruction changes
+export const INITIALIZE_ACCOUNT_ACCOUNT_INDEX = 0;
+export const INITIALIZE_ACCOUNT_MINT_INDEX = 1;
+export const INITIALIZE_ACCOUNT_OWNER_INDEX = 2;
+
+// NOTE: Update these if the position of arguments for the transfer instruction changes
+export const TRANSFER_SOURCE_INDEX = 0;
+export const TRANSFER_DESTINATION_INDEX = 1;
+export const TRANSFER_OWNER_INDEX = 2;
+
+// NOTE: Update these if the position of arguments for the closeAccount instruction changes
+export const CLOSE_ACCOUNT_SOURCE_INDEX = 0;
+export const CLOSE_ACCOUNT_DESTINATION_INDEX = 1;
+export const CLOSE_ACCOUNT_OWNER_INDEX = 2;
+
 export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 );
