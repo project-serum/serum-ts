@@ -275,6 +275,7 @@ export class Market {
       size,
       orderType = 'limit',
       clientId,
+      openOrdersAddressKey,
     }: OrderParams,
   ) {
     const { transaction, signers } = await this.makePlaceOrderTransaction(
@@ -287,6 +288,7 @@ export class Market {
         size,
         orderType,
         clientId,
+        openOrdersAddressKey,
       },
     );
     return await this._sendTransaction(connection, transaction, signers);
@@ -302,6 +304,7 @@ export class Market {
       size,
       orderType = 'limit',
       clientId,
+      openOrdersAddressKey,
     }: OrderParams<T>,
     cacheDurationMs = 0,
   ) {
@@ -331,6 +334,8 @@ export class Market {
       signers.push(newOpenOrdersAccount);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
+    } else if (openOrdersAddressKey) {
+      openOrdersAddress = openOrdersAddressKey;
     } else {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
@@ -377,19 +382,16 @@ export class Market {
       }
     }
 
-    const placeOrderInstruction = this.makePlaceOrderInstruction(
-      connection,
-      {
-        owner,
-        payer: wrappedSolAccount?.publicKey ?? payer,
-        side,
-        price,
-        size,
-        orderType,
-        clientId,
-      },
-      openOrdersAddress,
-    );
+    const placeOrderInstruction = this.makePlaceOrderInstruction(connection, {
+      owner,
+      payer: wrappedSolAccount?.publicKey ?? payer,
+      side,
+      price,
+      size,
+      orderType,
+      clientId,
+      openOrdersAddressKey: openOrdersAddress,
+    });
     transaction.add(placeOrderInstruction);
 
     if (wrappedSolAccount) {
@@ -415,8 +417,8 @@ export class Market {
       size,
       orderType = 'limit',
       clientId,
+      openOrdersAddressKey,
     }: OrderParams<T>,
-    openOrdersAddress,
   ): TransactionInstruction {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -431,7 +433,7 @@ export class Market {
       requestQueue: this._decoded.requestQueue,
       baseVault: this._decoded.baseVault,
       quoteVault: this._decoded.quoteVault,
-      openOrders: openOrdersAddress,
+      openOrders: openOrdersAddressKey,
       owner: ownerAddress,
       payer,
       side,
@@ -810,6 +812,7 @@ export interface OrderParams<T = Account> {
   size: number;
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
+  openOrdersAddressKey?: PublicKey;
 }
 
 export const OPEN_ORDERS_LAYOUT = struct([
