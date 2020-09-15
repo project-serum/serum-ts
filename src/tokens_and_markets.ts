@@ -239,7 +239,7 @@ export const MARKETS: Array<{
   },
   {
     address: new PublicKey('46VdEkj4MJwZinwVb3Y7DUDpVXLNb9YW7P2waKU3vCqr'),
-    name: 'UBXT/USDC',
+    name: 'UBXT/USDT',
     deprecated: false,
     programId: new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
   },
