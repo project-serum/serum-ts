@@ -62,6 +62,10 @@ export const TOKEN_MINTS: Array<{ address: PublicKey; name: string }> = [
     address: new PublicKey('5Fu5UUgbjpUvdBveb3a1JTNirL8rXtiYeSMWvKjtUNQv'),
     name: 'CREAM',
   },
+  {
+    address: new PublicKey('873KLxCbz7s9Kc4ZzgYRtNmhfkQrhfyWGZJBmyCbC3ei'),
+    name: 'UBXT',
+  },
   { address: WRAPPED_SOL_MINT, name: 'SOL' },
 ];
 
@@ -224,6 +228,18 @@ export const MARKETS: Array<{
   {
     address: new PublicKey('EBxJWA2nLV57ZntbjizxH527ZjPNLT5cpUHMnY5k3oq'),
     name: 'CREAM/USDT',
+    deprecated: false,
+    programId: new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
+  },
+  {
+    address: new PublicKey('8Ae7Uhigx8k4fKdJG7irdPCVDZLvWsJfeTH2t5fr3TVD'),
+    name: 'UBXT/USDC',
+    deprecated: false,
+    programId: new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
+  },
+  {
+    address: new PublicKey('46VdEkj4MJwZinwVb3Y7DUDpVXLNb9YW7P2waKU3vCqr'),
+    name: 'UBXT/USDC',
     deprecated: false,
     programId: new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
   },
