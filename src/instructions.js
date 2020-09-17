@@ -251,19 +251,28 @@ export class DexInstructions {
     quoteWallet,
     vaultSigner,
     programId,
+    referrerQuoteWallet = null,
   }) {
+    const keys = [
+      { pubkey: market, isSigner: false, isWritable: true },
+      { pubkey: openOrders, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+      { pubkey: baseVault, isSigner: false, isWritable: true },
+      { pubkey: quoteVault, isSigner: false, isWritable: true },
+      { pubkey: baseWallet, isSigner: false, isWritable: true },
+      { pubkey: quoteWallet, isSigner: false, isWritable: true },
+      { pubkey: vaultSigner, isSigner: false, isWritable: false },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+    ];
+    if (referrerQuoteWallet) {
+      keys.push({
+        pubkey: referrerQuoteWallet,
+        isSigner: false,
+        isWritable: true,
+      });
+    }
     return new TransactionInstruction({
-      keys: [
-        { pubkey: market, isSigner: false, isWritable: true },
-        { pubkey: openOrders, isSigner: false, isWritable: true },
-        { pubkey: owner, isSigner: true, isWritable: false },
-        { pubkey: baseVault, isSigner: false, isWritable: true },
-        { pubkey: quoteVault, isSigner: false, isWritable: true },
-        { pubkey: baseWallet, isSigner: false, isWritable: true },
-        { pubkey: quoteWallet, isSigner: false, isWritable: true },
-        { pubkey: vaultSigner, isSigner: false, isWritable: false },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
-      ],
+      keys,
       programId,
       data: encodeInstruction({
         settleFunds: {},

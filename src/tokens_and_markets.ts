@@ -1,6 +1,17 @@
 import { MSRM_MINT, SRM_MINT, WRAPPED_SOL_MINT } from './token-instructions';
 import { PublicKey } from '@solana/web3.js';
 
+export function getLayoutVersion(programId: PublicKey) {
+  if (
+    programId.equals(
+      new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
+    )
+  ) {
+    return 1;
+  }
+  return 2;
+}
+
 export const TOKEN_MINTS: Array<{ address: PublicKey; name: string }> = [
   {
     address: new PublicKey('9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E'),
