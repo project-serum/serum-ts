@@ -8,3 +8,4 @@ const DEX_PROGRAM_ID = lib.DEX_PROGRAM_ID;
 const decodeEventQueue = lib.decodeEventQueue;
 const decodeRequestQueue = lib.decodeRequestQueue;
 const TokenInstructions = lib.TokenInstructions;
+const getLayoutVersion = lib.getLayoutVersion;
