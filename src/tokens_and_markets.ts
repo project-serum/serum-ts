@@ -5,6 +5,9 @@ export function getLayoutVersion(programId: PublicKey) {
   if (
     programId.equals(
       new PublicKey('4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn'),
+    ) ||
+    programId.equals(
+      new PublicKey('BJ3jrUzddfuSrZHXSCxMUUQsjKEyLmuuyZebkcaFp2fg'),
     )
   ) {
     return 1;
