@@ -9,5 +9,10 @@ export {
 } from './instructions';
 export { getFeeTier, getFeeRates, supportsSrmFeeDiscounts } from './fees';
 export { TOKEN_MINTS, MARKETS, getLayoutVersion } from './tokens_and_markets';
-export { decodeEventQueue, decodeRequestQueue } from './queue';
+export {
+  decodeEventQueue,
+  decodeRequestQueue,
+  REQUEST_QUEUE_LAYOUT,
+  EVENT_QUEUE_LAYOUT,
+} from './queue';
 export * as TokenInstructions from './token-instructions';
