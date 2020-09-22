@@ -14,6 +14,10 @@ import { TOKEN_PROGRAM_ID } from './token-instructions';
 export const SETTLE_FUNDS_BASE_WALLET_INDEX = 5;
 export const SETTLE_FUNDS_QUOTE_WALLET_INDEX = 6;
 
+// NOTE: Update these if the position of arguments for the newOrder instruction changes
+export const NEW_ORDER_OPEN_ORDERS_INDEX = 1;
+export const NEW_ORDER_OWNER_INDEX = 4;
+
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
   0,
   union(u32('instruction')),
