@@ -188,6 +188,10 @@ export class Market {
     );
   }
 
+  get programId(): PublicKey {
+    return this._programId;
+  }
+
   get address(): PublicKey {
     return this._decoded.ownAddress;
   }
@@ -380,6 +384,10 @@ export class Market {
 
   get supportsSrmFeeDiscounts() {
     return supportsSrmFeeDiscounts(this._programId);
+  }
+
+  get supportsReferralFees() {
+    return getLayoutVersion(this._programId) > 1;
   }
 
   async findFeeDiscountKeys(
@@ -766,7 +774,7 @@ export class Market {
     if (!openOrders.owner.equals(owner.publicKey)) {
       throw new Error('Invalid open orders account');
     }
-    if (referrerQuoteWallet && getLayoutVersion(this._programId) === 1) {
+    if (referrerQuoteWallet && !this.supportsReferralFees) {
       throw new Error('This program ID does not support referrerQuoteWallet');
     }
     const { transaction, signers } = await this.makeSettleFundsTransaction(
