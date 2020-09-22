@@ -145,3 +145,13 @@ export function decodeEventQueue(buffer: Buffer, history?: number): Event[] {
   }
   return nodes;
 }
+
+export const REQUEST_QUEUE_LAYOUT = {
+  HEADER: REQUEST_QUEUE_HEADER,
+  NODE: REQUEST,
+};
+
+export const EVENT_QUEUE_LAYOUT = {
+  HEADER: EVENT_QUEUE_HEADER,
+  NODE: EVENT,
+};
