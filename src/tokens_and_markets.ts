@@ -104,6 +104,10 @@ export const TOKEN_MINTS: Array<{ address: PublicKey; name: string }> = [
     address: new PublicKey('GUohe4DJUA5FKPWo3joiPgsB7yzer7LpDmt1Vhzy3Zht'),
     name: 'KEEP',
   },
+  {
+    address: new PublicKey('GeDS162t9yGJuLEHPWXXGrb1zwkzinCgRwnT8vHYjKza'),
+    name: 'MATH',
+  },
   { address: WRAPPED_SOL_MINT, name: 'SOL' },
 ];
 
@@ -542,6 +546,18 @@ export const MARKETS: Array<{
   {
     name: 'KEEP/USDC',
     address: new PublicKey('sxS9EdTx1UPe4j2c6Au9f1GKZXrFj5pTgNKgjGGtGdY'),
+    programId: new PublicKey('EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o'),
+    deprecated: false,
+  },
+  {
+    name: 'MATH/USDT',
+    address: new PublicKey('5P6dJbyKySFXMYNWiEcNQu8xPRYsehYzCeVpae9Ueqrg'),
+    programId: new PublicKey('EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o'),
+    deprecated: false,
+  },
+  {
+    name: 'MATH/USDC',
+    address: new PublicKey('CfnnU38ACScF6pcurxSB3FLXeZmfFYunVKExeUyosu5P'),
     programId: new PublicKey('EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o'),
     deprecated: false,
   },
