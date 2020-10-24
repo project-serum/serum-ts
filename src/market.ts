@@ -6,6 +6,7 @@ import BN from 'bn.js';
 import {
   Account,
   AccountInfo,
+  Commitment,
   Connection,
   LAMPORTS_PER_SOL,
   PublicKey,
@@ -108,7 +109,7 @@ export class Market {
   private _baseSplTokenDecimals: number;
   private _quoteSplTokenDecimals: number;
   private _skipPreflight: boolean;
-  private _confirmations: number;
+  private _commitment: Commitment;
   private _programId: PublicKey;
   private _openOrdersAccountsCache: {
     [publickKey: string]: { accounts: OpenOrders[]; ts: number };
@@ -133,7 +134,7 @@ export class Market {
     options: MarketOptions = {},
     programId: PublicKey,
   ) {
-    const { skipPreflight = false, confirmations = 0 } = options;
+    const { skipPreflight = false, commitment = 'recent' } = options;
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
       throw new Error('Invalid market state');
     }
@@ -141,7 +142,7 @@ export class Market {
     this._baseSplTokenDecimals = baseMintDecimals;
     this._quoteSplTokenDecimals = quoteMintDecimals;
     this._skipPreflight = skipPreflight;
-    this._confirmations = confirmations;
+    this._commitment = commitment;
     this._programId = programId;
     this._openOrdersAccountsCache = {};
     this._feeDiscountKeysCache = {};
@@ -355,21 +356,23 @@ export class Market {
       feeDiscountPubkey,
     }: OrderParams,
   ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction(
-      connection,
-      {
-        owner,
-        payer,
-        side,
-        price,
-        size,
-        orderType,
-        clientId,
-        openOrdersAddressKey,
-        feeDiscountPubkey,
-      },
-    );
-    return await this._sendTransaction(connection, transaction, signers);
+    const { transaction, signers } = await this.makePlaceOrderTransaction<
+      Account
+    >(connection, {
+      owner,
+      payer,
+      side,
+      price,
+      size,
+      orderType,
+      clientId,
+      openOrdersAddressKey,
+      feeDiscountPubkey,
+    });
+    return await this._sendTransaction(connection, transaction, [
+      owner,
+      ...signers,
+    ]);
   }
 
   getSplTokenBalanceFromAccountInfo(
@@ -524,7 +527,7 @@ export class Market {
       cacheDurationMs,
     );
     const transaction = new Transaction();
-    const signers: (T | Account)[] = [owner];
+    const signers: Account[] = [];
 
     // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
     feeDiscountPubkey =
@@ -626,7 +629,7 @@ export class Market {
       );
     }
 
-    return { transaction, signers };
+    return { transaction, signers, payer: owner };
   }
 
   makePlaceOrderInstruction<T extends PublicKey | Account>(
@@ -680,14 +683,12 @@ export class Market {
     const signature = await connection.sendTransaction(transaction, signers, {
       skipPreflight: this._skipPreflight,
     });
-    if (this._confirmations > 0) {
-      const { value } = await connection.confirmTransaction(
-        signature,
-        this._confirmations,
-      );
-      if (value?.err) {
-        throw new Error(JSON.stringify(value.err));
-      }
+    const { value } = await connection.confirmTransaction(
+      signature,
+      this._commitment,
+    );
+    if (value?.err) {
+      throw new Error(JSON.stringify(value.err));
     }
     return signature;
   }
@@ -784,9 +785,10 @@ export class Market {
       quoteWallet,
       referrerQuoteWallet,
     );
-    signers[0] = owner;
-    // @ts-ignore
-    return await this._sendTransaction(connection, transaction, signers);
+    return await this._sendTransaction(connection, transaction, [
+      owner,
+      ...signers,
+    ]);
   }
 
   async makeSettleFundsTransaction(
@@ -806,7 +808,7 @@ export class Market {
     );
 
     const transaction = new Transaction();
-    const signers: [Account | PublicKey] = [openOrders.owner];
+    const signers: Account[] = [];
 
     let wrappedSolAccount: Account | null = null;
     if (
@@ -866,7 +868,7 @@ export class Market {
       );
     }
 
-    return { transaction, signers };
+    return { transaction, signers, payer: openOrders.owner };
   }
 
   async matchOrders(connection: Connection, feePayer: Account, limit: number) {
@@ -1035,7 +1037,7 @@ export class Market {
 
 export interface MarketOptions {
   skipPreflight?: boolean;
-  confirmations?: number;
+  commitment?: Commitment;
 }
 
 export interface OrderParams<T = Account> {
