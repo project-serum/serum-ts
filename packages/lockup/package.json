@@ -1,5 +1,5 @@
 {
-  "name": "@projectserum/lockup",
+  "name": "@project-serum/lockup",
   "version": "0.0.0",
   "description": "Serum lockup",
   "main": "dist/index.umd.js",
@@ -30,7 +30,7 @@
     ]
   },
   "dependencies": {
-
+    "@project-serum/registry": "0.0.0"
   },
   "browser": {
     "./dist/index.umd.js": "./dist/index.browser.umd.js",

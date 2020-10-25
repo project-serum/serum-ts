@@ -1,5 +1,5 @@
-import { testing } from '@projectserum/registry';
+import { testing } from '@project-serum/registry';
 
 export const testingWrapper = {
-	testing,
+  testing,
 };

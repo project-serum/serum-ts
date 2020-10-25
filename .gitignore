@@ -1,2 +1,10 @@
 node_modules/
+build/
 dist/
+lib/
+.DS_Store
+*~
+.idea
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

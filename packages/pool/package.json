@@ -1,0 +1,58 @@
+{
+  "name": "@project-serum/pool",
+  "version": "0.1.0",
+  "description": "Library for interacting with the serum pools",
+  "repository": "project-serum/serum-ts",
+  "main": "dist/lib/index.js",
+  "source": "src/index.js",
+  "types": "dist/lib/index.d.ts",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc --watch",
+    "clean": "rm -rf dist",
+    "prepare": "run-s clean build",
+    "test": "run-s test:unit test:lint test:build",
+    "test:build": "run-s build",
+    "test:lint": "eslint src",
+    "test:unit": "jest",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/bn.js": "^4.11.6",
+    "@types/jest": "^26.0.9",
+    "@typescript-eslint/eslint-plugin": "^4.5.0",
+    "@typescript-eslint/parser": "^4.5.0",
+    "babel-eslint": "^10.0.3",
+    "cross-env": "^7.0.2",
+    "eslint": "^7.6.0",
+    "eslint-config-prettier": "^6.11.0",
+    "jest": "^26.4.0",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.0.5",
+    "ts-jest": "^26.2.0",
+    "typescript": "^4.0.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "prettier": {
+    "singleQuote": true,
+    "trailingComma": "all"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^0.84.0",
+    "bn.js": "^5.1.2",
+    "buffer-layout": "^1.2.0"
+  },
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not op_mini all",
+    "maintained node versions"
+  ]
+}

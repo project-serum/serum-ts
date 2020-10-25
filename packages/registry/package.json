@@ -1,5 +1,5 @@
 {
-  "name": "@projectserum/registry",
+  "name": "@project-serum/registry",
   "version": "0.0.0",
   "description": "Serum node registration",
   "main": "dist/index.umd.js",

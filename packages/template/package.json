@@ -1,5 +1,5 @@
 {
-  "name": "@projectserum/template",
+  "name": "@project-serum/template",
   "version": "0.0.0",
   "description": "Serum package template",
   "main": "dist/index.umd.js",
