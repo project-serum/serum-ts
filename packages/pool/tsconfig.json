@@ -1,13 +1,21 @@
 {
-  "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+
     "outDir": "./dist/lib",
     "rootDir": "./src",
+
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    "sourceMap": true
+    "sourceMap": true,
+
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["./src/**/*"],
-  "exclude": ["./src/**/*.test.ts", "node_modules", "**/node_modules"]
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "**/node_modules"]
 }
