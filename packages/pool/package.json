@@ -27,7 +27,8 @@
   },
   "dependencies": {
     "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0"
+    "buffer-layout": "^1.2.0",
+    "@project-serum/serum": "^0.13.7"
   },
   "peerDependencies": {
     "@solana/web3.js": "^0.84.0"

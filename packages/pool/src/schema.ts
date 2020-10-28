@@ -37,7 +37,7 @@ export interface ParamDesc {
 export type PoolRequest =
   | { initialize: InitializePoolRequest }
   | { getBasket: PoolAction }
-  | { transact: PoolAction };
+  | { execute: PoolAction };
 
 export interface InitializePoolRequest {
   vaultSignerNonce: number;
