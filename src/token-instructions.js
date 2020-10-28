@@ -61,6 +61,16 @@ LAYOUT.addVariant(
   BufferLayout.struct([BufferLayout.nu64('amount')]),
   'approve',
 );
+LAYOUT.addVariant(5, BufferLayout.struct([]), 'revoke');
+LAYOUT.addVariant(
+  6,
+  BufferLayout.struct([
+    BufferLayout.u8('authorityType'),
+    BufferLayout.u8('newAuthorityOption'),
+    publicKeyLayout('newAuthority'),
+  ]),
+  'setAuthority',
+);
 LAYOUT.addVariant(
   7,
   BufferLayout.struct([BufferLayout.nu64('amount')]),
@@ -152,6 +162,43 @@ export function approve({ source, delegate, amount, owner }) {
     keys,
     data: encodeTokenInstructionData({
       approve: { amount },
+    }),
+    programId: TOKEN_PROGRAM_ID,
+  });
+}
+
+export function revoke({ source, owner }) {
+  const keys = [
+    { pubkey: source, isSigner: false, isWritable: true },
+    { pubkey: owner, isSigner: true, isWritable: false },
+  ];
+  return new TransactionInstruction({
+    keys,
+    data: encodeTokenInstructionData({
+      revoke: {},
+    }),
+    programId: TOKEN_PROGRAM_ID,
+  });
+}
+
+export function setAuthority({
+  target,
+  currentAuthority,
+  newAuthority,
+  authorityType,
+}) {
+  const keys = [
+    { pubkey: target, isSigner: false, isWritable: true },
+    { pubkey: currentAuthority, isSigner: true, isWritable: false },
+  ];
+  return new TransactionInstruction({
+    keys,
+    data: encodeTokenInstructionData({
+      setAuthority: {
+        authorityType,
+        newAuthorityOption: !!newAuthority,
+        newAuthority,
+      },
     }),
     programId: TOKEN_PROGRAM_ID,
   });

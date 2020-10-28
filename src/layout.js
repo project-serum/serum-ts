@@ -163,7 +163,7 @@ export function setLayoutDecoder(layout, decoder) {
 export function setLayoutEncoder(layout, encoder) {
   const originalEncode = layout.encode;
   layout.encode = function encode(src, b, offset) {
-    return originalEncode(encoder(src), b, offset);
+    return originalEncode.call(this, encoder(src), b, offset);
   };
   return layout;
 }
