@@ -1,11 +1,11 @@
 {
   "parser": "@typescript-eslint/parser",
+  "plugins": ["@typescript-eslint"],
   "extends": [
+    "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
-    "standard",
-    "prettier/@typescript-eslint",
-    "plugin:prettier/recommended",
-    "prettier/standard"
+    "prettier",
+    "prettier/@typescript-eslint"
   ],
   "env": {
     "node": true,
@@ -16,6 +16,7 @@
     "sourceType": "module"
   },
   "rules": {
+    "no-constant-condition": ["error", { "checkLoops": false }],
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "off"
