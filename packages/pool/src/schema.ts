@@ -14,18 +14,31 @@ import {
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
+/**
+ * Decoded pool state.
+ */
 export interface PoolState {
+  /** Token mint address for the pool token. */
   poolTokenMint: PublicKey;
+  /** Assets in the pool. */
   assets: AssetInfo[];
+  /** Owner of the assets in the pool. */
   vaultSigner: PublicKey;
+  /** Nonce used to generate `vaultSigner`; only used internally by the pool program. */
   vaultSignerNonce: number;
+  /** Accounts that must be included in requests to create or redeem tokens. */
   accountParams: ParamDesc[];
+  /** Admin for the pool. Not used by default but may have pool-specific semantics. */
   adminKey: PublicKey | null;
+  /** Custom pool-specific state. */
   customState: Buffer;
 }
 
+/** Describes one of the assets in the pool. */
 export interface AssetInfo {
+  /** Token mint address for the asset. */
   mint: PublicKey;
+  /** Token vault address for the asset. */
   vaultAddress: PublicKey;
 }
 

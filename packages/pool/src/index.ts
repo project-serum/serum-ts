@@ -10,6 +10,14 @@ export {
   SimplePoolParams,
 } from './transactions';
 
+/**
+ * Load and decode pool state.
+ *
+ * Throws an error if the pool is not found or invalid.
+ *
+ * @param connection Solana connection to use to fetch the pool state.
+ * @param address Pool state account address.
+ */
 export async function loadPoolInfo(
   connection: Connection,
   address: PublicKey,
