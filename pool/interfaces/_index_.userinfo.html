@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>PoolState | @project-serum/pool</title>
+	<title>UserInfo | @project-serum/pool</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/_index_.html">&quot;index&quot;</a>
 				</li>
 				<li>
-					<a href="_index_.poolstate.html">PoolState</a>
+					<a href="_index_.userinfo.html">UserInfo</a>
 				</li>
 			</ul>
-			<h1>Interface PoolState</h1>
+			<h1>Interface UserInfo</h1>
 		</div>
 	</div>
 </header>
@@ -73,7 +73,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">PoolState</span>
+						<span class="target">UserInfo</span>
 					</li>
 				</ul>
 			</section>
@@ -84,13 +84,9 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#accountparams" class="tsd-kind-icon">account<wbr>Params</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#adminkey" class="tsd-kind-icon">admin<wbr>Key</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#assets" class="tsd-kind-icon">assets</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#customstate" class="tsd-kind-icon">custom<wbr>State</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#pooltokenmint" class="tsd-kind-icon">pool<wbr>Token<wbr>Mint</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#vaultsigner" class="tsd-kind-icon">vault<wbr>Signer</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.poolstate.html#vaultsignernonce" class="tsd-kind-icon">vault<wbr>Signer<wbr>Nonce</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.userinfo.html#assetaccounts" class="tsd-kind-icon">asset<wbr>Accounts</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.userinfo.html#owner" class="tsd-kind-icon">owner</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-interface"><a href="_index_.userinfo.html#pooltokenaccount" class="tsd-kind-icon">pool<wbr>Token<wbr>Account</a></li>
 							</ul>
 						</section>
 					</div>
@@ -99,74 +95,50 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="accountparams" class="tsd-anchor"></a>
-					<h3>account<wbr>Params</h3>
-					<div class="tsd-signature tsd-kind-icon">account<wbr>Params<span class="tsd-signature-symbol">:</span> <a href="_index_.paramdesc.html" class="tsd-signature-type">ParamDesc</a><span class="tsd-signature-symbol">[]</span></div>
+					<a name="assetaccounts" class="tsd-anchor"></a>
+					<h3>asset<wbr>Accounts</h3>
+					<div class="tsd-signature tsd-kind-icon">asset<wbr>Accounts<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L22">schema.ts:22</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/instructions.ts#L22">instructions.ts:22</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p> spl-token account for each of the <a href="_index_.poolstate.html#assets">assets</a> in the
+							pool.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="adminkey" class="tsd-anchor"></a>
-					<h3>admin<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">admin<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
+					<a name="owner" class="tsd-anchor"></a>
+					<h3>owner</h3>
+					<div class="tsd-signature tsd-kind-icon">owner<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L23">schema.ts:23</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/instructions.ts#L26">instructions.ts:26</a></li>
 						</ul>
 					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p> Owner or delegate of the token accounts.</p>
+						</div>
+					</div>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="assets" class="tsd-anchor"></a>
-					<h3>assets</h3>
-					<div class="tsd-signature tsd-kind-icon">assets<span class="tsd-signature-symbol">:</span> <a href="_index_.assetinfo.html" class="tsd-signature-type">AssetInfo</a><span class="tsd-signature-symbol">[]</span></div>
+					<a name="pooltokenaccount" class="tsd-anchor"></a>
+					<h3>pool<wbr>Token<wbr>Account</h3>
+					<div class="tsd-signature tsd-kind-icon">pool<wbr>Token<wbr>Account<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L19">schema.ts:19</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/instructions.ts#L17">instructions.ts:17</a></li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="customstate" class="tsd-anchor"></a>
-					<h3>custom<wbr>State</h3>
-					<div class="tsd-signature tsd-kind-icon">custom<wbr>State<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Buffer</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L24">schema.ts:24</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="pooltokenmint" class="tsd-anchor"></a>
-					<h3>pool<wbr>Token<wbr>Mint</h3>
-					<div class="tsd-signature tsd-kind-icon">pool<wbr>Token<wbr>Mint<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L18">schema.ts:18</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="vaultsigner" class="tsd-anchor"></a>
-					<h3>vault<wbr>Signer</h3>
-					<div class="tsd-signature tsd-kind-icon">vault<wbr>Signer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">PublicKey</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L20">schema.ts:20</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface">
-					<a name="vaultsignernonce" class="tsd-anchor"></a>
-					<h3>vault<wbr>Signer<wbr>Nonce</h3>
-					<div class="tsd-signature tsd-kind-icon">vault<wbr>Signer<wbr>Nonce<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L21">schema.ts:21</a></li>
-						</ul>
-					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>spl-token account for the <a href="_index_.poolstate.html#pooltokenmint">pool token</a>.</p>
+						</div>
+					</div>
 				</section>
 			</section>
 		</div>
@@ -204,45 +176,33 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="_index_.poolinfo.html" class="tsd-kind-icon">Pool<wbr>Info</a>
 					</li>
-				</ul>
-				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-module">
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="_index_.poolstate.html" class="tsd-kind-icon">Pool<wbr>State</a>
-						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#accountparams" class="tsd-kind-icon">account<wbr>Params</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#adminkey" class="tsd-kind-icon">admin<wbr>Key</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#assets" class="tsd-kind-icon">assets</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#customstate" class="tsd-kind-icon">custom<wbr>State</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#pooltokenmint" class="tsd-kind-icon">pool<wbr>Token<wbr>Mint</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#vaultsigner" class="tsd-kind-icon">vault<wbr>Signer</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface">
-								<a href="_index_.poolstate.html#vaultsignernonce" class="tsd-kind-icon">vault<wbr>Signer<wbr>Nonce</a>
-							</li>
-						</ul>
 					</li>
-				</ul>
-				<ul class="after-current">
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="_index_.simplepoolparams.html" class="tsd-kind-icon">Simple<wbr>Pool<wbr>Params</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="_index_.transactionandsigners.html" class="tsd-kind-icon">Transaction<wbr>And<wbr>Signers</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-module">
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-interface tsd-parent-kind-module">
 						<a href="_index_.userinfo.html" class="tsd-kind-icon">User<wbr>Info</a>
+						<ul>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_index_.userinfo.html#assetaccounts" class="tsd-kind-icon">asset<wbr>Accounts</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_index_.userinfo.html#owner" class="tsd-kind-icon">owner</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-interface">
+								<a href="_index_.userinfo.html#pooltokenaccount" class="tsd-kind-icon">pool<wbr>Token<wbr>Account</a>
+							</li>
+						</ul>
 					</li>
+				</ul>
+				<ul class="after-current">
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
 						<a href="../modules/_index_.html#poolaction" class="tsd-kind-icon">Pool<wbr>Action</a>
 					</li>

@@ -71,13 +71,24 @@
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
+							<h3>Classes</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_index_.poolinstructions.html" class="tsd-kind-icon">Pool<wbr>Instructions</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-module"><a href="../classes/_index_.pooltransactions.html" class="tsd-kind-icon">Pool<wbr>Transactions</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Interfaces</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.assetinfo.html" class="tsd-kind-icon">Asset<wbr>Info</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.basket.html" class="tsd-kind-icon">Basket</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.initializepoolrequest.html" class="tsd-kind-icon">Initialize<wbr>Pool<wbr>Request</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.paramdesc.html" class="tsd-kind-icon">Param<wbr>Desc</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.poolinfo.html" class="tsd-kind-icon">Pool<wbr>Info</a></li>
 								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.poolstate.html" class="tsd-kind-icon">Pool<wbr>State</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.simplepoolparams.html" class="tsd-kind-icon">Simple<wbr>Pool<wbr>Params</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.transactionandsigners.html" class="tsd-kind-icon">Transaction<wbr>And<wbr>Signers</a></li>
+								<li class="tsd-kind-interface tsd-parent-kind-module"><a href="../interfaces/_index_.userinfo.html" class="tsd-kind-icon">User<wbr>Info</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -108,6 +119,7 @@
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#decodepoolstate" class="tsd-kind-icon">decode<wbr>Pool<wbr>State</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#encodepoolrequest" class="tsd-kind-icon">encode<wbr>Pool<wbr>Request</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#ispoolstate" class="tsd-kind-icon">is<wbr>Pool<wbr>State</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#loadpoolinfo" class="tsd-kind-icon">load<wbr>Pool<wbr>Info</a></li>
 							</ul>
 						</section>
 					</div>
@@ -121,17 +133,17 @@
 					<div class="tsd-signature tsd-kind-icon">Pool<wbr>Action<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>create<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>redeem<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>swap<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.basket.html" class="tsd-signature-type">Basket</a><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L48">schema.ts:48</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L48">schema.ts:48</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-module">
 					<a name="poolrequest" class="tsd-anchor"></a>
 					<h3>Pool<wbr>Request</h3>
-					<div class="tsd-signature tsd-kind-icon">Pool<wbr>Request<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>initialize<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.initializepoolrequest.html" class="tsd-signature-type">InitializePoolRequest</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>getBasket<span class="tsd-signature-symbol">: </span><a href="_index_.html#poolaction" class="tsd-signature-type">PoolAction</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>transact<span class="tsd-signature-symbol">: </span><a href="_index_.html#poolaction" class="tsd-signature-type">PoolAction</a><span class="tsd-signature-symbol"> }</span></div>
+					<div class="tsd-signature tsd-kind-icon">Pool<wbr>Request<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{ </span>initialize<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.initializepoolrequest.html" class="tsd-signature-type">InitializePoolRequest</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>getBasket<span class="tsd-signature-symbol">: </span><a href="_index_.html#poolaction" class="tsd-signature-type">PoolAction</a><span class="tsd-signature-symbol"> }</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-symbol">{ </span>execute<span class="tsd-signature-symbol">: </span><a href="_index_.html#poolaction" class="tsd-signature-type">PoolAction</a><span class="tsd-signature-symbol"> }</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L37">schema.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L37">schema.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -144,7 +156,7 @@
 					<div class="tsd-signature tsd-kind-icon">Asset<wbr>Info<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.assetinfo.html" class="tsd-signature-type">AssetInfo</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = struct([publicKey(&#x27;mint&#x27;),publicKey(&#x27;vaultAddress&#x27;),])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L54">schema.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L54">schema.ts:54</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -154,7 +166,7 @@
 					<div class="tsd-signature tsd-kind-icon">Basket<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.basket.html" class="tsd-signature-type">Basket</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = struct([vec(i64(), &#x27;quantities&#x27;)])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L79">schema.ts:79</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L79">schema.ts:79</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -164,7 +176,7 @@
 					<div class="tsd-signature tsd-kind-icon">Initialize<wbr>Pool<wbr>Request<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.initializepoolrequest.html" class="tsd-signature-type">InitializePoolRequest</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = struct([u8(&#x27;vaultSignerNonce&#x27;),u8(&#x27;assetsLength&#x27;),u16(&#x27;customStateLength&#x27;),])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L87">schema.ts:87</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L87">schema.ts:87</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -174,7 +186,7 @@
 					<div class="tsd-signature tsd-kind-icon">POOL_<wbr>REQUEST_<wbr>TAG<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol"> = new BN(&#x27;220a6cbdcd1cc4cf&#x27;, &#x27;hex&#x27;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L93">schema.ts:93</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L93">schema.ts:93</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -184,7 +196,7 @@
 					<div class="tsd-signature tsd-kind-icon">POOL_<wbr>STATE_<wbr>TAG<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol"> = new BN(&#x27;16a7874c7fb2301b&#x27;, &#x27;hex&#x27;)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L64">schema.ts:64</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L64">schema.ts:64</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -194,7 +206,7 @@
 					<div class="tsd-signature tsd-kind-icon">Param<wbr>Desc<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.paramdesc.html" class="tsd-signature-type">ParamDesc</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = struct([publicKey(&#x27;address&#x27;),bool(&#x27;writable&#x27;),])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L59">schema.ts:59</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L59">schema.ts:59</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -204,7 +216,7 @@
 					<div class="tsd-signature tsd-kind-icon">Pool<wbr>Action<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="_index_.html#poolaction" class="tsd-signature-type">PoolAction</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = rustEnum([u64(&#x27;create&#x27;),u64(&#x27;redeem&#x27;),Basket.replicate(&#x27;swap&#x27;),])</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L81">schema.ts:81</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L81">schema.ts:81</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -214,7 +226,7 @@
 					<div class="tsd-signature tsd-kind-icon">Pool<wbr>Request<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="_index_.html#poolrequest" class="tsd-signature-type">PoolRequest</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = tagged(POOL_REQUEST_TAG,rustEnum([InitializePoolRequest.replicate(&#x27;initialize&#x27;),PoolAction.replicate(&#x27;getBasket&#x27;),PoolAction.replicate(&#x27;transact&#x27;),]),)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L95">schema.ts:95</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L95">schema.ts:95</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -224,7 +236,7 @@
 					<div class="tsd-signature tsd-kind-icon">Pool<wbr>State<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Layout</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.poolstate.html" class="tsd-signature-type">PoolState</a><span class="tsd-signature-symbol">&gt;</span><span class="tsd-signature-symbol"> = tagged(POOL_STATE_TAG,struct([publicKey(&#x27;poolTokenMint&#x27;),vec(AssetInfo, &#x27;assets&#x27;),publicKey(&#x27;vaultSigner&#x27;),u8(&#x27;vaultSignerNonce&#x27;),vec(ParamDesc, &#x27;accountParams&#x27;),option(publicKey(), &#x27;adminKey&#x27;),vecU8(&#x27;customState&#x27;),]),)</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L66">schema.ts:66</a></li>
+							<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L66">schema.ts:66</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -241,7 +253,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L118">schema.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L118">schema.ts:118</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -264,7 +276,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L108">schema.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L108">schema.ts:108</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -287,7 +299,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L112">schema.ts:112</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L112">schema.ts:112</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -310,7 +322,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7e1a56a/packages/pool/src/schema.ts#L104">schema.ts:104</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/schema.ts#L104">schema.ts:104</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -320,6 +332,32 @@
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="loadpoolinfo" class="tsd-anchor"></a>
+					<h3>load<wbr>Pool<wbr>Info</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">load<wbr>Pool<wbr>Info<span class="tsd-signature-symbol">(</span>connection<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Connection</span>, address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/93fa1a6/packages/pool/src/index.ts#L13">index.ts:13</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>connection: <span class="tsd-signature-type">Connection</span></h5>
+								</li>
+								<li>
+									<h5>address: <span class="tsd-signature-type">PublicKey</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -338,6 +376,12 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_index_.poolinstructions.html" class="tsd-kind-icon">Pool<wbr>Instructions</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="../classes/_index_.pooltransactions.html" class="tsd-kind-icon">Pool<wbr>Transactions</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="../interfaces/_index_.assetinfo.html" class="tsd-kind-icon">Asset<wbr>Info</a>
 					</li>
@@ -351,7 +395,19 @@
 						<a href="../interfaces/_index_.paramdesc.html" class="tsd-kind-icon">Param<wbr>Desc</a>
 					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_index_.poolinfo.html" class="tsd-kind-icon">Pool<wbr>Info</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="../interfaces/_index_.poolstate.html" class="tsd-kind-icon">Pool<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_index_.simplepoolparams.html" class="tsd-kind-icon">Simple<wbr>Pool<wbr>Params</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_index_.transactionandsigners.html" class="tsd-kind-icon">Transaction<wbr>And<wbr>Signers</a>
+					</li>
+					<li class=" tsd-kind-interface tsd-parent-kind-module">
+						<a href="../interfaces/_index_.userinfo.html" class="tsd-kind-icon">User<wbr>Info</a>
 					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-module">
 						<a href="_index_.html#poolaction" class="tsd-kind-icon">Pool<wbr>Action</a>
@@ -397,6 +453,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_index_.html#ispoolstate" class="tsd-kind-icon">is<wbr>Pool<wbr>State</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_index_.html#loadpoolinfo" class="tsd-kind-icon">load<wbr>Pool<wbr>Info</a>
 					</li>
 				</ul>
 			</nav>
