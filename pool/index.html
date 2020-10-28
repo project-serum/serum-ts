@@ -77,12 +77,34 @@
 				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
 					<h2>Usage</h2>
 				</a>
+				<a href="#load-pool-info" id="load-pool-info" style="color: inherit; text-decoration: none;">
+					<h3>Load pool info</h3>
+				</a>
+				<pre><code class="language-js"><span class="hljs-keyword">import</span> { Connection, PublicKey } <span class="hljs-keyword">from</span> <span class="hljs-string">'@solana/web3.js'</span>;
+<span class="hljs-keyword">import</span> { loadPoolInfo, PoolTransactions } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
+
+<span class="hljs-keyword">let</span> connection = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'...'</span>);
+<span class="hljs-keyword">let</span> poolAddress = <span class="hljs-keyword">new</span> PublicKey(<span class="hljs-string">'...'</span>); <span class="hljs-comment">// Address of the pool.</span>
+
+<span class="hljs-keyword">let</span> poolInfo = <span class="hljs-keyword">await</span> loadPoolInfo(connection, poolAddress);
+<span class="hljs-built_in">console</span>.log(poolInfo.state);</code></pre>
+				<p>See <a href="https://project-serum.github.io/serum-ts/pool/modules/_index_.html#loadpoolinfo">loadPoolInfo()</a> and <a href="https://project-serum.github.io/serum-ts/pool/interfaces/_index_.poolstate.html">PoolState</a> for details.</p>
+				<a href="#decode-pool-state" id="decode-pool-state" style="color: inherit; text-decoration: none;">
+					<h3>Decode pool state</h3>
+				</a>
+				<pre><code class="language-js"><span class="hljs-keyword">import</span> { decodePoolState } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
+
+<span class="hljs-comment">// Pool state account data, e.g. from Connection.getAccountInfo or Connection.onAccountChange</span>
+<span class="hljs-keyword">let</span> data = <span class="hljs-keyword">new</span> Buffer(<span class="hljs-string">'...'</span>);
+
+<span class="hljs-keyword">let</span> poolState = decodePoolState(data);
+<span class="hljs-built_in">console</span>.log(poolState);</code></pre>
+				<p>See <a href="https://project-serum.github.io/serum-ts/pool/interfaces/_index_.poolstate.html">PoolState</a>.</p>
 				<a href="#create-pool-tokens" id="create-pool-tokens" style="color: inherit; text-decoration: none;">
 					<h3>Create pool tokens</h3>
 				</a>
 				<pre><code class="language-js"><span class="hljs-keyword">import</span> { Account, Connection, PublicKey } <span class="hljs-keyword">from</span> <span class="hljs-string">'@solana/web3.js'</span>;
-<span class="hljs-keyword">import</span> { loadPoolInfo } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
-<span class="hljs-keyword">import</span> { PoolTransactions } <span class="hljs-keyword">from</span> <span class="hljs-string">'./transactions'</span>;
+<span class="hljs-keyword">import</span> { loadPoolInfo, PoolTransactions } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
 <span class="hljs-keyword">import</span> BN <span class="hljs-keyword">from</span> <span class="hljs-string">'bn.js'</span>;
 
 <span class="hljs-keyword">let</span> connection = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'...'</span>);
@@ -108,12 +130,12 @@
   [<span class="hljs-keyword">new</span> BN(<span class="hljs-number">10</span>), <span class="hljs-keyword">new</span> BN(<span class="hljs-number">10</span>)],
 );
 <span class="hljs-keyword">await</span> connection.sendTransaction(transaction, [payer, ...signers]);</code></pre>
+				<p>See <a href="https://project-serum.github.io/serum-ts/pool/classes/_index_.pooltransactions.html#execute">PoolTransactions.execute</a> for details.</p>
 				<a href="#redeem-pool-tokens" id="redeem-pool-tokens" style="color: inherit; text-decoration: none;">
 					<h3>Redeem pool tokens</h3>
 				</a>
 				<pre><code class="language-js"><span class="hljs-keyword">import</span> { Account, Connection, PublicKey } <span class="hljs-keyword">from</span> <span class="hljs-string">'@solana/web3.js'</span>;
-<span class="hljs-keyword">import</span> { loadPoolInfo } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
-<span class="hljs-keyword">import</span> { PoolTransactions } <span class="hljs-keyword">from</span> <span class="hljs-string">'./transactions'</span>;
+<span class="hljs-keyword">import</span> { loadPoolInfo, PoolTransactions } <span class="hljs-keyword">from</span> <span class="hljs-string">'@project-serum/pool'</span>;
 <span class="hljs-keyword">import</span> BN <span class="hljs-keyword">from</span> <span class="hljs-string">'bn.js'</span>;
 
 <span class="hljs-keyword">let</span> connection = <span class="hljs-keyword">new</span> Connection(<span class="hljs-string">'...'</span>);
@@ -139,6 +161,7 @@
   [<span class="hljs-keyword">new</span> BN(<span class="hljs-number">10</span>), <span class="hljs-keyword">new</span> BN(<span class="hljs-number">10</span>)],
 );
 <span class="hljs-keyword">await</span> connection.sendTransaction(transaction, [payer, ...signers]);</code></pre>
+				<p>See <a href="https://project-serum.github.io/serum-ts/pool/classes/_index_.pooltransactions.html#execute">PoolTransactions.execute</a> for details.</p>
 				<a href="#api-reference" id="api-reference" style="color: inherit; text-decoration: none;">
 					<h2>API Reference</h2>
 				</a>
