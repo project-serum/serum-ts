@@ -6,7 +6,7 @@
   "main": "dist/lib/index.js",
   "source": "src/index.js",
   "types": "dist/lib/index.d.ts",
-  "exports":{
+  "exports": {
     ".": "dist/lib/index.js"
   },
   "license": "Apache-2.0",
@@ -26,29 +26,29 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@project-serum/serum": "^0.13.7",
     "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0",
-    "@project-serum/serum": "^0.13.7"
+    "buffer-layout": "^1.2.0"
   },
   "peerDependencies": {
     "@solana/web3.js": "^0.84.0"
   },
   "devDependencies": {
-    "@solana/web3.js": "^0.84.0",
+    "@solana/web3.js": "^0.85.0",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^26.0.9",
-    "@typescript-eslint/eslint-plugin": "^4.5.0",
-    "@typescript-eslint/parser": "^4.5.0",
+    "@typescript-eslint/eslint-plugin": "^4.6.0",
+    "@typescript-eslint/parser": "^4.6.0",
     "babel-eslint": "^10.0.3",
     "cross-env": "^7.0.2",
-    "eslint": "^7.6.0",
-    "eslint-config-prettier": "^6.11.0",
+    "eslint": "^7.12.1",
+    "eslint-config-prettier": "^6.15.0",
     "jest": "^26.4.0",
     "npm-run-all": "^4.1.5",
     "prettier": "^2.0.5",
-    "ts-jest": "^26.2.0",
+    "ts-jest": "^26.4.3",
     "typedoc": "^0.17.0-3",
-    "typescript": "^4.0.3"
+    "typescript": "^4.0.5"
   },
   "files": [
     "dist"

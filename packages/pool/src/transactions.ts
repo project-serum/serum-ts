@@ -19,6 +19,10 @@ import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 
 export interface TransactionAndSigners {
   transaction: Transaction;
+  /**
+   * Auto-generated accounts that need to sign the transaction. Note that this does not include
+   * the user (fee payer and spl-token owner) account.
+   */
   signers: Account[];
 }
 
@@ -29,8 +33,6 @@ export interface SimplePoolParams {
   /** Program ID of the pool program. */
   programId: PublicKey;
 
-  /** Uninitialized account to use as the new pool account. */
-  poolStateAccount: Account;
   /** Size of pool state account, in bytes. */
   poolStateSpace: number;
 
@@ -77,15 +79,14 @@ export class PoolTransactions {
    */
   static async initializeSimplePool(
     params: SimplePoolParams,
-  ): Promise<TransactionAndSigners> {
+  ): Promise<[PublicKey, TransactionAndSigners[]]> {
     const {
       connection,
       programId,
-      poolStateAccount,
       poolStateSpace,
       poolMintDecimals = 6,
       assetMints,
-      initialPoolMintSupply = new BN('1e' + poolMintDecimals),
+      initialPoolMintSupply = new BN('1' + '0'.repeat(poolMintDecimals)),
       initialAssetQuantities,
       creator,
       creatorAssets,
@@ -100,27 +101,43 @@ export class PoolTransactions {
       throw new Error('assetMints and creatorAssets must have the same length');
     }
 
+    const poolStateAccount = new Account();
     const [vaultSigner, vaultSignerNonce] = await PublicKey.findProgramAddress(
       [poolStateAccount.publicKey.toBuffer()],
       programId,
     );
     const poolTokenMint = new Account();
     const creatorPoolTokenAccount = new Account();
-    const transaction = new Transaction();
-    const signers = [poolStateAccount, poolTokenMint, creatorPoolTokenAccount];
+    const vaultAccounts = assetMints.map(() => new Account());
 
+    // Split into two transactions to stay under the size limit.
+    // Ideally all instructions that transfer tokens happen in the second transaction,
+    // so they get reverted if the pool creation fails.
+    const setup = {
+      transaction: new Transaction(),
+      signers: [poolTokenMint, creatorPoolTokenAccount, ...vaultAccounts],
+    };
+    const finalize = {
+      transaction: new Transaction(),
+      signers: [poolStateAccount],
+    };
+
+    const mintAccountSpace = 82;
+    const mintAccountLamports = await connection.getMinimumBalanceForRentExemption(
+      mintAccountSpace,
+    );
     const tokenAccountSpace = 165;
     const tokenAccountLamports = await connection.getMinimumBalanceForRentExemption(
       tokenAccountSpace,
     );
 
     // Initialize pool token.
-    transaction.add(
+    setup.transaction.add(
       SystemProgram.createAccount({
         fromPubkey: creator,
         newAccountPubkey: poolTokenMint.publicKey,
-        space: 82,
-        lamports: await connection.getMinimumBalanceForRentExemption(82),
+        space: mintAccountSpace,
+        lamports: mintAccountLamports,
         programId: TOKEN_PROGRAM_ID,
       }),
       TokenInstructions.initializeMint({
@@ -135,6 +152,13 @@ export class PoolTransactions {
         lamports: tokenAccountLamports,
         programId: TOKEN_PROGRAM_ID,
       }),
+      TokenInstructions.initializeAccount({
+        account: creatorPoolTokenAccount.publicKey,
+        mint: poolTokenMint.publicKey,
+        owner: creator,
+      }),
+    );
+    finalize.transaction.add(
       TokenInstructions.mintTo({
         mint: poolTokenMint.publicKey,
         destination: creatorPoolTokenAccount.publicKey,
@@ -150,10 +174,9 @@ export class PoolTransactions {
     );
 
     // Initialize vault accounts.
-    const vaults: PublicKey[] = [];
     assetMints.forEach((mint, index) => {
-      const vault = new Account();
-      transaction.add(
+      const vault = vaultAccounts[index];
+      setup.transaction.add(
         SystemProgram.createAccount({
           fromPubkey: creator,
           newAccountPubkey: vault.publicKey,
@@ -166,6 +189,8 @@ export class PoolTransactions {
           mint,
           owner: vaultSigner,
         }),
+      );
+      finalize.transaction.add(
         TokenInstructions.transfer({
           source: creatorAssets[index],
           destination: vault.publicKey,
@@ -173,12 +198,10 @@ export class PoolTransactions {
           owner: creator,
         }),
       );
-      vaults.push(vault.publicKey);
-      signers.push(vault);
     });
 
     // Initialize pool account.
-    transaction.add(
+    finalize.transaction.add(
       SystemProgram.createAccount({
         fromPubkey: creator,
         newAccountPubkey: poolStateAccount.publicKey,
@@ -192,14 +215,14 @@ export class PoolTransactions {
         programId,
         poolStateAccount.publicKey,
         poolTokenMint.publicKey,
-        vaults,
+        vaultAccounts.map(vault => vault.publicKey),
         vaultSigner,
         vaultSignerNonce,
         additionalAccounts,
       ),
     );
 
-    return { transaction, signers };
+    return [poolStateAccount.publicKey, [setup, finalize]];
   }
 
   /**
@@ -232,6 +255,7 @@ export class PoolTransactions {
     transaction.add(
       PoolInstructions.getBasket(pool, action, retbufAccount.publicKey),
     );
+    transaction.feePayer = payer;
     return { transaction, signers: [retbufAccount] };
   }
 
@@ -257,6 +281,11 @@ export class PoolTransactions {
     user: UserInfo,
     expectedBasket: Basket,
   ): TransactionAndSigners {
+    if (expectedBasket.quantities.length !== pool.state.assets.length) {
+      throw new Error(
+        'expectedBasket must have the same number of components as the pool',
+      );
+    }
     const transaction = new Transaction();
     const delegate = new Account();
     if ('create' in action) {

@@ -1,6 +1,8 @@
 import {
   AccountMeta,
   PublicKey,
+  SYSVAR_INSTRUCTIONS_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
 import { encodePoolRequest, PoolAction, PoolState } from './schema';
@@ -28,7 +30,7 @@ export interface UserInfo {
 
 export const RETBUF_PROGRAM_ID = new PublicKey(
   // TODO
-  '11111111111111111111111111111111',
+  'Fb5VbxAy7Q6HKjWrggEvEtifBfM7T4HukisF1yyVRN4y',
 );
 
 export class PoolInstructions {
@@ -45,6 +47,7 @@ export class PoolInstructions {
    * @param vaultSignerNonce Nonce used to generate `vaultSigner`.
    * @param additionalAccounts Any custom pool-specific accounts needed to
    * initialize the pool.
+   * @param customData Any custom pool-specific data needed to initialize the pool
    */
   static initialize(
     poolProgram: PublicKey,
@@ -53,7 +56,8 @@ export class PoolInstructions {
     vaults: PublicKey[],
     vaultSigner: PublicKey,
     vaultSignerNonce: number,
-    additionalAccounts: AccountMeta[],
+    additionalAccounts?: AccountMeta[],
+    customData?: Buffer,
   ): TransactionInstruction {
     return new TransactionInstruction({
       keys: [
@@ -65,15 +69,19 @@ export class PoolInstructions {
           isWritable: true,
         })),
         { pubkey: vaultSigner, isSigner: false, isWritable: false },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: true, isWritable: false },
-        ...additionalAccounts,
+        {
+          pubkey: SYSVAR_RENT_PUBKEY,
+          isSigner: false,
+          isWritable: false,
+        },
+        ...(additionalAccounts ?? []),
       ],
       programId: poolProgram,
       data: encodePoolRequest({
         initialize: {
           vaultSignerNonce,
           assetsLength: vaults.length,
-          customStateLength: 0,
+          customData: customData ?? Buffer.alloc(0),
         },
       }),
     });
@@ -156,7 +164,7 @@ export class PoolInstructions {
           isWritable: true,
         })),
         { pubkey: user.owner, isSigner: true, isWritable: false },
-        { pubkey: TOKEN_PROGRAM_ID, isSigner: true, isWritable: false },
+        { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
         ...pool.state.accountParams.map(paramInfo => ({
           pubkey: paramInfo.address,
           isSigner: false,

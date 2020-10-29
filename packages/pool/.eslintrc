@@ -16,6 +16,8 @@
     "sourceType": "module"
   },
   "rules": {
+    "no-constant-condition": ["error", { "checkLoops": false }],
+    "no-empty-function": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "off"
   }

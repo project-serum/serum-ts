@@ -37,14 +37,14 @@ class BNLayout extends LayoutCls<BN> {
   decode(b: Buffer, offset = 0) {
     const num = new BN(this.blob.decode(b, offset), 10, 'le');
     if (this.signed) {
-      return num.fromTwos(this.span);
+      return num.fromTwos(this.span * 8).clone();
     }
     return num;
   }
 
   encode(src: BN, b: Buffer, offset = 0) {
     if (this.signed) {
-      src = src.toTwos(this.span);
+      src = src.toTwos(this.span * 8);
     }
     return this.blob.encode(
       src.toArrayLike(Buffer, 'le', this.span),
@@ -238,7 +238,7 @@ export function rustEnum<T>(
   variants: Layout<any>[],
   property?: string,
 ): Layout<T> {
-  const unionLayout = union(u32(), property);
+  const unionLayout = union(u8(), property);
   variants.forEach((variant, index) =>
     unionLayout.addVariant(index, variant, variant.property),
   );

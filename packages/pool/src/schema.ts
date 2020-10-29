@@ -55,7 +55,7 @@ export type PoolRequest =
 export interface InitializePoolRequest {
   vaultSignerNonce: number;
   assetsLength: number;
-  customStateLength: number;
+  customData: Buffer;
 }
 
 export type PoolAction = { create: BN } | { redeem: BN } | { swap: Basket };
@@ -100,7 +100,7 @@ export const PoolAction: Layout<PoolAction> = rustEnum([
 export const InitializePoolRequest: Layout<InitializePoolRequest> = struct([
   u8('vaultSignerNonce'),
   u8('assetsLength'),
-  u16('customStateLength'),
+  vecU8('customData'),
 ]);
 
 export const POOL_REQUEST_TAG = new BN('220a6cbdcd1cc4cf', 'hex');
@@ -110,12 +110,12 @@ export const PoolRequest: Layout<PoolRequest> = tagged(
   rustEnum([
     InitializePoolRequest.replicate('initialize'),
     PoolAction.replicate('getBasket'),
-    PoolAction.replicate('transact'),
+    PoolAction.replicate('execute'),
   ]),
 );
 
 export function isPoolState(data: Buffer): boolean {
-  return data.slice(0, 8).equals(POOL_REQUEST_TAG.toBuffer('le'));
+  return data.slice(0, 8).equals(POOL_STATE_TAG.toBuffer('le'));
 }
 
 export function decodePoolState(data: Buffer): PoolState {
