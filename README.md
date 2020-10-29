@@ -3,8 +3,6 @@
 [![Discord Chat](https://img.shields.io/discord/739225212658122886?color=blueviolet)](https://discord.com/channels/739225212658122886)
 [![License](https://img.shields.io/github/license/project-serum/serum-dex?color=blue)](https://opensource.org/licenses/Apache-2.0)
 
-TODO: decide on a name for this. Should be called serum-js if we move everything into here?
-
 ## Contributing
 
 ### Installing
