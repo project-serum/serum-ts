@@ -241,7 +241,7 @@ async function createUserAccounts(
   return {
     owner: payer.publicKey,
     poolTokenAccount: poolTokenAccount.publicKey,
-    assetAccounts: assetAccounts.map(account => account.publicKey),
+    assetAccounts: assetAccounts.map((account) => account.publicKey),
   };
 }
 
@@ -250,17 +250,11 @@ async function sendAndConfirmTransaction(
   transaction: Transaction,
   signers: Account[],
 ) {
-  let txid;
-  try {
-    txid = await connection.sendTransaction(transaction, signers, {
-      preflightCommitment: 'recent',
-    });
-  } catch (e) {
-    console.log(await simulateTransaction(connection, transaction, 'recent'));
-    throw e;
-  }
+  const txid = await connection.sendTransaction(transaction, signers, {
+    preflightCommitment: 'recent',
+  });
   await connection.confirmTransaction(txid, 'recent');
   return txid;
 }
 
-doStuff().catch(e => console.error(e));
+doStuff().catch((e) => console.error(e));

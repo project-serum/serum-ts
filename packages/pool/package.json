@@ -26,15 +26,15 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.7",
+    "@project-serum/serum": "^0.13.8",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.84.0"
+    "@solana/web3.js": "^0.86.1"
   },
   "devDependencies": {
-    "@solana/web3.js": "^0.85.0",
+    "@solana/web3.js": "^0.86.1",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^26.0.9",
     "@typescript-eslint/eslint-plugin": "^4.6.0",
