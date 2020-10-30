@@ -1,0 +1,55 @@
+{
+  "name": "@project-serum/swap",
+  "version": "0.0.0",
+  "description": "Serum Swap",
+  "main": "dist/index.umd.js",
+  "module": "dist/index.es5.js",
+  "types": "dist/lib/src/index.d.ts",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "yarn build:node && yarn build:browser",
+    "build:node": "tsc -b && rollup -c rollup/rollup.config.ts",
+    "build:browser": "tsc -b && rollup -c rollup/rollup.config.browser.ts",
+    "test": "jest test",
+    "coverage": "jest --coverage test",
+    "prepublishOnly": "yarn build"
+  },
+  "jest": {
+    "transform": {
+      ".(ts)": "ts-jest"
+    },
+    "testEnvironment": "node",
+    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js"
+    ]
+  },
+  "dependencies": {
+    "@project-serum/serum": "^0.13.8",
+    "@solana/spl-token": "0.0.11",
+    "@solana/spl-token-swap": "0.0.2",
+    "bn.js": "^5.1.3",
+    "bs58": "^4.0.1",
+    "buffer-layout": "^1.2.0",
+    "dotenv": "^8.2.0"
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^0.84.1"
+  },
+  "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/bn.js": "^4.11.6",
+    "@types/bs58": "^4.0.1",
+    "@types/jest": "^24.9.1",
+    "@types/node": "^12.12.62"
+  },
+  "browser": {
+    "./dist/index.umd.js": "./dist/index.browser.umd.js",
+    "./dist/index.es5.js": "./dist/index.browser.es5.js"
+  }
+}

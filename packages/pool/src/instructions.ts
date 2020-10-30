@@ -1,7 +1,6 @@
 import {
   AccountMeta,
   PublicKey,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
 } from '@solana/web3.js';
