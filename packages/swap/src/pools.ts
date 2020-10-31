@@ -465,7 +465,7 @@ export class Pool {
         ? this._holdingAccounts[0]
         : this._holdingAccounts[1];
     const holdingB =
-      holdingA === this._tokenMints[0]
+      holdingA === this._holdingAccounts[0]
         ? this._holdingAccounts[1]
         : this._holdingAccounts[0];
 
