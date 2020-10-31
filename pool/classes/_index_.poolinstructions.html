@@ -104,7 +104,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/d66e4e6/packages/pool/src/instructions.ts#L145">instructions.ts:145</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2643279/packages/pool/src/instructions.ts#L147">instructions.ts:147</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -144,7 +144,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/d66e4e6/packages/pool/src/instructions.ts#L106">instructions.ts:106</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2643279/packages/pool/src/instructions.ts#L108">instructions.ts:108</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -185,13 +185,13 @@
 					<a name="initialize" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> initialize</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">initialize<span class="tsd-signature-symbol">(</span>poolProgram<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolTokenMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, vaults<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span>, vaultSigner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, vaultSignerNonce<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, additionalAccounts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">AccountMeta</span><span class="tsd-signature-symbol">[]</span>, customData<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+						<li class="tsd-signature tsd-kind-icon">initialize<span class="tsd-signature-symbol">(</span>poolProgram<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolTokenMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, vaults<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span>, vaultSigner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, vaultSignerNonce<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, additionalAccounts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">AccountMeta</span><span class="tsd-signature-symbol">[]</span>, customData<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/d66e4e6/packages/pool/src/instructions.ts#L52">instructions.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2643279/packages/pool/src/instructions.ts#L52">instructions.ts:52</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -218,6 +218,12 @@
 									<h5>poolTokenMint: <span class="tsd-signature-type">PublicKey</span></h5>
 									<div class="tsd-comment tsd-typography">
 										<p>spl-token mint address for the pool token.</p>
+									</div>
+								</li>
+								<li>
+									<h5>poolName: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>User-friendly name for the pool.</p>
 									</div>
 								</li>
 								<li>
