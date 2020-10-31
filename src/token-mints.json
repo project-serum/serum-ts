@@ -98,5 +98,13 @@
     {
         "address": "So11111111111111111111111111111111111111112",
         "name": "SOL"
+    },
+    {
+        "address": "Cu83Rkh99iNdogZ9awWzSpxixE8V3vgiHBsb1QeP3VSQ",
+        "name": "TOMO"
+    },
+    {
+        "address": "EqWCKXfs3x47uVosDpTRgFniThL9Y8iCztJaapxbEaVX",
+        "name": "LUA"
     }
 ]
