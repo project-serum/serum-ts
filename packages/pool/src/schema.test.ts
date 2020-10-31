@@ -35,6 +35,7 @@ describe('PoolState', () => {
           writable: false,
         },
       ],
+      name: 'Test',
       adminKey: null,
       customState: Buffer.alloc(10),
     };

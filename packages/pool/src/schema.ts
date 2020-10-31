@@ -6,6 +6,7 @@ import {
   option,
   publicKey,
   rustEnum,
+  str,
   tagged,
   u64,
   vec,
@@ -28,6 +29,8 @@ export interface PoolState {
   vaultSignerNonce: number;
   /** Accounts that must be included in requests to create or redeem tokens. */
   accountParams: ParamDesc[];
+  /** User-friendly name for the pool. */
+  name: string;
   /** Admin for the pool. Not used by default but may have pool-specific semantics. */
   adminKey: PublicKey | null;
   /** Custom pool-specific state. */
@@ -55,6 +58,7 @@ export type PoolRequest =
 export interface InitializePoolRequest {
   vaultSignerNonce: number;
   assetsLength: number;
+  poolName: string;
   customData: Buffer;
 }
 
@@ -84,6 +88,7 @@ export const PoolState: Layout<PoolState> = tagged(
     publicKey('vaultSigner'),
     u8('vaultSignerNonce'),
     vec(ParamDesc, 'accountParams'),
+    str('name'),
     option(publicKey(), 'adminKey'),
     vecU8('customState'),
   ]),
@@ -100,6 +105,7 @@ export const PoolAction: Layout<PoolAction> = rustEnum([
 export const InitializePoolRequest: Layout<InitializePoolRequest> = struct([
   u8('vaultSignerNonce'),
   u8('assetsLength'),
+  str('poolName'),
   vecU8('customData'),
 ]);
 

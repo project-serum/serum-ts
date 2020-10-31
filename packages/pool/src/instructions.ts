@@ -40,6 +40,7 @@ export class PoolInstructions {
    * @param poolAccount Newly-created account to hold the pool state. Must be
    * owned by the pool program.
    * @param poolTokenMint spl-token mint address for the pool token.
+   * @param poolName User-friendly name for the pool.
    * @param vaults spl-token account for each of the assets in the pool.
    * @param vaultSigner Mint authority for `poolTokenMint` and owner of
    * `poolTokenMint`.
@@ -52,6 +53,7 @@ export class PoolInstructions {
     poolProgram: PublicKey,
     poolAccount: PublicKey,
     poolTokenMint: PublicKey,
+    poolName: string,
     vaults: PublicKey[],
     vaultSigner: PublicKey,
     vaultSignerNonce: number,
@@ -80,6 +82,7 @@ export class PoolInstructions {
         initialize: {
           vaultSignerNonce,
           assetsLength: vaults.length,
+          poolName,
           customData: customData ?? Buffer.alloc(0),
         },
       }),

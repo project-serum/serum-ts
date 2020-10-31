@@ -36,6 +36,9 @@ export interface SimplePoolParams {
   /** Size of pool state account, in bytes. */
   poolStateSpace: number;
 
+  /** User-friendly name for the pool. */
+  poolName: string;
+
   /**
    * Number of decimals for the to-be-created pool token.
    *
@@ -85,6 +88,7 @@ export class PoolTransactions {
       programId,
       poolStateSpace,
       poolMintDecimals = 6,
+      poolName,
       assetMints,
       initialPoolMintSupply = new BN('1' + '0'.repeat(poolMintDecimals)),
       initialAssetQuantities,
@@ -215,6 +219,7 @@ export class PoolTransactions {
         programId,
         poolStateAccount.publicKey,
         poolTokenMint.publicKey,
+        poolName,
         vaultAccounts.map(vault => vault.publicKey),
         vaultSigner,
         vaultSignerNonce,

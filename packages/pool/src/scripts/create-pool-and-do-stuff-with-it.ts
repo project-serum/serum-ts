@@ -14,7 +14,7 @@ import { PoolTransactions } from '../transactions';
 import { getPoolBasket, loadPoolInfo, PoolInfo, UserInfo } from '../index';
 
 const POOL_PROGRAM_ID = new PublicKey(
-  'DZMz3qpQfBSKcJCqkTX4eJHjqFwgsV4xcDB2tj4gr5ux',
+  'C6DXD7VDvktuRj1YMCGfKtWFJocaFnmKHvkv2JyxMvD6',
 );
 
 async function doStuff() {
@@ -43,6 +43,7 @@ async function doStuff() {
     initialAssetQuantities: [new BN(100), new BN(300)],
     poolStateSpace: 1000,
     programId: POOL_PROGRAM_ID,
+    poolName: 'Test Pool',
   });
   console.log('Pool address:', poolAddress.toBase58());
   for (const { transaction, signers } of transactions) {
