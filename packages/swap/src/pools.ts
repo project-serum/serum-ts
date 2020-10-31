@@ -50,7 +50,7 @@ export class Pool {
     decoded: any, // todo: remove any
     poolAccount: any, // todo: remove any
     programId: PublicKey,
-    options: PoolOptions = {}
+    options: PoolOptions = {},
   ) {
     const { skipPreflight = false, commitment = 'recent' } = options;
     this._decoded = decoded;
@@ -76,11 +76,11 @@ export class Pool {
     connection: Connection,
     address: PublicKey,
     programId: PublicKey,
-    options: PoolOptions = {}
+    options: PoolOptions = {},
   ) {
     const account = throwIfNull(
       await connection.getAccountInfo(address),
-      'Pool not found'
+      'Pool not found',
     );
     const decoded = TokenSwapLayout.decode(account.data);
     return new Pool(decoded, address, programId, options);
@@ -102,7 +102,7 @@ export class Pool {
     callable: () => Promise<T>,
     cache: { [key: string]: { value: T; ts: number } },
     key: string,
-    cacheDurationMs: number
+    cacheDurationMs: number,
   ): Promise<T> {
     const cachedItem = cache[key];
     const now = timeMs();
@@ -120,26 +120,26 @@ export class Pool {
   async getCachedMintAccount(
     connection: Connection,
     pubkey: PublicKey | string,
-    cacheDurationMs = 0
+    cacheDurationMs = 0,
   ) {
     return this.cached<MintInfo>(
       () => getMintAccount(connection, pubkey),
       this._mintAccountsCache,
       typeof pubkey === 'string' ? pubkey : pubkey.toBase58(),
-      cacheDurationMs
+      cacheDurationMs,
     );
   }
 
   async getCachedTokenAccount(
     connection: Connection,
     pubkey: PublicKey | string,
-    cacheDurationMs = 0
+    cacheDurationMs = 0,
   ) {
     return this.cached<TokenAccount>(
       () => getTokenAccount(connection, pubkey),
       this._tokenAccountsCache,
       typeof pubkey === 'string' ? pubkey : pubkey.toBase58(),
-      cacheDurationMs
+      cacheDurationMs,
     );
   }
 
@@ -148,7 +148,7 @@ export class Pool {
     owner: T,
     liquidityAmount: number,
     poolAccount: TokenAccount,
-    tokenAccounts: TokenAccount[]
+    tokenAccounts: TokenAccount[],
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -160,17 +160,17 @@ export class Pool {
     const poolMint = await this.getCachedMintAccount(
       connection,
       this._poolTokenMint,
-      3600000
+      3600000,
     );
     const accountA = await this.getCachedTokenAccount(
       connection,
       this._holdingAccounts[0],
-      3600000
+      3600000,
     );
     const accountB = await this.getCachedTokenAccount(
       connection,
       this._holdingAccounts[1],
-      3600000
+      3600000,
     );
     if (!poolMint.mintAuthority) {
       throw new Error('Mint doesnt have authority');
@@ -185,13 +185,13 @@ export class Pool {
     let tokenAccountB: PublicKey | undefined;
     if (accountA.info.mint.equals(WRAPPED_SOL_MINT)) {
       const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-        AccountLayout.span
+        AccountLayout.span,
       );
       const { account, instructions, cleanUpInstructions } = createTokenAccount(
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        accountRentExempt
+        accountRentExempt,
       );
       tokenAccountA = account.publicKey;
       signers.push(account);
@@ -199,18 +199,18 @@ export class Pool {
       cleanUpInstructions.concat(cleanUpInstructions);
     } else {
       tokenAccountA = tokenAccounts.find(a =>
-        a.info.mint.equals(accountA.info.mint)
+        a.info.mint.equals(accountA.info.mint),
       )?.pubkey;
     }
     if (accountB.info.mint.equals(WRAPPED_SOL_MINT)) {
       const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-        AccountLayout.span
+        AccountLayout.span,
       );
       const { account, instructions, cleanUpInstructions } = createTokenAccount(
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        accountRentExempt
+        accountRentExempt,
       );
       tokenAccountB = account.publicKey;
       signers.push(account);
@@ -218,16 +218,16 @@ export class Pool {
       cleanUpInstructions.concat(cleanUpInstructions);
     } else {
       tokenAccountB = tokenAccounts.find(a =>
-        a.info.mint.equals(accountB.info.mint)
+        a.info.mint.equals(accountB.info.mint),
       )?.pubkey;
     }
     assert(
       !!tokenAccountA,
-      `Token account for mint ${accountA.info.mint.toBase58()} not provided`
+      `Token account for mint ${accountA.info.mint.toBase58()} not provided`,
     );
     assert(
       !!tokenAccountB,
-      `Token account for mint ${accountB.info.mint.toBase58()} not provided`
+      `Token account for mint ${accountB.info.mint.toBase58()} not provided`,
     );
 
     instructions.push(
@@ -237,8 +237,8 @@ export class Pool {
         authority,
         ownerAddress,
         [],
-        liquidityAmount
-      )
+        liquidityAmount,
+      ),
     );
 
     instructions.push(
@@ -256,8 +256,8 @@ export class Pool {
         TOKEN_PROGRAM_ID,
         liquidityAmount,
         minAmount0,
-        minAmount1
-      )
+        minAmount1,
+      ),
     );
     const transaction = new Transaction();
     transaction.add(...instructions, ...cleanUpInstructions);
@@ -273,14 +273,14 @@ export class Pool {
       amount: number; // note this is raw amount, not decimal
     }[],
     poolTokenAccount?: PublicKey,
-    slippageTolerance = 0.005 // allow slippage of this much between setting input amounts and on chain transaction
+    slippageTolerance = 0.005, // allow slippage of this much between setting input amounts and on chain transaction
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const poolMint = await this.getCachedMintAccount(
       connection,
       this._poolTokenMint,
-      360000
+      360000,
     );
     if (!poolMint.mintAuthority) {
       throw new Error('Mint doesnt have authority');
@@ -292,17 +292,17 @@ export class Pool {
 
     const accountA = await this.getCachedTokenAccount(
       connection,
-      this._holdingAccounts[0]
+      this._holdingAccounts[0],
     );
     const accountB = await this.getCachedTokenAccount(
       connection,
-      this._holdingAccounts[1]
+      this._holdingAccounts[1],
     );
 
     const reserve0 = accountA.info.amount.toNumber();
     const reserve1 = accountB.info.amount.toNumber();
     const [fromA, fromB] = accountA.info.mint.equals(
-      sourceTokenAccounts[0].mint
+      sourceTokenAccounts[0].mint,
     )
       ? [sourceTokenAccounts[0], sourceTokenAccounts[1]]
       : [sourceTokenAccounts[1], sourceTokenAccounts[0]];
@@ -322,7 +322,7 @@ export class Pool {
 
     const liquidity = Math.min(
       (amount0 * (1 - slippageTolerance) * supply) / reserve0,
-      (amount1 * (1 - slippageTolerance) * supply) / reserve1
+      (amount1 * (1 - slippageTolerance) * supply) / reserve1,
     );
     const instructions: TransactionInstruction[] = [];
     const cleanupInstructions: TransactionInstruction[] = [];
@@ -330,7 +330,7 @@ export class Pool {
     const signers: Account[] = [];
 
     const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-      AccountLayout.span
+      AccountLayout.span,
     );
 
     let fromKeyA: PublicKey;
@@ -343,7 +343,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        fromA.amount + accountRentExempt
+        fromA.amount + accountRentExempt,
       );
       fromKeyA = account.publicKey;
       signers.push(account);
@@ -363,7 +363,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        fromB.amount + accountRentExempt
+        fromB.amount + accountRentExempt,
       );
       fromKeyB = account.publicKey;
       signers.push(account);
@@ -383,7 +383,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         this._poolTokenMint,
-        accountRentExempt
+        accountRentExempt,
       );
       toAccount = account.publicKey;
       signers.push(account);
@@ -401,8 +401,8 @@ export class Pool {
         authority,
         ownerAddress,
         [],
-        amount0
-      )
+        amount0,
+      ),
     );
 
     instructions.push(
@@ -412,8 +412,8 @@ export class Pool {
         authority,
         ownerAddress,
         [],
-        amount1
-      )
+        amount1,
+      ),
     );
 
     instructions.push(
@@ -430,8 +430,8 @@ export class Pool {
         TOKEN_PROGRAM_ID,
         liquidity,
         amount0,
-        amount1
-      )
+        amount1,
+      ),
     );
 
     const transaction = new Transaction();
@@ -454,7 +454,7 @@ export class Pool {
       amount: number; // note this is raw amount, not decimal
     },
     slippage: number,
-    hostFeeAccount: PublicKey
+    hostFeeAccount: PublicKey,
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -471,7 +471,7 @@ export class Pool {
 
     const poolMint = await this.getCachedMintAccount(
       connection,
-      this._poolTokenMint
+      this._poolTokenMint,
     );
     if (!poolMint.mintAuthority || !this._feeAccount) {
       throw new Error('Mint doesnt have authority');
@@ -483,7 +483,7 @@ export class Pool {
     const signers: Account[] = [];
 
     const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-      AccountLayout.span
+      AccountLayout.span,
     );
 
     let fromAccount: PublicKey;
@@ -496,7 +496,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        tokenIn.amount + accountRentExempt
+        tokenIn.amount + accountRentExempt,
       );
       fromAccount = account.publicKey;
       signers.push(account);
@@ -516,7 +516,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        accountRentExempt
+        accountRentExempt,
       );
       toAccount = account.publicKey;
       signers.push(account);
@@ -534,8 +534,8 @@ export class Pool {
         authority,
         ownerAddress,
         [],
-        amountIn
-      )
+        amountIn,
+      ),
     );
 
     // swap
@@ -553,8 +553,8 @@ export class Pool {
         TOKEN_PROGRAM_ID,
         amountIn,
         minAmountOut,
-        hostFeeAccount
-      )
+        hostFeeAccount,
+      ),
     );
 
     instructions.concat(cleanupInstructions);
@@ -573,7 +573,7 @@ export class Pool {
       amount: number; // note this is raw amount, not decimal
     }[],
     options: PoolConfig,
-    liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION
+    liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION,
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -586,18 +586,18 @@ export class Pool {
         fromPubkey: ownerAddress,
         newAccountPubkey: liquidityTokenMintAccount.publicKey,
         lamports: await connection.getMinimumBalanceForRentExemption(
-          MintLayout.span
+          MintLayout.span,
         ),
         space: MintLayout.span,
         programId: TOKEN_PROGRAM_ID,
-      })
+      }),
     );
     initializeAccountsSigners.push(liquidityTokenMintAccount);
 
     const tokenSwapAccount = new Account();
     const [authority, nonce] = await PublicKey.findProgramAddress(
       [tokenSwapAccount.publicKey.toBuffer()],
-      PROGRAM_ID
+      PROGRAM_ID,
     );
 
     // create mint for pool liquidity token
@@ -609,11 +609,11 @@ export class Pool {
         // pass control of liquidity mint to swap program
         authority,
         // swap program can freeze liquidity token mint
-        null
-      )
+        null,
+      ),
     );
     const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
-      AccountLayout.span
+      AccountLayout.span,
     );
     const holdingAccounts: { [mint: string]: Account } = {};
     componentMints.forEach(mint => {
@@ -622,7 +622,7 @@ export class Pool {
         instructions: createHoldingTokenAccountInstructions,
       } = createTokenAccount(authority, ownerAddress, mint, accountRentExempt);
       initializeAccountsInstructions.push(
-        ...createHoldingTokenAccountInstructions
+        ...createHoldingTokenAccountInstructions,
       );
       initializeAccountsSigners.push(account);
       holdingAccounts[mint.toBase58()] = account;
@@ -635,7 +635,7 @@ export class Pool {
       ownerAddress,
       ownerAddress,
       liquidityTokenMintAccount.publicKey,
-      accountRentExempt
+      accountRentExempt,
     );
     initializeAccountsSigners.push(depositorAccount);
     initializeAccountsInstructions.push(...createLPTokenAccountInstructions);
@@ -647,7 +647,7 @@ export class Pool {
       SWAP_PROGRAM_OWNER_FEE_ADDRESS,
       ownerAddress,
       liquidityTokenMintAccount.publicKey,
-      accountRentExempt
+      accountRentExempt,
     );
     initializeAccountsSigners.push(feeAccount);
     initializeAccountsInstructions.push(...createFeeAccountInstructions);
@@ -664,11 +664,11 @@ export class Pool {
         fromPubkey: ownerAddress,
         newAccountPubkey: tokenSwapAccount.publicKey,
         lamports: await connection.getMinimumBalanceForRentExemption(
-          TokenSwapLayout.span
+          TokenSwapLayout.span,
         ),
         space: TokenSwapLayout.span,
         programId: PROGRAM_ID,
-      })
+      }),
     );
 
     sourceTokenAccounts.forEach(({ mint, tokenAccount, amount }) => {
@@ -682,7 +682,7 @@ export class Pool {
           ownerAddress,
           ownerAddress,
           WRAPPED_SOL_MINT,
-          amount + accountRentExempt
+          amount + accountRentExempt,
         );
         wrappedAccount = account.publicKey;
         initializePoolSigners.push(account);
@@ -699,8 +699,8 @@ export class Pool {
           holdingAccounts[mint.toBase58()].publicKey,
           ownerAddress,
           [],
-          amount
-        )
+          amount,
+        ),
       );
     });
 
@@ -722,14 +722,14 @@ export class Pool {
         options.ownerTradeFeeNumerator,
         options.ownerTradeFeeDenominator,
         options.ownerWithdrawFeeNumerator,
-        options.ownerWithdrawFeeDenominator
-      )
+        options.ownerWithdrawFeeDenominator,
+      ),
     );
     initializePoolSigners.push(tokenSwapAccount);
     const initializePoolTransaction = new Transaction();
     initializePoolTransaction.add(
       ...initializePoolInstructions,
-      ...cleanupInstructions
+      ...cleanupInstructions,
     );
     return {
       initializeAccountsTransaction,
@@ -751,7 +751,7 @@ export class Pool {
     options: PoolConfig,
     liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION,
     skipPreflight = true,
-    commitment: Commitment = 'single'
+    commitment: Commitment = 'single',
   ) {
     const {
       initializeAccountsTransaction,
@@ -764,27 +764,27 @@ export class Pool {
       componentMints,
       sourceTokenAccounts,
       options,
-      liquidityTokenPrecision
+      liquidityTokenPrecision,
     );
     const createAccountsTxid = await Pool.sendTransaction(
       connection,
       initializeAccountsTransaction,
       [owner, ...initializeAccountsSigners],
       skipPreflight,
-      commitment
+      commitment,
     );
     const status = (await connection.confirmTransaction(createAccountsTxid))
       .value;
     assert(
       !status.err,
-      `Received error awaiting create accounts transaction ${createAccountsTxid}`
+      `Received error awaiting create accounts transaction ${createAccountsTxid}`,
     );
     return await Pool.sendTransaction(
       connection,
       initializePoolTransaction,
       [owner, ...initializePoolSigners],
       skipPreflight,
-      commitment
+      commitment,
     );
   }
 
@@ -793,14 +793,14 @@ export class Pool {
     transaction: Transaction,
     signers: Array<Account>,
     skipPreflight = true,
-    commitment: Commitment = 'single'
+    commitment: Commitment = 'single',
   ): Promise<TransactionSignature> {
     const signature = await connection.sendTransaction(transaction, signers, {
       skipPreflight: skipPreflight,
     });
     const { value } = await connection.confirmTransaction(
       signature,
-      commitment
+      commitment,
     );
     if (value?.err) {
       throw new Error(JSON.stringify(value.err));
@@ -811,7 +811,7 @@ export class Pool {
 
 export const getMintAccount = async (
   connection: Connection,
-  pubKey: PublicKey | string
+  pubKey: PublicKey | string,
 ) => {
   const address = typeof pubKey === 'string' ? new PublicKey(pubKey) : pubKey;
   const info = await connection.getAccountInfo(address);
@@ -823,7 +823,7 @@ export const getMintAccount = async (
 
 export const getTokenAccount = async (
   connection: Connection,
-  pubKey: PublicKey | string
+  pubKey: PublicKey | string,
 ): Promise<TokenAccount> => {
   const address = typeof pubKey === 'string' ? new PublicKey(pubKey) : pubKey;
   const info = await connection.getAccountInfo(address);
@@ -842,7 +842,7 @@ export const createTokenAccount = (
   owner: PublicKey,
   payer: PublicKey,
   mint: PublicKey,
-  lamports: number
+  lamports: number,
 ) => {
   const account = new Account();
   const instructions: TransactionInstruction[] = [];
@@ -855,7 +855,7 @@ export const createTokenAccount = (
       lamports,
       space,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   );
 
   instructions.push(
@@ -863,8 +863,8 @@ export const createTokenAccount = (
       TOKEN_PROGRAM_ID,
       mint,
       account.publicKey,
-      owner
-    )
+      owner,
+    ),
   );
   if (mint.equals(WRAPPED_SOL_MINT)) {
     cleanUpInstructions.push(
@@ -873,8 +873,8 @@ export const createTokenAccount = (
         account.publicKey,
         payer,
         owner,
-        []
-      )
+        [],
+      ),
     );
   }
   return { account, instructions, cleanUpInstructions };

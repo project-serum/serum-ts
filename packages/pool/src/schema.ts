@@ -1,4 +1,4 @@
-import { struct, u16, u8 } from 'buffer-layout';
+import { struct, u8 } from 'buffer-layout';
 import {
   bool,
   i64,

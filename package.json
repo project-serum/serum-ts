@@ -14,7 +14,7 @@
     "build": "lerna run build",
     "lint": "eslint 'packages/*/{src,test}/**/*.ts' && prettier -c 'packages/*/{src,test}/**/*.ts'",
     "lint:fix": "eslint --fix 'packages/*/{src,test}/**/*.ts' && prettier --write 'packages/*/{src,test}/**/*.ts'",
-    "deploy:docs": "gh-pages -d docs",
+    "deploy:docs": "lerna run docs && gh-pages -d docs",
     "test": "lerna run test --concurrency 1 --stream"
   },
   "lint-staged": {
@@ -28,9 +28,10 @@
     }
   },
   "prettier": {
+    "arrowParens": "avoid",
     "semi": true,
     "singleQuote": true,
-    "trailingComma": "es5"
+    "trailingComma": "all"
   },
   "commitlint": {
     "extends": [
@@ -51,7 +52,7 @@
     "jest-config": "^26.6.1",
     "lerna": "3.22.1",
     "lint-staged": "^10.5.0",
-    "prettier": "^1.18.2",
+    "prettier": "^2.1.2",
     "rollup": "^1.23.1",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-json": "^4.0.0",

@@ -12,7 +12,6 @@ import { readFile } from 'fs';
 import BN from 'bn.js';
 import { PoolTransactions } from '../transactions';
 import { getPoolBasket, loadPoolInfo, PoolInfo, UserInfo } from '../index';
-import { simulateTransaction } from '../simulate-transaction';
 
 const POOL_PROGRAM_ID = new PublicKey(
   'DZMz3qpQfBSKcJCqkTX4eJHjqFwgsV4xcDB2tj4gr5ux',
@@ -191,6 +190,7 @@ async function createMint(connection: Connection, payer: Account) {
   return [mint.publicKey, vault.publicKey];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function createUserAccounts(
   connection: Connection,
   payer: Account,
@@ -241,7 +241,7 @@ async function createUserAccounts(
   return {
     owner: payer.publicKey,
     poolTokenAccount: poolTokenAccount.publicKey,
-    assetAccounts: assetAccounts.map((account) => account.publicKey),
+    assetAccounts: assetAccounts.map(account => account.publicKey),
   };
 }
 
@@ -257,4 +257,4 @@ async function sendAndConfirmTransaction(
   return txid;
 }
 
-doStuff().catch((e) => console.error(e));
+doStuff().catch(e => console.error(e));

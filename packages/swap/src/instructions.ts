@@ -6,19 +6,19 @@ import { AccountInfo, AccountLayout, MintInfo, u64 } from '@solana/spl-token';
 export { TokenSwap } from '@solana/spl-token-swap';
 
 export const PROGRAM_ID = new PublicKey(
-  '9qvG1zUp8xF1Bi4m6UdRNby1BAAuaDrUxSpv4CmRRMjL'
+  '9qvG1zUp8xF1Bi4m6UdRNby1BAAuaDrUxSpv4CmRRMjL',
 );
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
-  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+  'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
 );
 
 export const WRAPPED_SOL_MINT = new PublicKey(
-  'So11111111111111111111111111111111111111112'
+  'So11111111111111111111111111111111111111112',
 );
 
 export const SWAP_PROGRAM_OWNER_FEE_ADDRESS = new PublicKey(
-  'HfoTxFR1Tm6kGmWgYWD6J7YHVy1UwqSULUGVLXkJqaKN'
+  'HfoTxFR1Tm6kGmWgYWD6J7YHVy1UwqSULUGVLXkJqaKN',
 );
 
 export const DEFAULT_LIQUIDITY_TOKEN_PRECISION = 8;
@@ -90,7 +90,7 @@ export const createInitSwapInstruction = (
   ownerTradeFeeNumerator: number,
   ownerTradeFeeDenominator: number,
   ownerWithdrawFeeNumerator: number,
-  ownerWithdrawFeeDenominator: number
+  ownerWithdrawFeeDenominator: number,
 ): TransactionInstruction => {
   const keys = [
     { pubkey: tokenSwapAccount.publicKey, isSigner: false, isWritable: true },
@@ -129,7 +129,7 @@ export const createInitSwapInstruction = (
         ownerWithdrawFeeNumerator,
         ownerWithdrawFeeDenominator,
       },
-      data
+      data,
     );
     data = data.slice(0, encodeLength);
   }
@@ -153,7 +153,7 @@ export const depositInstruction = (
   tokenProgramId: PublicKey,
   poolTokenAmount: number | Numberu64,
   maximumTokenA: number | Numberu64,
-  maximumTokenB: number | Numberu64
+  maximumTokenB: number | Numberu64,
 ): TransactionInstruction => {
   const dataLayout = struct([
     u8('instruction'),
@@ -170,7 +170,7 @@ export const depositInstruction = (
       maximumTokenA: new Numberu64(maximumTokenA).toBuffer(),
       maximumTokenB: new Numberu64(maximumTokenB).toBuffer(),
     },
-    data
+    data,
   );
 
   const keys = [
@@ -205,7 +205,7 @@ export const withdrawInstruction = (
   tokenProgramId: PublicKey,
   poolTokenAmount: number | Numberu64,
   minimumTokenA: number | Numberu64,
-  minimumTokenB: number | Numberu64
+  minimumTokenB: number | Numberu64,
 ): TransactionInstruction => {
   const dataLayout = struct([
     u8('instruction'),
@@ -222,7 +222,7 @@ export const withdrawInstruction = (
       minimumTokenA: new Numberu64(minimumTokenA).toBuffer(),
       minimumTokenB: new Numberu64(minimumTokenB).toBuffer(),
     },
-    data
+    data,
   );
 
   const keys = [
@@ -261,7 +261,7 @@ export const swapInstruction = (
   tokenProgramId: PublicKey,
   amountIn: number | Numberu64,
   minimumAmountOut: number | Numberu64,
-  programOwner?: PublicKey
+  programOwner?: PublicKey,
 ): TransactionInstruction => {
   const dataLayout = struct([
     u8('instruction'),
@@ -293,7 +293,7 @@ export const swapInstruction = (
       amountIn: new Numberu64(amountIn).toBuffer(),
       minimumAmountOut: new Numberu64(minimumAmountOut).toBuffer(),
     },
-    data
+    data,
   );
 
   return new TransactionInstruction({
