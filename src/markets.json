@@ -568,5 +568,29 @@
         "name": "MATH/USDC",
         "deprecated": false,
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "GCJ1KSKoLKFURAW9nyT8Y3WMC8twELdBrYNDH2yXXqbN",
+        "name": "TOMO/USDC",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "3Sp7McDVnLUc4b4VzPxNVP78E8iXBNoDXPHTQebAoJG9",
+        "name": "TOMO/USDT",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "rPTGvVrNFYzBeTEcYnHiaWGNnkSXsWNNjUgk771LkwJ",
+        "name": "LUA/USDC",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "7PSeX1AEtBY9KvgegF5rUh452VemMh7oDzFtJgH7sxMG",
+        "name": "LUA/USDT",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
     }
 ]
