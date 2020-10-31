@@ -19,7 +19,7 @@
     "clean": "rm -rf dist",
     "prepare": "run-s clean build",
     "docs": "typedoc --out ../../docs/pool --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
-    "test": "run-s test:unit test:lint test:build",
+    "test": "run-s test:build test:unit test:lint",
     "test:build": "run-s build",
     "test:lint": "eslint src",
     "test:unit": "jest",
