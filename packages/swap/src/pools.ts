@@ -25,7 +25,7 @@ import {
   WRAPPED_SOL_MINT,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
-import { timeMs } from './utils';
+import {divideBnToNumber, timeMs} from './utils';
 import assert from 'assert';
 
 export class Pool {
@@ -455,24 +455,37 @@ export class Pool {
     },
     slippage: number,
     hostFeeAccount: PublicKey,
-  ) {
+  ): Promise<{transaction: Transaction; signers: Account[]; payer: T}> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
-    const amountIn = tokenIn.amount; // these two should include slippage
-    const minAmountOut = tokenOut.amount * (1 - slippage);
+    const [poolMint, inMint, outMint] = await Promise.all([
+      this.getCachedMintAccount(
+        connection,
+        this._poolTokenMint,
+        3600_000
+      ),
+      this.getCachedMintAccount(
+        connection,
+        tokenIn.mint,
+        3600_000
+      ),
+      this.getCachedMintAccount(
+        connection,
+        tokenOut.mint,
+        3600_000
+      ),
+    ]);
+    const amountIn = Math.floor(tokenIn.amount * Math.pow(10, inMint.decimals));
+    const minAmountOut = Math.floor(tokenOut.amount * Math.pow(10, outMint.decimals) * (1 - slippage));
     const holdingA =
       this._tokenMints[0].toBase58() === tokenIn.mint.toBase58()
         ? this._holdingAccounts[0]
         : this._holdingAccounts[1];
     const holdingB =
-      holdingA === this._holdingAccounts[0]
+      holdingA.equals(this._holdingAccounts[0])
         ? this._holdingAccounts[1]
         : this._holdingAccounts[0];
 
-    const poolMint = await this.getCachedMintAccount(
-      connection,
-      this._poolTokenMint,
-    );
     if (!poolMint.mintAuthority || !this._feeAccount) {
       throw new Error('Mint doesnt have authority');
     }
@@ -496,7 +509,7 @@ export class Pool {
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
-        tokenIn.amount + accountRentExempt,
+        amountIn + accountRentExempt,
       );
       fromAccount = account.publicKey;
       signers.push(account);
