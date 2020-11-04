@@ -14,9 +14,6 @@ export default {
       name: 'index',
       format: 'umd',
       sourcemap: true,
-      globals: {
-        crypto: 'crypto',
-      },
     },
     {
       file: pkg.module,

@@ -14,9 +14,6 @@ export default {
       name: 'index',
       format: 'umd',
       sourcemap: true,
-      globals: {
-        crypto: 'crypto',
-      },
     },
     {
       file: pkg.module,
@@ -30,7 +27,11 @@ export default {
   },
   plugins: [
     resolve(),
-    commonjs(),
+    commonjs({
+			namedExports: {
+        '../pool/dist/lib/index.js': ['Basket'],
+			}
+		}),
     json(),
     typescript({ useTsconfigDeclarationDir: true }),
     sourceMaps(),

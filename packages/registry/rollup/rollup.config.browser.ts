@@ -12,9 +12,6 @@ export default {
       name: 'index',
       format: 'umd',
       sourcemap: true,
-      globals: {
-        crypto: 'crypto',
-      },
     },
     {
       file: './dist/index.browser.es5.js',
@@ -30,7 +27,11 @@ export default {
     resolve({
       browser: true,
     }),
-    commonjs(),
+    commonjs({
+			namedExports: {
+        '../pool/dist/lib/index.js': ['Basket'],
+			}
+		}),
     json(),
     typescript({ useTsconfigDeclarationDir: true }),
     sourceMaps(),

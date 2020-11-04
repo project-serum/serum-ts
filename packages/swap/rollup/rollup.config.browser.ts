@@ -12,9 +12,6 @@ export default {
       name: 'index',
       format: 'umd',
       sourcemap: true,
-      globals: {
-        crypto: 'crypto',
-      },
     },
     {
       file: './dist/index.browser.es5.js',

@@ -1,5 +1,3 @@
-import { testing } from '@project-serum/registry';
-
-export const testingWrapper = {
-  testing,
+export const testing = {
+  test: 'test',
 };
