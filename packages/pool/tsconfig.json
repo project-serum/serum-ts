@@ -15,8 +15,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-
-    "typeRoots": ["../../types/", "../../node_modules/@types"]
+    "typeRoots": ["../../types/", "../../node_modules/@types", "../../packages/borsh/dist/lib"]
   },
   "include": ["src/**/*"],
   "exclude": ["src/**/*.test.ts", "**/node_modules"]

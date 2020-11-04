@@ -11,7 +11,7 @@ import {
   u64,
   vec,
   vecU8,
-} from './borsh';
+} from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
