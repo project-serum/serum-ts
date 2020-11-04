@@ -1,0 +1,30 @@
+{
+  "name": "@project-serum/common",
+  "version": "0.0.0",
+  "description": "Serum Borsh",
+  "main": "dist/lib/index.js",
+	"types": "dist/lib/index.d.ts",
+  "exports": {
+    ".": "dist/lib/index.js"
+  },
+	"license": "Apache-2.0",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "build": "tsc",
+		"test": "jest test",
+    "clean": "rm -rf dist",
+    "prepare": "run-s clean build"
+  },
+	"dependencies": {
+		"@project-serum/serum": "^0.13.8",
+		"bn.js": "^5.1.2"
+  },
+  "peerDependencies": {
+		"@solana/web3.js": "^0.86.1"
+  },
+  "files": [
+    "dist"
+  ]
+}
