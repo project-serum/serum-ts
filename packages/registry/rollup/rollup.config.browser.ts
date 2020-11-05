@@ -29,7 +29,7 @@ export default {
     }),
     commonjs({
 			namedExports: {
-        '../pool/dist/lib/index.js': ['Basket'],
+        '../pool/dist/lib/index.js': ['Basket', 'decodePoolState'],
 			}
 		}),
     json(),

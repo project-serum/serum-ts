@@ -2,12 +2,12 @@
   "extends": "../../tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-		"outDir": "dist/lib",
+    "outDir": "dist/lib",
     "esModuleInterop": true,
-		"composite": true,
-		"baseUrl": ".",
-		"paths": {
- 		  "@solana/web3.js":	["../../node_modules/@solana/web3.js/lib"]
-		}
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@solana/web3.js":  ["../../node_modules/@solana/web3.js/lib"]
+    }
   }
 }

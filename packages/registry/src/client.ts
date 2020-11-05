@@ -5,6 +5,7 @@ import BN from 'bn.js';
 import {
   TransactionSignature,
   Account,
+  AccountMeta,
   SystemProgram,
   Connection,
   PublicKey,
@@ -17,8 +18,12 @@ import { AccountInfo } from '@solana/spl-token';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import {
   sendAndConfirmTransaction,
-  parseTokenAccount,
+  createTokenAccount,
+  getTokenAccount,
+  createAccountRentExempt,
+  SPL_SHARED_MEMORY_ID,
 } from '@project-serum/common';
+import { decodePoolState, PoolState, Basket } from '@project-serum/pool';
 import * as instruction from './instruction';
 import * as accounts from './accounts';
 import { Registrar } from './accounts/registrar';
@@ -30,6 +35,7 @@ type Config = {
   connection: Connection;
   payer: Account;
   programId: PublicKey;
+  stakeProgramId: PublicKey;
   registrar: PublicKey;
 };
 
@@ -37,6 +43,7 @@ export default class Client {
   readonly connection: Connection;
   readonly payer: Account;
   readonly programId: PublicKey;
+  readonly stakeProgramId: PublicKey;
   readonly accounts: Accounts;
   readonly registrar: PublicKey;
 
@@ -44,12 +51,14 @@ export default class Client {
     this.connection = cfg.connection;
     this.payer = cfg.payer;
     this.programId = cfg.programId;
+    this.stakeProgramId = cfg.stakeProgramId;
     this.accounts = new Accounts(cfg.connection);
     this.registrar = cfg.registrar;
   }
 
   static async local(
     programId: PublicKey,
+    stakeProgramId: PublicKey,
     registrar: PublicKey,
   ): Promise<Client> {
     const connection = new Connection('http://localhost:8899', 'recent');
@@ -66,6 +75,7 @@ export default class Client {
       connection,
       payer,
       programId,
+      stakeProgramId,
       registrar,
     });
   }
@@ -319,7 +329,7 @@ export default class Client {
           { pubkey: this.registrar, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: vault, isWritable: true, isSigner: false },
-        ],
+        ].concat(await this.poolAccounts()),
         programId: this.programId,
         data: instruction.encode({
           deposit: {
@@ -343,21 +353,17 @@ export default class Client {
     let vaultAddress = undefined;
     let vault = undefined;
 
-    let depositorAccInfo = await this.connection.getAccountInfo(depositor);
-    if (depositorAccInfo === null) {
-      throw new Error('Failed to find token account');
-    }
-    let depositorAcc = parseTokenAccount(depositorAccInfo.data);
+    let depositorAcc = await getTokenAccount(this.connection, depositor);
 
     let r = await this.accounts.registrar(this.registrar);
 
     let vaultAcc = await this.accounts.vault(this.registrar);
-    if (vaultAcc.mint == depositorAcc.mint) {
+    if (vaultAcc.mint.equals(depositorAcc.mint)) {
       vaultAddress = r.vault;
       vault = vaultAcc;
     }
     let megaVaultAcc = await this.accounts.megaVault(this.registrar);
-    if (megaVaultAcc.mint == depositorAcc.mint) {
+    if (megaVaultAcc.mint.equals(depositorAcc.mint)) {
       vaultAddress = r.megaVault;
       vault = megaVaultAcc;
     }
@@ -374,6 +380,22 @@ export default class Client {
       vaultAddress,
       vault,
     };
+  }
+
+  private async poolFor(
+    poolToken: PublicKey,
+    r: Registrar,
+  ): Promise<{ pool: PoolState; isMega: boolean }> {
+    let poolTokenAcc = await getTokenAccount(this.connection, poolToken);
+    let pool = await this.accounts.pool(r);
+    if (pool.poolTokenMint.equals(poolTokenAcc.mint)) {
+      return { pool, isMega: false };
+    }
+    let megaPool = await this.accounts.megaPool(r);
+    if (megaPool.poolTokenMint.equals(poolTokenAcc.mint)) {
+      return { pool: megaPool, isMega: true };
+    }
+    throw new Error(`Failed top find pool for ${poolToken}`);
   }
 
   async withdraw(req: WithdrawRequest): Promise<WithdrawResponse> {
@@ -422,7 +444,7 @@ export default class Client {
           { pubkey: this.registrar, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: v.vault.owner, isWritable: true, isSigner: false },
-        ],
+        ].concat(await this.poolAccounts()),
         programId: this.programId,
         data: instruction.encode({
           withdraw: {
@@ -441,15 +463,191 @@ export default class Client {
   }
 
   async stake(req: StakeRequest): Promise<StakeResponse> {
-    // todo
-    return {};
+    let { member, beneficiary, entity, amount, stakeToken } = req;
+    if (beneficiary === undefined) {
+      beneficiary = this.payer;
+    }
+    if (entity === undefined) {
+      let m = await this.accounts.member(member);
+      entity = m.entity;
+    }
+
+    const tx = new Transaction();
+    tx.add(
+      new TransactionInstruction({
+        keys: [
+          { pubkey: member, isWritable: true, isSigner: false },
+          { pubkey: beneficiary.publicKey, isWritable: false, isSigner: true },
+          { pubkey: entity, isWritable: true, isSigner: false },
+          { pubkey: this.registrar, isWritable: false, isSigner: false },
+          { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
+          { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
+        ].concat(await this.executePoolAccounts(stakeToken)),
+        programId: this.programId,
+        data: instruction.encode({
+          stake: {
+            amount,
+          },
+        }),
+      }),
+    );
+
+    let signers = [this.payer, beneficiary];
+    let txSig = await sendAndConfirmTransaction(this.connection, tx, signers);
+
+    return {
+      tx: txSig,
+    };
+  }
+
+  private async executePoolAccounts(
+    poolToken: PublicKey,
+    r?: Registrar,
+  ): Promise<Array<AccountMeta>> {
+    if (r === undefined) {
+      r = await this.accounts.registrar(this.registrar);
+    }
+    const accs = await this.poolAccounts(r);
+
+    let assetAccs = await (async (): Promise<Array<AccountMeta>> => {
+      const { pool, isMega } = await this.poolFor(poolToken, r);
+      let assetAccs = [r.vault];
+      if (isMega) {
+        assetAccs.push(r.megaVault);
+      }
+      return assetAccs.map(a => {
+        return { pubkey: a, isWritable: true, isSigner: false };
+      });
+    })();
+
+    let vaultAuthority = await this.accounts.vaultAuthority(
+      this.programId,
+      this.registrar,
+      r,
+    );
+
+    return accs
+      .concat([{ pubkey: poolToken, isWritable: true, isSigner: false }])
+      .concat(assetAccs)
+      .concat([{ pubkey: vaultAuthority, isWritable: false, isSigner: false }]);
+  }
+
+  private async poolAccounts(r?: Registrar): Promise<Array<AccountMeta>> {
+    if (r === undefined) {
+      r = await this.accounts.registrar(this.registrar);
+    }
+    let pool = await this.accounts.pool(r);
+    let megaPool = await this.accounts.megaPool(r);
+    let retbuf = await createAccountRentExempt(
+      this.connection,
+      this.payer,
+      SPL_SHARED_MEMORY_ID,
+      MAX_BASKET_SIZE,
+    );
+    return [
+      // Pids.
+      { pubkey: this.stakeProgramId, isWritable: false, isSigner: false },
+      { pubkey: SPL_SHARED_MEMORY_ID, isWritable: false, isSigner: false },
+      { pubkey: retbuf.publicKey, isWritable: true, isSigner: false },
+      // Pool.
+      { pubkey: r.pool, isWritable: true, isSigner: false },
+      { pubkey: pool.poolTokenMint, isWritable: true, isSigner: false },
+      {
+        pubkey: pool.assets[0].vaultAddress,
+        isWritable: true,
+        isSigner: false,
+      },
+      { pubkey: pool.vaultSigner, isWritable: false, isSigner: false },
+      // Mega pool.
+      { pubkey: r.megaPool, isWritable: true, isSigner: false },
+      { pubkey: megaPool.poolTokenMint, isWritable: true, isSigner: false },
+      {
+        pubkey: megaPool.assets[0].vaultAddress,
+        isWritable: true,
+        isSigner: false,
+      },
+      {
+        pubkey: megaPool.assets[1].vaultAddress,
+        isWritable: true,
+        isSigner: false,
+      },
+      { pubkey: megaPool.vaultSigner, isWritable: false, isSigner: false },
+    ];
   }
 
   async startStakeWithdrawal(
     req: StartStakeWithdrawalRequest,
   ): Promise<StartStakeWithdrawalResponse> {
-    // todo
-    return {};
+    let {
+      pendingWithdrawal,
+      member,
+      beneficiary,
+      entity,
+      amount,
+      stakeToken,
+    } = req;
+
+    if (pendingWithdrawal === undefined) {
+      pendingWithdrawal = new Account();
+    }
+    if (beneficiary === undefined) {
+      beneficiary = this.payer;
+    }
+    if (entity === undefined) {
+      let m = await this.accounts.member(member);
+      entity = m.entity;
+    }
+
+    let vaultAuthority = await this.accounts.vaultAuthority(
+      this.programId,
+      this.registrar,
+    );
+
+    const tx = new Transaction();
+    tx.add(
+      SystemProgram.createAccount({
+        fromPubkey: this.payer.publicKey,
+        newAccountPubkey: pendingWithdrawal.publicKey,
+        lamports: await this.connection.getMinimumBalanceForRentExemption(
+          accounts.pendingWithdrawal.SIZE,
+        ),
+        space: accounts.pendingWithdrawal.SIZE,
+        programId: this.programId,
+      }),
+    );
+    tx.add(
+      new TransactionInstruction({
+        keys: [
+          {
+            pubkey: pendingWithdrawal.publicKey,
+            isWritable: true,
+            isSigner: false,
+          },
+          { pubkey: member, isWritable: true, isSigner: false },
+          { pubkey: beneficiary.publicKey, isWritable: false, isSigner: true },
+          { pubkey: entity, isWritable: true, isSigner: false },
+          { pubkey: this.registrar, isWritable: false, isSigner: false },
+          { pubkey: vaultAuthority, isWritable: false, isSigner: false },
+          { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
+          { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
+          { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
+        ].concat(await this.executePoolAccounts(stakeToken)),
+        programId: this.programId,
+        data: instruction.encode({
+          startStakeWithdrawal: {
+            amount,
+          },
+        }),
+      }),
+    );
+
+    let signers = [this.payer, beneficiary, pendingWithdrawal];
+    let txSig = await sendAndConfirmTransaction(this.connection, tx, signers);
+
+    return {
+      tx: txSig,
+      pendingWithdrawal: pendingWithdrawal.publicKey,
+    };
   }
 
   async endStakeWithdrawal(
@@ -473,7 +671,7 @@ export default class Client {
           { pubkey: beneficiary.publicKey, isWritable: false, isSigner: true },
           { pubkey: entity, isWritable: true, isSigner: false },
           { pubkey: this.registrar, isWritable: false, isSigner: false },
-          { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
+          { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
         ],
         programId: this.programId,
         data: instruction.encode({
@@ -489,6 +687,23 @@ export default class Client {
       tx: txSig,
     };
   }
+
+  async allocSpt(isMega: boolean, owner?: PublicKey): Promise<PublicKey> {
+    if (owner === undefined) {
+      owner = this.payer.publicKey;
+    }
+    let pool = isMega
+      ? await this.accounts.megaPool(this.registrar)
+      : await this.accounts.pool(this.registrar);
+    let spt = await createTokenAccount(
+      this.connection,
+      this.payer,
+      pool.poolTokenMint,
+      owner,
+    );
+
+    return spt;
+  }
 }
 
 class Accounts {
@@ -496,7 +711,7 @@ class Accounts {
 
   async registrar(address: PublicKey): Promise<Registrar> {
     const accountInfo = await this.connection.getAccountInfo(address);
-    if (accountInfo == null) {
+    if (accountInfo === null) {
       throw new Error(`Registrar does not exist ${address}`);
     }
     return accounts.registrar.decode(accountInfo.data);
@@ -504,7 +719,7 @@ class Accounts {
 
   async entity(address: PublicKey): Promise<Entity> {
     const accountInfo = await this.connection.getAccountInfo(address);
-    if (accountInfo == null) {
+    if (accountInfo === null) {
       throw new Error(`Entity does not exist ${address}`);
     }
     return accounts.entity.decode(accountInfo.data);
@@ -512,7 +727,7 @@ class Accounts {
 
   async member(address: PublicKey): Promise<Member> {
     const accountInfo = await this.connection.getAccountInfo(address);
-    if (accountInfo == null) {
+    if (accountInfo === null) {
       throw new Error(`Member does not exist ${address}`);
     }
     return accounts.member.decode(accountInfo.data);
@@ -520,7 +735,7 @@ class Accounts {
 
   async pendingWithdrawal(address: PublicKey): Promise<PendingWithdrawal> {
     const accountInfo = await this.connection.getAccountInfo(address);
-    if (accountInfo == null) {
+    if (accountInfo === null) {
       throw new Error(`PendingWithdrawal does not exist ${address}`);
     }
     return accounts.pendingWithdrawal.decode(accountInfo.data);
@@ -528,20 +743,63 @@ class Accounts {
 
   async vault(registrarAddr: PublicKey): Promise<AccountInfo> {
     let r = await this.registrar(registrarAddr);
-    let depositorAccInfo = await this.connection.getAccountInfo(r.vault);
-    if (depositorAccInfo === null) {
-      throw new Error('Failed to find token account');
-    }
-    return parseTokenAccount(depositorAccInfo.data);
+    return getTokenAccount(this.connection, r.vault);
   }
 
   async megaVault(registrarAddr: PublicKey): Promise<AccountInfo> {
     let r = await this.registrar(registrarAddr);
-    let depositorAccInfo = await this.connection.getAccountInfo(r.megaVault);
-    if (depositorAccInfo === null) {
-      throw new Error('Failed to find token account');
+    return getTokenAccount(this.connection, r.megaVault);
+  }
+
+  async pool(registrar: PublicKey | Registrar): Promise<PoolState> {
+    if (registrar instanceof PublicKey) {
+      registrar = await this.registrar(registrar);
     }
-    return parseTokenAccount(depositorAccInfo.data);
+    let acc = await this.connection.getAccountInfo(registrar.pool);
+    if (acc === null) {
+      throw new Error('Failed to find staking pool');
+    }
+    return decodePoolState(acc.data);
+  }
+
+  async poolVault(registrar: PublicKey | Registrar): Promise<AccountInfo> {
+    const p = await this.pool(registrar);
+    return getTokenAccount(this.connection, p.assets[0].vaultAddress);
+  }
+
+  async megaPoolVaults(
+    registrar: PublicKey | Registrar,
+  ): Promise<[AccountInfo, AccountInfo]> {
+    const p = await this.pool(registrar);
+    return Promise.all([
+      getTokenAccount(this.connection, p.assets[0].vaultAddress),
+      getTokenAccount(this.connection, p.assets[1].vaultAddress),
+    ]);
+  }
+
+  async megaPool(registrar: PublicKey | Registrar): Promise<PoolState> {
+    if (registrar instanceof PublicKey) {
+      registrar = await this.registrar(registrar);
+    }
+    let acc = await this.connection.getAccountInfo(registrar.megaPool);
+    if (acc === null) {
+      throw new Error('Failed to find staking pool');
+    }
+    return decodePoolState(acc.data);
+  }
+
+  async vaultAuthority(
+    programId: PublicKey,
+    registrarAddr: PublicKey,
+    registrar?: Registrar,
+  ): Promise<PublicKey> {
+    if (registrar === undefined) {
+      registrar = await this.registrar(registrarAddr);
+    }
+    return PublicKey.createProgramAddress(
+      [registrarAddr.toBuffer(), Buffer.from([registrar.nonce])],
+      programId,
+    );
   }
 }
 
@@ -628,19 +886,32 @@ type WithdrawResponse = {
 };
 
 type StakeRequest = {
-  // todo
+  member: PublicKey;
+  beneficiary?: Account;
+  entity?: PublicKey;
+  amount: BN;
+  stakeToken: PublicKey;
 };
 
 type StakeResponse = {
-  // todo
+  tx: TransactionSignature;
 };
 
 type StartStakeWithdrawalRequest = {
-  // todo
+  // Encourage the user to pass this in to encourage persisting this address
+  // before invoking this function (so as not to lose the PendingWithdrawal
+  // address).
+  pendingWithdrawal?: Account;
+  member: PublicKey;
+  beneficiary?: Account;
+  entity?: PublicKey;
+  amount: BN;
+  stakeToken: PublicKey;
 };
 
 type StartStakeWithdrawalResponse = {
-  // todo
+  tx: TransactionSignature;
+  pendingWithdrawal: PublicKey;
 };
 
 type EndStakeWithdrawalRequest = {
@@ -653,3 +924,19 @@ type EndStakeWithdrawalRequest = {
 type EndStakeWithdrawalResponse = {
   tx: TransactionSignature;
 };
+
+// The maximum basket size. Used to create the "retbuf" shared memory account
+// data to pass data back from the staking pool to the registry via CPI.
+//
+// The SRM pool has a basket with a single asset quantitiy. The MSRM pool,
+// however, has two assets (SRM and MSRM) and so has a larger size.
+const MAX_BASKET_SIZE: number = maxBasketSize();
+
+function maxBasketSize(): number {
+  let b = {
+    quantities: [new BN(0), new BN(0)],
+  };
+  const buffer = Buffer.alloc(1000);
+  const len = Basket.encode(b, buffer);
+  return len;
+}
