@@ -2,6 +2,7 @@ import { Numberu64 } from '@solana/spl-token-swap';
 import { PublicKey, Account, TransactionInstruction } from '@solana/web3.js';
 import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
 import { AccountInfo, AccountLayout, MintInfo, u64 } from '@solana/spl-token';
+import BN from "bn.js";
 
 export { TokenSwap } from '@solana/spl-token-swap';
 
@@ -304,11 +305,11 @@ export const swapInstruction = (
 };
 
 export interface Mint {
-  mintAuthority: PublicKey;
-  supply: u64;
+  mintAuthority: Buffer;
+  supply: Buffer;
   decimals: number;
-  isInitialized: boolean;
-  freezeAuthority: PublicKey | null;
+  isInitialized: number;
+  freezeAuthority: Buffer | null;
 }
 
 export const MINT_LAYOUT: Layout<Mint> = struct([
@@ -322,7 +323,14 @@ export const MINT_LAYOUT: Layout<Mint> = struct([
 ]);
 
 export function parseMintData(data: Buffer): MintInfo {
-  return MINT_LAYOUT.decode(data);
+  const decoded = MINT_LAYOUT.decode(data);
+  return {
+    mintAuthority: new PublicKey(decoded.mintAuthority),
+    supply: new BN(decoded.supply),
+    decimals: decoded.decimals,
+    isInitialized: decoded.isInitialized === 1,
+    freezeAuthority: decoded.freezeAuthority && new PublicKey(decoded.freezeAuthority)
+  }
 }
 
 export function parseTokenAccount(data: Buffer): AccountInfo {

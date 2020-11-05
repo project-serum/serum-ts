@@ -1,4 +1,4 @@
-import { AccountLayout, MintInfo, MintLayout, Token } from '@solana/spl-token';
+import {AccountLayout, MintInfo, MintLayout, Token, u64} from '@solana/spl-token';
 import {
   Account,
   Commitment,
@@ -87,7 +87,7 @@ export class Pool {
   }
 
   get address(): PublicKey {
-    return this._decoded.pubkeys.account;
+    return this._poolAccount;
   }
 
   get publicKey(): PublicKey {
@@ -121,7 +121,7 @@ export class Pool {
     connection: Connection,
     pubkey: PublicKey | string,
     cacheDurationMs = 0,
-  ) {
+  ): Promise<MintInfo> {
     return this.cached<MintInfo>(
       () => getMintAccount(connection, pubkey),
       this._mintAccountsCache,
@@ -134,7 +134,7 @@ export class Pool {
     connection: Connection,
     pubkey: PublicKey | string,
     cacheDurationMs = 0,
-  ) {
+  ): Promise<TokenAccount> {
     return this.cached<TokenAccount>(
       () => getTokenAccount(connection, pubkey),
       this._tokenAccountsCache,
@@ -446,15 +446,15 @@ export class Pool {
     tokenIn: {
       mint: PublicKey;
       tokenAccount: PublicKey;
-      amount: number; // note this is raw amount, not decimal
+      amount: number;
     },
     tokenOut: {
       mint: PublicKey;
       tokenAccount: PublicKey;
-      amount: number; // note this is raw amount, not decimal
+      amount: number;
     },
     slippage: number,
-    hostFeeAccount: PublicKey,
+    hostFeeAccount?: PublicKey,
   ): Promise<{transaction: Transaction; signers: Account[]; payer: T}> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -540,16 +540,15 @@ export class Pool {
     }
 
     // create approval for transfer transactions
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        fromAccount,
-        authority,
-        ownerAddress,
-        [],
-        amountIn,
-      ),
+    const approveInstruction = Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      fromAccount,
+      authority,
+      ownerAddress,
+      [],
+      amountIn,
     );
+    instructions.push(approveInstruction);
 
     // swap
     instructions.push(
@@ -570,7 +569,7 @@ export class Pool {
       ),
     );
 
-    instructions.concat(cleanupInstructions);
+    instructions.push(...cleanupInstructions);
     const transaction = new Transaction();
     transaction.add(...instructions);
     return { transaction, signers, payer: owner };
@@ -587,7 +586,12 @@ export class Pool {
     }[],
     options: PoolConfig,
     liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION,
-  ) {
+  ): Promise<{
+    initializeAccountsTransaction: Transaction;
+    initializeAccountsSigners: Account[];
+    initializePoolTransaction: Transaction;
+    initializePoolSigners: Account[];
+  }> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const initializeAccountsInstructions: TransactionInstruction[] = [];
@@ -765,7 +769,7 @@ export class Pool {
     liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION,
     skipPreflight = true,
     commitment: Commitment = 'single',
-  ) {
+  ): Promise<string> {
     const {
       initializeAccountsTransaction,
       initializeAccountsSigners,
@@ -820,12 +824,28 @@ export class Pool {
     }
     return signature;
   }
+
+  async getHoldings(connection: Connection):
+    Promise<{ account: PublicKey; mint: PublicKey; holding: u64; }[]>
+  {
+    const accounts = (await Promise.all([
+      this.getCachedTokenAccount(connection, this._holdingAccounts[0]),
+      this.getCachedTokenAccount(connection, this._holdingAccounts[1]),
+    ]))
+    return accounts.map(account => {
+      return {
+        account: account.pubkey,
+        mint: account.info.mint,
+        holding: account.info.amount
+      }
+    });
+  }
 }
 
 export const getMintAccount = async (
   connection: Connection,
   pubKey: PublicKey | string,
-) => {
+): Promise<MintInfo> => {
   const address = typeof pubKey === 'string' ? new PublicKey(pubKey) : pubKey;
   const info = await connection.getAccountInfo(address);
   if (info === null) {
