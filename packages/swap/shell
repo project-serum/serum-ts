@@ -1,0 +1,5 @@
+const lib = require('./dist/index.umd.js');
+const solana = require('@solana/web3.js');
+const serum = require('@project-serum/serum');
+
+const connection = new solana.Connection('https://solana-api.projectserum.com');
