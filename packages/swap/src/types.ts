@@ -8,31 +8,6 @@ export interface TokenAccount {
   info: TokenAccountInfo;
 }
 
-export interface PoolInfo {
-  pubkeys: {
-    // swap program id
-    program: PublicKey;
-    // pool account public key
-    account: PublicKey;
-    // constituent asset's holding account public keys
-    holdingAccounts: PublicKey[];
-    // constituent asset's mint public keys
-    holdingMints: PublicKey[];
-    // mint of pool token
-    mint: PublicKey;
-    // account to which fees are paid
-    feeAccount?: PublicKey;
-  };
-  version: number;
-  raw: any;
-}
-
-export interface LiquidityComponent {
-  amount: number;
-  account?: TokenAccount;
-  mintAddress: string;
-}
-
 export interface PoolConfig {
   curveType: 0 | 1;
   tradeFeeNumerator: number;

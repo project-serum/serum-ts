@@ -1,4 +1,10 @@
-import {AccountLayout, MintInfo, MintLayout, Token, u64} from '@solana/spl-token';
+import {
+  AccountLayout,
+  MintInfo,
+  MintLayout,
+  Token,
+  u64,
+} from '@solana/spl-token';
 import {
   Account,
   Commitment,
@@ -25,7 +31,7 @@ import {
   WRAPPED_SOL_MINT,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
-import {divideBnToNumber, timeMs} from './utils';
+import { timeMs } from './utils';
 import assert from 'assert';
 
 export class Pool {
@@ -48,7 +54,7 @@ export class Pool {
 
   constructor(
     decoded: any, // todo: remove any
-    poolAccount: any, // todo: remove any
+    poolAccount: PublicKey,
     programId: PublicKey,
     options: PoolOptions = {},
   ) {
@@ -77,7 +83,7 @@ export class Pool {
     address: PublicKey,
     programId: PublicKey,
     options: PoolOptions = {},
-  ) {
+  ): Promise<Pool> {
     const account = throwIfNull(
       await connection.getAccountInfo(address),
       'Pool not found',
@@ -149,7 +155,7 @@ export class Pool {
     liquidityAmount: number,
     poolAccount: TokenAccount,
     tokenAccounts: TokenAccount[],
-  ) {
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
 
@@ -274,7 +280,7 @@ export class Pool {
     }[],
     poolTokenAccount?: PublicKey,
     slippageTolerance = 0.005, // allow slippage of this much between setting input amounts and on chain transaction
-  ) {
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const poolMint = await this.getCachedMintAccount(
@@ -455,36 +461,25 @@ export class Pool {
     },
     slippage: number,
     hostFeeAccount?: PublicKey,
-  ): Promise<{transaction: Transaction; signers: Account[]; payer: T}> {
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const [poolMint, inMint, outMint] = await Promise.all([
-      this.getCachedMintAccount(
-        connection,
-        this._poolTokenMint,
-        3600_000
-      ),
-      this.getCachedMintAccount(
-        connection,
-        tokenIn.mint,
-        3600_000
-      ),
-      this.getCachedMintAccount(
-        connection,
-        tokenOut.mint,
-        3600_000
-      ),
+      this.getCachedMintAccount(connection, this._poolTokenMint, 3600_000),
+      this.getCachedMintAccount(connection, tokenIn.mint, 3600_000),
+      this.getCachedMintAccount(connection, tokenOut.mint, 3600_000),
     ]);
     const amountIn = Math.floor(tokenIn.amount * Math.pow(10, inMint.decimals));
-    const minAmountOut = Math.floor(tokenOut.amount * Math.pow(10, outMint.decimals) * (1 - slippage));
+    const minAmountOut = Math.floor(
+      tokenOut.amount * Math.pow(10, outMint.decimals) * (1 - slippage),
+    );
     const holdingA =
       this._tokenMints[0].toBase58() === tokenIn.mint.toBase58()
         ? this._holdingAccounts[0]
         : this._holdingAccounts[1];
-    const holdingB =
-      holdingA.equals(this._holdingAccounts[0])
-        ? this._holdingAccounts[1]
-        : this._holdingAccounts[0];
+    const holdingB = holdingA.equals(this._holdingAccounts[0])
+      ? this._holdingAccounts[1]
+      : this._holdingAccounts[0];
 
     if (!poolMint.mintAuthority || !this._feeAccount) {
       throw new Error('Mint doesnt have authority');
@@ -573,6 +568,34 @@ export class Pool {
     const transaction = new Transaction();
     transaction.add(...instructions);
     return { transaction, signers, payer: owner };
+  }
+
+  async swap(
+    connection: Connection,
+    owner: Account,
+    tokenIn: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number;
+    },
+    tokenOut: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number;
+    },
+    slippage: number,
+    hostFeeAccount?: PublicKey,
+    skipPreflight = true,
+    commitment: Commitment = 'single',
+  ): Promise<string> {
+    const {transaction, signers, payer} = await this.makeSwapTransaction(connection, owner, tokenIn, tokenOut, slippage, hostFeeAccount);
+    return await sendTransaction(
+      connection,
+      transaction,
+      [payer, ...signers],
+      skipPreflight,
+      commitment
+    )
   }
 
   static async makeInitializePoolTransaction<T extends PublicKey | Account>(
@@ -783,7 +806,7 @@ export class Pool {
       options,
       liquidityTokenPrecision,
     );
-    const createAccountsTxid = await Pool.sendTransaction(
+    const createAccountsTxid = await sendTransaction(
       connection,
       initializeAccountsTransaction,
       [owner, ...initializeAccountsSigners],
@@ -796,7 +819,7 @@ export class Pool {
       !status.err,
       `Received error awaiting create accounts transaction ${createAccountsTxid}`,
     );
-    return await Pool.sendTransaction(
+    return await sendTransaction(
       connection,
       initializePoolTransaction,
       [owner, ...initializePoolSigners],
@@ -805,41 +828,38 @@ export class Pool {
     );
   }
 
-  static async sendTransaction(
+  async getHoldings(
     connection: Connection,
-    transaction: Transaction,
-    signers: Array<Account>,
-    skipPreflight = true,
-    commitment: Commitment = 'single',
-  ): Promise<TransactionSignature> {
-    const signature = await connection.sendTransaction(transaction, signers, {
-      skipPreflight: skipPreflight,
-    });
-    const { value } = await connection.confirmTransaction(
-      signature,
-      commitment,
-    );
-    if (value?.err) {
-      throw new Error(JSON.stringify(value.err));
-    }
-    return signature;
-  }
-
-  async getHoldings(connection: Connection):
-    Promise<{ account: PublicKey; mint: PublicKey; holding: u64; }[]>
-  {
-    const accounts = (await Promise.all([
+  ): Promise<{ account: PublicKey; mint: PublicKey; holding: u64 }[]> {
+    const accounts = await Promise.all([
       this.getCachedTokenAccount(connection, this._holdingAccounts[0]),
       this.getCachedTokenAccount(connection, this._holdingAccounts[1]),
-    ]))
+    ]);
     return accounts.map(account => {
       return {
         account: account.pubkey,
         mint: account.info.mint,
-        holding: account.info.amount
-      }
+        holding: account.info.amount,
+      };
     });
   }
+}
+
+async function sendTransaction(
+  connection: Connection,
+  transaction: Transaction,
+  signers: Array<Account>,
+  skipPreflight = true,
+  commitment: Commitment = 'single',
+): Promise<TransactionSignature> {
+  const signature = await connection.sendTransaction(transaction, signers, {
+    skipPreflight: skipPreflight,
+  });
+  const { value } = await connection.confirmTransaction(signature, commitment);
+  if (value?.err) {
+    throw new Error(JSON.stringify(value.err));
+  }
+  return signature;
 }
 
 export const getMintAccount = async (

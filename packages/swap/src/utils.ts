@@ -1,4 +1,4 @@
-import BN from "bn.js";
+import BN from 'bn.js';
 
 export const timeMs = (): number => {
   return new Date().getTime();
