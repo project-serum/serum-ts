@@ -18,15 +18,27 @@ import { AccountInfo } from '@solana/spl-token';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import {
   sendAndConfirmTransaction,
+  createMint,
   createTokenAccount,
   getTokenAccount,
   createAccountRentExempt,
   SPL_SHARED_MEMORY_ID,
 } from '@project-serum/common';
-import { decodePoolState, PoolState, Basket } from '@project-serum/pool';
+import {
+  encodePoolState,
+  decodePoolState,
+  PoolState,
+  Basket,
+  PoolInstructions,
+} from '@project-serum/pool';
 import * as instruction from './instruction';
 import * as accounts from './accounts';
-import { Registrar } from './accounts/registrar';
+import {
+  Registrar,
+  SIZE as REGISTRAR_SIZE,
+  STAKE_POOL_NAME,
+  MEGA_STAKE_POOL_NAME,
+} from './accounts/registrar';
 import { PendingWithdrawal } from './accounts/pending-withdrawal';
 import { Entity } from './accounts/entity';
 import { Member, Watchtower } from './accounts/member';
@@ -38,6 +50,35 @@ type Config = {
   stakeProgramId: PublicKey;
   registrar: PublicKey;
 };
+
+type Provider = {
+  connection: Connection;
+  payer: Account;
+  programId: PublicKey;
+  stakeProgramId: PublicKey;
+};
+
+export async function localProvider(
+  programId: PublicKey,
+  stakeProgramId: PublicKey,
+): Promise<Provider> {
+  const connection = new Connection('http://localhost:8899', 'recent');
+  const payer = new Account(
+    Buffer.from(
+      JSON.parse(
+        await promisify(readFile)(homedir() + '/.config/solana/id.json', {
+          encoding: 'utf-8',
+        }),
+      ),
+    ),
+  );
+  return {
+    connection,
+    payer,
+    programId,
+    stakeProgramId,
+  };
+}
 
 export default class Client {
   readonly connection: Connection;
@@ -56,28 +97,212 @@ export default class Client {
     this.registrar = cfg.registrar;
   }
 
-  static async local(
-    programId: PublicKey,
-    stakeProgramId: PublicKey,
-    registrar: PublicKey,
-  ): Promise<Client> {
-    const connection = new Connection('http://localhost:8899', 'recent');
-    const payer = new Account(
-      Buffer.from(
-        JSON.parse(
-          await promisify(readFile)(homedir() + '/.config/solana/id.json', {
-            encoding: 'utf-8',
-          }),
-        ),
-      ),
-    );
-    return new Client({
-      connection,
-      payer,
-      programId,
-      stakeProgramId,
+  // Initializes both the registry and its associated staking pool.
+  static async initialize(
+    provider: Provider,
+    req: InitializeRequest,
+  ): Promise<[Client, InitializeResponse]> {
+    let {
+      mint,
+      megaMint,
+      withdrawalTimelock,
+      deactivationTimelock,
+      rewardActivationThreshold,
+      authority,
       registrar,
+    } = req;
+    if (authority === undefined) {
+      authority = provider.payer.publicKey;
+    }
+    if (registrar === undefined) {
+      registrar = new Account();
+    }
+    const pool = new Account();
+    const megaPool = new Account();
+
+    // Create program vault authorities.
+    const [vaultAuthority, vaultNonce] = await PublicKey.findProgramAddress(
+      [registrar.publicKey.toBuffer()],
+      provider.programId,
+    );
+    const [
+      poolVaultAuthority,
+      poolVaultNonce,
+    ] = await PublicKey.findProgramAddress(
+      [pool.publicKey.toBuffer()],
+      provider.stakeProgramId,
+    );
+    const [
+      megaPoolVaultAuthority,
+      megaPoolVaultNonce,
+    ] = await PublicKey.findProgramAddress(
+      [megaPool.publicKey.toBuffer()],
+      provider.stakeProgramId,
+    );
+
+    // Create program vaults.
+    const vault = await createTokenAccount(
+      provider.connection,
+      provider.payer,
+      mint,
+      vaultAuthority,
+    );
+    const megaVault = await createTokenAccount(
+      provider.connection,
+      provider.payer,
+      megaMint,
+      vaultAuthority,
+    );
+    const poolVault = await createTokenAccount(
+      provider.connection,
+      provider.payer,
+      mint,
+      poolVaultAuthority,
+    );
+    const megaPoolVault = await createTokenAccount(
+      provider.connection,
+      provider.payer,
+      mint,
+      megaPoolVaultAuthority,
+    );
+    const megaPoolMegaVault = await createTokenAccount(
+      provider.connection,
+      provider.payer,
+      megaMint,
+      megaPoolVaultAuthority,
+    );
+
+    // Create pool tokens.
+    const poolMint = await createMint(
+      provider.connection,
+      provider.payer,
+      poolVaultAuthority,
+    );
+    const megaPoolMint = await createMint(
+      provider.connection,
+      provider.payer,
+      megaPoolVaultAuthority,
+    );
+
+    const createTx = new Transaction();
+    createTx.add(
+      // Create registrar.
+      SystemProgram.createAccount({
+        fromPubkey: provider.payer.publicKey,
+        newAccountPubkey: registrar.publicKey,
+        space: REGISTRAR_SIZE,
+        lamports: await provider.connection.getMinimumBalanceForRentExemption(
+          REGISTRAR_SIZE,
+        ),
+        programId: provider.programId,
+      }),
+      // Create staking pool.
+      SystemProgram.createAccount({
+        fromPubkey: provider.payer.publicKey,
+        newAccountPubkey: pool.publicKey,
+        space: POOL_STATE_SIZE,
+        lamports: await provider.connection.getMinimumBalanceForRentExemption(
+          POOL_STATE_SIZE,
+        ),
+        programId: provider.stakeProgramId,
+      }),
+      // Create mega staking pool.
+      SystemProgram.createAccount({
+        fromPubkey: provider.payer.publicKey,
+        newAccountPubkey: megaPool.publicKey,
+        space: MEGA_POOL_STATE_SIZE,
+        lamports: await provider.connection.getMinimumBalanceForRentExemption(
+          MEGA_POOL_STATE_SIZE,
+        ),
+        programId: provider.stakeProgramId,
+      }),
+    );
+
+    // Program specific accounts.
+    const additionalAccounts = [
+      { pubkey: vaultAuthority, isWritable: false, isSigner: false },
+    ];
+    const initTx = new Transaction();
+    initTx.add(
+      // Initialize pool.
+      PoolInstructions.initialize(
+        provider.stakeProgramId,
+        pool.publicKey,
+        poolMint,
+        STAKE_POOL_NAME,
+        [poolVault],
+        poolVaultAuthority,
+        poolVaultNonce,
+        additionalAccounts,
+      ),
+      // Initialize mega pool.
+      PoolInstructions.initialize(
+        provider.stakeProgramId,
+        megaPool.publicKey,
+        megaPoolMint,
+        MEGA_STAKE_POOL_NAME,
+        [megaPoolVault, megaPoolMegaVault],
+        megaPoolVaultAuthority,
+        megaPoolVaultNonce,
+        additionalAccounts,
+      ),
+      // Iniitalize registrar.
+      new TransactionInstruction({
+        keys: [
+          { pubkey: registrar.publicKey, isWritable: true, isSigner: false },
+          { pubkey: vault, isWritable: false, isSigner: false },
+          { pubkey: megaVault, isWritable: false, isSigner: false },
+          { pubkey: pool.publicKey, isWritable: false, isSigner: false },
+          { pubkey: megaPool.publicKey, isWritable: false, isSigner: false },
+          {
+            pubkey: provider.stakeProgramId,
+            isWritable: false,
+            isSigner: false,
+          },
+          { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
+        ],
+        programId: provider.programId,
+        data: instruction.encode({
+          initialize: {
+            authority,
+            nonce: vaultNonce,
+            withdrawalTimelock,
+            deactivationTimelock,
+            rewardActivationThreshold,
+          },
+        }),
+      }),
+    );
+
+    const createSigners = [provider.payer, registrar, pool, megaPool];
+    const initSigners = [provider.payer];
+
+    const createTxSig = await sendAndConfirmTransaction(
+      provider.connection,
+      createTx,
+      createSigners,
+    );
+    const initTxSig = await sendAndConfirmTransaction(
+      provider.connection,
+      initTx,
+      initSigners,
+    );
+
+    const client = new Client({
+      registrar: registrar.publicKey,
+      ...provider,
     });
+
+    return [
+      client,
+      {
+        createTx: createTxSig,
+        initTx: initTxSig,
+        registrar: registrar.publicKey,
+        pool: pool.publicKey,
+        megaPool: megaPool.publicKey,
+      },
+    ];
   }
 
   async createEntity(req: CreateEntityRequest): Promise<CreateEntityResponse> {
@@ -803,6 +1028,24 @@ class Accounts {
   }
 }
 
+type InitializeRequest = {
+  mint: PublicKey;
+  megaMint: PublicKey;
+  withdrawalTimelock: BN;
+  deactivationTimelock: BN;
+  rewardActivationThreshold: BN;
+  authority?: PublicKey;
+  registrar?: Account;
+};
+
+type InitializeResponse = {
+  createTx: TransactionSignature;
+  initTx: TransactionSignature;
+  registrar: PublicKey;
+  pool: PublicKey;
+  megaPool: PublicKey;
+};
+
 type CreateEntityRequest = {
   leader?: Account;
 };
@@ -932,11 +1175,38 @@ type EndStakeWithdrawalResponse = {
 // however, has two assets (SRM and MSRM) and so has a larger size.
 const MAX_BASKET_SIZE: number = maxBasketSize();
 
+const POOL_STATE_SIZE: number = poolStateSize(1);
+
+const MEGA_POOL_STATE_SIZE: number = poolStateSize(2);
+
 function maxBasketSize(): number {
-  let b = {
+  const b = {
     quantities: [new BN(0), new BN(0)],
   };
   const buffer = Buffer.alloc(1000);
   const len = Basket.encode(b, buffer);
   return len;
+}
+
+function poolStateSize(assetLen: number): number {
+  return encodePoolState({
+    poolTokenMint: new PublicKey(Buffer.alloc(32)),
+    assets: [...Array(assetLen)].map(() => {
+      return {
+        mint: new PublicKey(Buffer.alloc(32)),
+        vaultAddress: new PublicKey(Buffer.alloc(32)),
+      };
+    }),
+    vaultSigner: new PublicKey(Buffer.alloc(32)),
+    vaultSignerNonce: 0,
+    accountParams: [...Array(assetLen)].map(() => {
+      return {
+        address: new PublicKey(Buffer.alloc(32)),
+        writable: false,
+      };
+    }),
+    name: STAKE_POOL_NAME,
+    adminKey: new PublicKey(Buffer.alloc(32)),
+    customState: Buffer.from([]),
+  }).length;
 }

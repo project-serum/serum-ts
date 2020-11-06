@@ -128,6 +128,12 @@ export function decodePoolState(data: Buffer): PoolState {
   return PoolState.decode(data);
 }
 
+export function encodePoolState(state: PoolState): Buffer {
+  const buffer = Buffer.alloc(1000);
+  const len = PoolState.encode(state, buffer);
+  return buffer.slice(0, len);
+}
+
 export function encodePoolRequest(poolRequest: PoolRequest): Buffer {
   const buffer = Buffer.alloc(1000);
   const len = PoolRequest.encode(poolRequest, buffer);

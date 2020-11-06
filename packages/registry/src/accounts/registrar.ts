@@ -40,3 +40,20 @@ export function encode(r: Registrar): Buffer {
   const len = REGISTRAR_LAYOUT.encode(r, buffer);
   return buffer.slice(0, len);
 }
+
+export const SIZE: number = encode({
+  initialized: false,
+  authority: new PublicKey(Buffer.alloc(32)),
+  nonce: 0,
+  rewardActivationThreshold: new BN(0),
+  withdrawalTimelock: new BN(0),
+  deactivationTimelock: new BN(0),
+  vault: new PublicKey(Buffer.alloc(32)),
+  megaVault: new PublicKey(Buffer.alloc(32)),
+  pool: new PublicKey(Buffer.alloc(32)),
+  megaPool: new PublicKey(Buffer.alloc(32)),
+  poolProgramId: new PublicKey(Buffer.alloc(32)),
+}).length;
+
+export const STAKE_POOL_NAME = '';
+export const MEGA_STAKE_POOL_NAME = '';

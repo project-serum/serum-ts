@@ -14,7 +14,45 @@ export const SPL_SHARED_MEMORY_ID = new PublicKey(
   'shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL',
 );
 
-export async function createMint(connection: Connection, payer: Account) {
+export async function createMint(
+  connection: Connection,
+  payer: Account,
+  authority?: PublicKey,
+): Promise<PublicKey> {
+  if (authority === undefined) {
+    authority = payer.publicKey;
+  }
+  const mint = new Account();
+  const tx = new Transaction();
+  tx.add(
+    SystemProgram.createAccount({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: mint.publicKey,
+      space: 82,
+      lamports: await connection.getMinimumBalanceForRentExemption(82),
+      programId: TokenInstructions.TOKEN_PROGRAM_ID,
+    }),
+    TokenInstructions.initializeMint({
+      mint: mint.publicKey,
+      decimals: 0,
+      mintAuthority: authority,
+    }),
+  );
+
+  await sendAndConfirmTransaction(connection, tx, [payer, mint]);
+
+  return mint.publicKey;
+}
+
+export async function createMintAndVault(
+  connection: Connection,
+  payer: Account,
+  amount: BN,
+  owner?: PublicKey,
+): Promise<[PublicKey, PublicKey]> {
+  if (owner === undefined) {
+    owner = payer.publicKey;
+  }
   const mint = new Account();
   const vault = new Account();
   const txn = new Transaction();
@@ -41,12 +79,12 @@ export async function createMint(connection: Connection, payer: Account) {
     TokenInstructions.initializeAccount({
       account: vault.publicKey,
       mint: mint.publicKey,
-      owner: payer.publicKey,
+      owner,
     }),
     TokenInstructions.mintTo({
       mint: mint.publicKey,
       destination: vault.publicKey,
-      amount: new BN(10000),
+      amount,
       mintAuthority: payer.publicKey,
     }),
   );

@@ -1,37 +1,20 @@
-import { Client } from '../../src';
+import { Client, localProvider } from '../../src';
 import BN from 'bn.js';
+import { PublicKey } from '@solana/web3.js';
 import {
-  Account,
-  Connection,
-  PublicKey,
-  SystemProgram,
-  Transaction,
-} from '@solana/web3.js';
-import { getTokenAccount, sleep } from '@project-serum/common';
+  getTokenAccount,
+  sleep,
+  createMintAndVault,
+} from '@project-serum/common';
 
+// When running this test, make sure to deploy the following programs
+// and plugin the on-chain addresses, here.
 const registryProgramId = new PublicKey(
-  '3jZ5Eftt4wXGwKzfu9DU1HLBtbseYp3CNo7sy3hCsDGv',
+  'HdpSHXjuC6cf2oE67645X6dt5r6eCFVmhKhWjaWi95BR',
 );
 const stakeProgramId = new PublicKey(
-  'EqKvBmNqKKBUvD3xQZ9u1kpaJUEoBAY4ekgLQZKd58vR',
+  '2Cu7X1Pgmm8yZJ7ByZgV4AGPbWkwx11GZdKngaoGHQdx',
 );
-
-const registrarAddress = new PublicKey(
-  '7qcifemLVkg7wsuMeidfyMhjJSJMkRH6C7cs5aTB1Xv',
-);
-const poolAddress = new PublicKey(
-  '6RrpY8R28T4ooHS31cjLfzGrvgqpUFBXM3NsW8pKA51y',
-);
-const megaPoolAddress = new PublicKey(
-  '7fiKj295TcXXg6gaTAqoCbz5YDvaRfxbDjBW9aCjq7W3',
-);
-
-const srmMint = new PublicKey('GJ7hQKBfXJ9o5vzTqDtigQmgPn7uZ5brDV8ZQv5bt3RD');
-const msrmMint = new PublicKey('EFL5MZmE2pPTJWXjB3BGoEjp2X7SZZqKPVhxE7PTxyTB');
-
-// Owned by the local wallet.
-const god = new PublicKey('5xP9ZzTWVStXgsgcVH4jrAdbYFpX6iApQ5LMSASU42TJ');
-const megaGod = new PublicKey('DWnTzoTGWCnHUBdLZTECirBC1aSHCaLEzje3u7xmPnrp');
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
@@ -39,10 +22,29 @@ const publicKeyZero = new PublicKey(Buffer.alloc(32));
 
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
-    let client = await Client.local(
-      registryProgramId,
-      stakeProgramId,
-      registrarAddress,
+    // Setup genesis state.
+    const provider = await localProvider(registryProgramId, stakeProgramId);
+    const [srmMint, god] = await createMintAndVault(
+      provider.connection,
+      provider.payer,
+      new BN(1000000000),
+    );
+    const [msrmMint, megaGod] = await createMintAndVault(
+      provider.connection,
+      provider.payer,
+      new BN(1000000000),
+    );
+
+    // Initialize the registrar.
+    let [client, { registrar: registrarAddress }] = await Client.initialize(
+      provider,
+      {
+        mint: srmMint,
+        megaMint: msrmMint,
+        withdrawalTimelock: new BN(2),
+        deactivationTimelock: new BN(5),
+        rewardActivationThreshold: new BN(1),
+      },
     );
     let registrar = await client.accounts.registrar(registrarAddress);
 

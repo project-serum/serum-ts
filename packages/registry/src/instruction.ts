@@ -28,7 +28,7 @@ export type RegistryInstruction =
 export type Initialize = {
   authority: PublicKey;
   nonce: number;
-  withdrawealTimelock: BN;
+  withdrawalTimelock: BN;
   deactivationTimelock: BN;
   rewardActivationThreshold: BN;
 };
