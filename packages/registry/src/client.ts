@@ -305,6 +305,50 @@ export default class Client {
     ];
   }
 
+  async updateRegistrar(
+    req: UpdateRegistrarRequest,
+  ): Promise<UpdateRegistrarResponse> {
+    let {
+      authority,
+      newAuthority,
+      withdrawalTimelock,
+      deactivationTimelock,
+      rewardActivationThreshold,
+    } = req;
+    if (authority === undefined) {
+      authority = this.payer;
+    }
+
+    const entity = new Account();
+
+    const tx = new Transaction();
+    tx.add(
+      new TransactionInstruction({
+        keys: [
+          { pubkey: this.registrar, isWritable: true, isSigner: false },
+          { pubkey: authority.publicKey, isWritable: false, isSigner: true },
+        ],
+        programId: this.programId,
+        data: instruction.encode({
+          updateRegistrar: {
+            newAuthority,
+            withdrawalTimelock,
+            deactivationTimelock,
+            rewardActivationThreshold,
+          },
+        }),
+      }),
+    );
+
+    let signers = [this.payer, authority];
+
+    let txSig = await sendAndConfirmTransaction(this.connection, tx, signers);
+
+    return {
+      tx: txSig,
+    };
+  }
+
   async createEntity(req: CreateEntityRequest): Promise<CreateEntityResponse> {
     let { leader } = req;
     if (leader === undefined) {
@@ -1044,6 +1088,18 @@ type InitializeResponse = {
   registrar: PublicKey;
   pool: PublicKey;
   megaPool: PublicKey;
+};
+
+type UpdateRegistrarRequest = {
+  authority?: Account;
+  newAuthority: PublicKey | null;
+  withdrawalTimelock: BN | null;
+  deactivationTimelock: BN | null;
+  rewardActivationThreshold: BN | null;
+};
+
+type UpdateRegistrarResponse = {
+  tx: TransactionSignature;
 };
 
 type CreateEntityRequest = {

@@ -10,10 +10,10 @@ import {
 // When running this test, make sure to deploy the following programs
 // and plugin the on-chain addresses, here.
 const registryProgramId = new PublicKey(
-  'HdpSHXjuC6cf2oE67645X6dt5r6eCFVmhKhWjaWi95BR',
+  'FkWGAbCuEhaDGTJTjCcA2GJ4V4BWBYmwhS7Ke2iJjYFG',
 );
 const stakeProgramId = new PublicKey(
-  '2Cu7X1Pgmm8yZJ7ByZgV4AGPbWkwx11GZdKngaoGHQdx',
+  '29LLqvaCrAL8u8k8KyRYY9HDrCuabN6aW4SEMm9YZzVW',
 );
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
@@ -41,12 +41,26 @@ describe('End-to-end tests', () => {
       {
         mint: srmMint,
         megaMint: msrmMint,
-        withdrawalTimelock: new BN(2),
+        withdrawalTimelock: new BN(60),
         deactivationTimelock: new BN(5),
         rewardActivationThreshold: new BN(1),
       },
     );
     let registrar = await client.accounts.registrar(registrarAddress);
+    expect(registrar.withdrawalTimelock.toNumber()).toEqual(60);
+    expect(registrar.deactivationTimelock.toNumber()).toEqual(5);
+    expect(registrar.rewardActivationThreshold.toNumber()).toEqual(1);
+    expect(registrar.authority).toEqual(client.payer.publicKey);
+
+    // Update registrar.
+    await client.updateRegistrar({
+      newAuthority: null,
+      withdrawalTimelock: new BN(2),
+      deactivationTimelock: null,
+      rewardActivationThreshold: null,
+    });
+    registrar = await client.accounts.registrar(registrarAddress);
+    expect(registrar.withdrawalTimelock.toNumber()).toEqual(2);
 
     // Create Entity.
     let { entity } = await client.createEntity({});
@@ -192,7 +206,7 @@ describe('End-to-end tests', () => {
     );
 
     // Wait for withdrawal timelock to pass.
-    await sleep(registrar.deactivationTimelock.toNumber() * 3 * 1000);
+    await sleep(registrar.withdrawalTimelock.toNumber() * 3 * 1000);
 
     // EndStakeWithdrawal.
     const memberBefore = await client.accounts.member(member);

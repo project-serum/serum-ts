@@ -13,6 +13,7 @@ import BN from 'bn.js';
 
 export type RegistryInstruction =
   | Initialize
+  | UpdateRegistrar
   | CreateEntity
   | UpdateEntity
   | CreateMember
@@ -25,7 +26,7 @@ export type RegistryInstruction =
   | EndStakeWithdrawal
   | CreateEntity;
 
-export type Initialize = {
+type Initialize = {
   authority: PublicKey;
   nonce: number;
   withdrawalTimelock: BN;
@@ -33,41 +34,48 @@ export type Initialize = {
   rewardActivationThreshold: BN;
 };
 
-export type CreateEntity = {};
+type UpdateRegistrar = {
+  newAuthority: PublicKey | null;
+  withdrawalTimelock: BN | null;
+  deactivationTimelock: BN | null;
+  rewardActivationThreshold: BN | null;
+};
 
-export type UpdateEntity = {
+type CreateEntity = {};
+
+type UpdateEntity = {
   leader: PublicKey;
 };
 
-export type CreateMember = {
+type CreateMember = {
   delegate: PublicKey;
   watchtower: Watchtower;
 };
 
-export type UpdateMember = {
+type UpdateMember = {
   watchtower: Watchtower | null;
   delegate: PublicKey | null;
 };
 
-export type SwitchEntity = {};
+type SwitchEntity = {};
 
-export type Deposit = {
+type Deposit = {
   amount: BN;
 };
 
-export type Withdraw = {
+type Withdraw = {
   amount: BN;
 };
 
-export type Stake = {
+type Stake = {
   amount: BN;
 };
 
-export type StartStakeWithdrawal = {
+type StartStakeWithdrawal = {
   amount: BN;
 };
 
-export type EndStakeWithdrawal = {};
+type EndStakeWithdrawal = {};
 
 const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct(
@@ -79,6 +87,15 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
       u64('rewardActivationThreshold'),
     ],
     'initialize',
+  ),
+  struct(
+    [
+      option(publicKey(), 'newAuthority'),
+      option(i64(), 'withdrawalTimelock'),
+      option(i64(), 'deactivationTimelock'),
+      option(u64(), 'rewardActivationThreshold'),
+    ],
+    'updateRegistrar',
   ),
   struct([], 'createEntity'),
   struct([publicKey('leader')], 'updateEntity'),
