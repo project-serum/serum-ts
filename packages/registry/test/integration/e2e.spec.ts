@@ -10,10 +10,10 @@ import {
 // When running this test, make sure to deploy the following programs
 // and plugin the on-chain addresses, here.
 const registryProgramId = new PublicKey(
-  'FkWGAbCuEhaDGTJTjCcA2GJ4V4BWBYmwhS7Ke2iJjYFG',
+  '51DvkDRrvRFdQQL3UYDWDK7tXijeE6seuLvBiVQfLHt',
 );
 const stakeProgramId = new PublicKey(
-  '29LLqvaCrAL8u8k8KyRYY9HDrCuabN6aW4SEMm9YZzVW',
+  '9wCANgFdLXAXBSmYbf6RBw2phoGco2w4d9gwQQSgJhSY',
 );
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);

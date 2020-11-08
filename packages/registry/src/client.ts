@@ -957,10 +957,15 @@ export default class Client {
     };
   }
 
-  async allocSpt(isMega: boolean, owner?: PublicKey): Promise<PublicKey> {
-    if (owner === undefined) {
-      owner = this.payer.publicKey;
-    }
+  // Allocates a staking pool token. Note that the token doesn't belong to
+  // the user until `stake` has been called, at which point the Registry will
+  // mint a balance to the token account and set the delegate to be the
+  // beneficiary.
+  async allocSpt(isMega: boolean): Promise<PublicKey> {
+    const owner = await this.accounts.vaultAuthority(
+      this.programId,
+      this.registrar,
+    );
     let pool = isMega
       ? await this.accounts.megaPool(this.registrar)
       : await this.accounts.pool(this.registrar);
