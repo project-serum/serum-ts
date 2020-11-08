@@ -18,7 +18,7 @@ describe('Instruction', () => {
     };
     const data = instruction.encode(registryInstruction);
     const buf = Buffer.from([
-      4,
+      5,
       1,
       250,
       164,
