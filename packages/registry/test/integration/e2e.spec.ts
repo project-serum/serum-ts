@@ -10,10 +10,10 @@ import {
 // When running this test, make sure to deploy the following programs
 // and plugin the on-chain addresses, here.
 const registryProgramId = new PublicKey(
-  '51DvkDRrvRFdQQL3UYDWDK7tXijeE6seuLvBiVQfLHt',
+  'DTKwymPp39PTVypEpEgTLmriwF7L517h3sED4pxWkKzv',
 );
 const stakeProgramId = new PublicKey(
-  '9wCANgFdLXAXBSmYbf6RBw2phoGco2w4d9gwQQSgJhSY',
+  'Gp57KS8jvAv2X4LRG9j3AJxJeRtV5KvnX6ZqyVjpxYKo',
 );
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
@@ -88,10 +88,6 @@ describe('End-to-end tests', () => {
     expect(m.registrar).toEqual(registrarAddress);
     expect(m.entity).toEqual(entity);
     expect(m.beneficiary).toEqual(client.payer.publicKey);
-    expect(m.watchtower).toEqual({
-      authority: publicKeyZero,
-      dst: publicKeyZero,
-    });
     expect(m.books).toEqual({
       sptAmount: u64Zero,
       sptMegaAmount: u64Zero,
@@ -110,14 +106,6 @@ describe('End-to-end tests', () => {
           deposit: u64Zero,
           megaDeposit: u64Zero,
         },
-      },
-    });
-    expect(m.lastActivePrices).toEqual({
-      basket: {
-        quantities: [i64Zero],
-      },
-      megaBasket: {
-        quantities: [i64Zero, i64Zero],
       },
     });
 

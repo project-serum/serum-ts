@@ -1,6 +1,3 @@
-import { promisify } from 'util';
-import { homedir } from 'os';
-import { readFile } from 'fs';
 import BN from 'bn.js';
 import {
   TransactionSignature,
@@ -41,7 +38,8 @@ import {
 } from './accounts/registrar';
 import { PendingWithdrawal } from './accounts/pending-withdrawal';
 import { Entity } from './accounts/entity';
-import { Member, Watchtower } from './accounts/member';
+import { Member } from './accounts/member';
+import { Generation } from './accounts/generation';
 
 type Config = {
   connection: Connection;
@@ -66,9 +64,12 @@ export async function localProvider(
   const payer = new Account(
     Buffer.from(
       JSON.parse(
-        await promisify(readFile)(homedir() + '/.config/solana/id.json', {
-          encoding: 'utf-8',
-        }),
+        require('fs').readFileSync(
+          require('os').homedir() + '/.config/solana/id.json',
+          {
+            encoding: 'utf-8',
+          },
+        ),
       ),
     ),
   );
@@ -427,18 +428,12 @@ export default class Client {
   }
 
   async createMember(req: CreateMemberRequest): Promise<CreateMemberResponse> {
-    let { beneficiary, entity, delegate, watchtower, watchtowerDst } = req;
+    let { beneficiary, entity, delegate } = req;
     if (beneficiary === undefined) {
       beneficiary = this.payer;
     }
     if (delegate === undefined) {
       delegate = new PublicKey(Buffer.alloc(32));
-    }
-    if (watchtower === undefined) {
-      watchtower = new PublicKey(Buffer.alloc(32));
-    }
-    if (watchtowerDst === undefined) {
-      watchtowerDst = new PublicKey(Buffer.alloc(32));
     }
 
     const member = new Account();
@@ -468,10 +463,6 @@ export default class Client {
         data: instruction.encode({
           createMember: {
             delegate: delegate,
-            watchtower: {
-              authority: watchtower,
-              dst: watchtowerDst,
-            },
           },
         }),
       }),
@@ -488,7 +479,7 @@ export default class Client {
   }
 
   async updateMember(req: UpdateMemberRequest): Promise<UpdateMemberResponse> {
-    let { member, beneficiary, delegate, watchtower } = req;
+    let { member, beneficiary, delegate } = req;
     if (beneficiary === undefined) {
       beneficiary = this.payer;
     }
@@ -503,7 +494,6 @@ export default class Client {
         programId: this.programId,
         data: instruction.encode({
           updateMember: {
-            watchtower,
             delegate,
           },
         }),
@@ -844,6 +834,45 @@ export default class Client {
     ];
   }
 
+  async markGeneration(
+    req: MarkGenerationRequest,
+  ): Promise<MarkGenerationResponse> {
+    let { entity, generation } = req;
+
+    if (generation === undefined) {
+      generation = (
+        await createAccountRentExempt(
+          this.connection,
+          this.payer,
+          this.programId,
+          accounts.generation.SIZE,
+        )
+      ).publicKey;
+    }
+    const tx = new Transaction();
+    tx.add(
+      new TransactionInstruction({
+        keys: [
+          { pubkey: generation, isWritable: true, isSigner: false },
+          { pubkey: entity, isWritable: false, isSigner: false },
+          { pubkey: this.registrar, isWritable: false, isSigner: false },
+        ],
+        programId: this.programId,
+        data: instruction.encode({
+          markGeneration: {},
+        }),
+      }),
+    );
+
+    let signers = [this.payer];
+    let txSig = await sendAndConfirmTransaction(this.connection, tx, signers);
+
+    return {
+      tx: txSig,
+      generation,
+    };
+  }
+
   async startStakeWithdrawal(
     req: StartStakeWithdrawalRequest,
   ): Promise<StartStakeWithdrawalResponse> {
@@ -854,6 +883,7 @@ export default class Client {
       entity,
       amount,
       stakeToken,
+      generation,
     } = req;
 
     if (pendingWithdrawal === undefined) {
@@ -900,7 +930,19 @@ export default class Client {
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
-        ].concat(await this.executePoolAccounts(stakeToken)),
+        ]
+          .concat(await this.executePoolAccounts(stakeToken))
+          .concat(
+            generation === undefined
+              ? []
+              : [
+                  {
+                    pubkey: generation,
+                    isWritable: false,
+                    isSigner: false,
+                  },
+                ],
+          ),
         programId: this.programId,
         data: instruction.encode({
           startStakeWithdrawal: {
@@ -1129,8 +1171,6 @@ type UpdateEntityResponse = {
 type CreateMemberRequest = {
   beneficiary?: Account;
   entity: PublicKey;
-  watchtower?: PublicKey;
-  watchtowerDst?: PublicKey;
   delegate?: PublicKey;
 };
 
@@ -1143,7 +1183,6 @@ type UpdateMemberRequest = {
   member: PublicKey;
   beneficiary?: Account;
   delegate: PublicKey | null;
-  watchtower: Watchtower | null;
 };
 
 type UpdateMemberResponse = {
@@ -1201,6 +1240,16 @@ type StakeResponse = {
   tx: TransactionSignature;
 };
 
+type MarkGenerationRequest = {
+  entity: PublicKey;
+  generation?: PublicKey;
+};
+
+type MarkGenerationResponse = {
+  tx: TransactionSignature;
+  generation: PublicKey;
+};
+
 type StartStakeWithdrawalRequest = {
   // Encourage the user to pass this in to encourage persisting this address
   // before invoking this function (so as not to lose the PendingWithdrawal
@@ -1211,6 +1260,8 @@ type StartStakeWithdrawalRequest = {
   entity?: PublicKey;
   amount: BN;
   stakeToken: PublicKey;
+  // generation must be provided if the entity is inactive.
+  generation?: PublicKey;
 };
 
 type StartStakeWithdrawalResponse = {
