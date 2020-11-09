@@ -32,6 +32,7 @@ type Initialize = {
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
   rewardActivationThreshold: BN;
+  maxStakePerEntity: BN;
 };
 
 type UpdateRegistrar = {
@@ -39,6 +40,7 @@ type UpdateRegistrar = {
   withdrawalTimelock: BN | null;
   deactivationTimelock: BN | null;
   rewardActivationThreshold: BN | null;
+  maxStakePerEntity: BN | null;
 };
 
 type CreateEntity = {};
@@ -85,6 +87,7 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
       i64('withdrawalTimelock'),
       i64('deactivationTimelock'),
       u64('rewardActivationThreshold'),
+      u64('maxStakePerEntity'),
     ],
     'initialize',
   ),
@@ -94,6 +97,7 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
       option(i64(), 'withdrawalTimelock'),
       option(i64(), 'deactivationTimelock'),
       option(u64(), 'rewardActivationThreshold'),
+      option(u64(), 'maxStakePerEntity'),
     ],
     'updateRegistrar',
   ),

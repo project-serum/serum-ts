@@ -109,6 +109,7 @@ export default class Client {
       withdrawalTimelock,
       deactivationTimelock,
       rewardActivationThreshold,
+      maxStakePerEntity,
       authority,
       registrar,
     } = req;
@@ -270,6 +271,7 @@ export default class Client {
             withdrawalTimelock,
             deactivationTimelock,
             rewardActivationThreshold,
+            maxStakePerEntity,
           },
         }),
       }),
@@ -315,6 +317,7 @@ export default class Client {
       withdrawalTimelock,
       deactivationTimelock,
       rewardActivationThreshold,
+      maxStakePerEntity,
     } = req;
     if (authority === undefined) {
       authority = this.payer;
@@ -336,6 +339,7 @@ export default class Client {
             withdrawalTimelock,
             deactivationTimelock,
             rewardActivationThreshold,
+            maxStakePerEntity,
           },
         }),
       }),
@@ -616,12 +620,12 @@ export default class Client {
 
     let r = await this.accounts.registrar(this.registrar);
 
-    let vaultAcc = await this.accounts.vault(this.registrar);
+    let vaultAcc = await this.accounts.depositVault(this.registrar);
     if (vaultAcc.mint.equals(depositorAcc.mint)) {
       vaultAddress = r.vault;
       vault = vaultAcc;
     }
-    let megaVaultAcc = await this.accounts.megaVault(this.registrar);
+    let megaVaultAcc = await this.accounts.depositMegaVault(this.registrar);
     if (megaVaultAcc.mint.equals(depositorAcc.mint)) {
       vaultAddress = r.megaVault;
       vault = megaVaultAcc;
@@ -1057,12 +1061,12 @@ class Accounts {
     return accounts.pendingWithdrawal.decode(accountInfo.data);
   }
 
-  async vault(registrarAddr: PublicKey): Promise<AccountInfo> {
+  async depositVault(registrarAddr: PublicKey): Promise<AccountInfo> {
     let r = await this.registrar(registrarAddr);
     return getTokenAccount(this.connection, r.vault);
   }
 
-  async megaVault(registrarAddr: PublicKey): Promise<AccountInfo> {
+  async depositMegaVault(registrarAddr: PublicKey): Promise<AccountInfo> {
     let r = await this.registrar(registrarAddr);
     return getTokenAccount(this.connection, r.megaVault);
   }
@@ -1125,6 +1129,7 @@ type InitializeRequest = {
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
   rewardActivationThreshold: BN;
+  maxStakePerEntity: BN;
   authority?: PublicKey;
   registrar?: Account;
 };
@@ -1143,6 +1148,7 @@ type UpdateRegistrarRequest = {
   withdrawalTimelock: BN | null;
   deactivationTimelock: BN | null;
   rewardActivationThreshold: BN | null;
+  maxStakePerEntity: BN | null;
 };
 
 type UpdateRegistrarResponse = {

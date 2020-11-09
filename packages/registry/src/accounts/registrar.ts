@@ -8,6 +8,7 @@ export interface Registrar {
   authority: PublicKey;
   nonce: number;
   rewardActivationThreshold: BN;
+  maxStakePerEntity: BN;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
   vault: PublicKey;
@@ -22,6 +23,7 @@ const REGISTRAR_LAYOUT: Layout<Registrar> = struct([
   publicKey('authority'),
   u8('nonce'),
   u64('rewardActivationThreshold'),
+  u64('maxStakePerEntity'),
   i64('withdrawalTimelock'),
   i64('deactivationTimelock'),
   publicKey('vault'),
@@ -46,6 +48,7 @@ export const SIZE: number = encode({
   authority: new PublicKey(Buffer.alloc(32)),
   nonce: 0,
   rewardActivationThreshold: new BN(0),
+  maxStakePerEntity: new BN(0),
   withdrawalTimelock: new BN(0),
   deactivationTimelock: new BN(0),
   vault: new PublicKey(Buffer.alloc(32)),

@@ -16,7 +16,7 @@ export interface PoolPrices {
   megaBasket: Basket;
 }
 
-const POOL_PRICES_LAYOUT: Layout<PoolPrices> = struct([
+export const POOL_PRICES_LAYOUT: Layout<PoolPrices> = struct([
   Basket.replicate('basket'),
   Basket.replicate('megaBasket'),
 ]);
@@ -42,12 +42,16 @@ export const SIZE: number = encode({
   initialized: false,
   entity: new PublicKey(Buffer.alloc(32)),
   generation: new BN(0),
-  lastActivePrices: {
+  lastActivePrices: defaultPoolPrices(),
+}).length;
+
+export function defaultPoolPrices(): PoolPrices {
+  return {
     basket: {
       quantities: [new BN(0)],
     },
     megaBasket: {
       quantities: [new BN(0), new BN(0)],
     },
-  },
-}).length;
+  };
+}

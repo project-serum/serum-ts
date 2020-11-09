@@ -2,6 +2,11 @@ import { struct, u8, Layout } from 'buffer-layout';
 import { bool, publicKey, u64 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
+import {
+  PoolPrices,
+  POOL_PRICES_LAYOUT,
+  defaultPoolPrices,
+} from './generation';
 
 export interface Member {
   initialized: boolean;
@@ -9,45 +14,38 @@ export interface Member {
   entity: PublicKey;
   beneficiary: PublicKey;
   generation: BN;
-  books: MemberBooks;
+  balances: MemberBalances;
+  lastActivePrices: PoolPrices;
 }
 
-export interface MemberBooks {
+interface MemberBalances {
   sptAmount: BN;
   sptMegaAmount: BN;
-  stakeIntent: BN;
-  megaStakeIntent: BN;
-  main: Book;
-  delegate: Book;
+  currentDeposit: BN;
+  currentMegaDeposit: BN;
+  main: OriginalDeposit;
+  delegate: OriginalDeposit;
 }
 
-export interface Book {
+interface OriginalDeposit {
   owner: PublicKey;
-  balances: Balances;
-}
-
-export interface Balances {
   deposit: BN;
   megaDeposit: BN;
 }
 
-const BALANCES_LAYOUT: Layout<Balances> = struct([
+const ORIGINAL_DEPOSIT_LAYOUT: Layout<OriginalDeposit> = struct([
+  publicKey('owner'),
   u64('deposit'),
   u64('megaDeposit'),
 ]);
 
-const BOOK_LAYOUT: Layout<Balances> = struct([
-  publicKey('owner'),
-  BALANCES_LAYOUT.replicate('balances'),
-]);
-
-const MEMBER_BOOKS_LAYOUT: Layout<MemberBooks> = struct([
+const MEMBER_BALANCES_LAYOUT: Layout<MemberBalances> = struct([
   u64('sptAmount'),
   u64('sptMegaAmount'),
-  u64('stakeIntent'),
-  u64('megaStakeIntent'),
-  BOOK_LAYOUT.replicate('main'),
-  BOOK_LAYOUT.replicate('delegate'),
+  u64('currentDeposit'),
+  u64('currentMegaDeposit'),
+  ORIGINAL_DEPOSIT_LAYOUT.replicate('main'),
+  ORIGINAL_DEPOSIT_LAYOUT.replicate('delegate'),
 ]);
 
 const MEMBER_LAYOUT: Layout<Member> = struct([
@@ -56,7 +54,8 @@ const MEMBER_LAYOUT: Layout<Member> = struct([
   publicKey('entity'),
   publicKey('beneficiary'),
   u64('generation'),
-  MEMBER_BOOKS_LAYOUT.replicate('books'),
+  MEMBER_BALANCES_LAYOUT.replicate('balances'),
+  POOL_PRICES_LAYOUT.replicate('lastActivePrices'),
 ]);
 
 export function decode(data: Buffer): Member {
@@ -75,24 +74,21 @@ export const SIZE: number = encode({
   entity: new PublicKey(Buffer.alloc(32)),
   beneficiary: new PublicKey(Buffer.alloc(32)),
   generation: new BN(0),
-  books: {
+  balances: {
     sptAmount: new BN(0),
     sptMegaAmount: new BN(0),
-    stakeIntent: new BN(0),
-    megaStakeIntent: new BN(0),
+    currentDeposit: new BN(0),
+    currentMegaDeposit: new BN(0),
     main: {
       owner: new PublicKey(Buffer.alloc(32)),
-      balances: {
-        deposit: new BN(0),
-        megaDeposit: new BN(0),
-      },
+      deposit: new BN(0),
+      megaDeposit: new BN(0),
     },
     delegate: {
       owner: new PublicKey(Buffer.alloc(32)),
-      balances: {
-        deposit: new BN(0),
-        megaDeposit: new BN(0),
-      },
+      deposit: new BN(0),
+      megaDeposit: new BN(0),
     },
   },
+  lastActivePrices: defaultPoolPrices(),
 }).length;

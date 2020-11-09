@@ -10,10 +10,10 @@ import {
 // When running this test, make sure to deploy the following programs
 // and plugin the on-chain addresses, here.
 const registryProgramId = new PublicKey(
-  'DTKwymPp39PTVypEpEgTLmriwF7L517h3sED4pxWkKzv',
+  '6BvqnB3iQ6RpdwUY15sw8PxZTTTwJLu4PRcToM8SjjdG',
 );
 const stakeProgramId = new PublicKey(
-  'Gp57KS8jvAv2X4LRG9j3AJxJeRtV5KvnX6ZqyVjpxYKo',
+  'G1PhvXmY1Koy3WGA2TnzV1tEWbZpMei7Rneq6K1k4Xmv',
 );
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
@@ -44,6 +44,7 @@ describe('End-to-end tests', () => {
         withdrawalTimelock: new BN(60),
         deactivationTimelock: new BN(5),
         rewardActivationThreshold: new BN(1),
+        maxStakePerEntity: new BN(100000000),
       },
     );
     let registrar = await client.accounts.registrar(registrarAddress);
@@ -51,6 +52,7 @@ describe('End-to-end tests', () => {
     expect(registrar.deactivationTimelock.toNumber()).toEqual(5);
     expect(registrar.rewardActivationThreshold.toNumber()).toEqual(1);
     expect(registrar.authority).toEqual(client.payer.publicKey);
+    expect(registrar.maxStakePerEntity.toNumber()).toEqual(100000000);
 
     // Update registrar.
     await client.updateRegistrar({
@@ -58,6 +60,7 @@ describe('End-to-end tests', () => {
       withdrawalTimelock: new BN(2),
       deactivationTimelock: null,
       rewardActivationThreshold: null,
+      maxStakePerEntity: null,
     });
     registrar = await client.accounts.registrar(registrarAddress);
     expect(registrar.withdrawalTimelock.toNumber()).toEqual(2);
@@ -73,8 +76,8 @@ describe('End-to-end tests', () => {
     expect(e.balances).toEqual({
       sptAmount: u64Zero,
       sptMegaAmount: u64Zero,
-      stakeIntent: u64Zero,
-      megaStakeIntent: u64Zero,
+      currentDeposit: u64Zero,
+      currentMegaDeposit: u64Zero,
     });
     expect(e.state).toEqual({
       inactive: {},
@@ -88,29 +91,33 @@ describe('End-to-end tests', () => {
     expect(m.registrar).toEqual(registrarAddress);
     expect(m.entity).toEqual(entity);
     expect(m.beneficiary).toEqual(client.payer.publicKey);
-    expect(m.books).toEqual({
+    expect(m.balances).toEqual({
       sptAmount: u64Zero,
       sptMegaAmount: u64Zero,
-      stakeIntent: u64Zero,
-      megaStakeIntent: u64Zero,
+      currentDeposit: u64Zero,
+      currentMegaDeposit: u64Zero,
       main: {
         owner: client.payer.publicKey,
-        balances: {
-          deposit: u64Zero,
-          megaDeposit: u64Zero,
-        },
+        deposit: u64Zero,
+        megaDeposit: u64Zero,
       },
       delegate: {
         owner: publicKeyZero,
-        balances: {
-          deposit: u64Zero,
-          megaDeposit: u64Zero,
-        },
+        deposit: u64Zero,
+        megaDeposit: u64Zero,
+      },
+    });
+    expect(m.lastActivePrices).toEqual({
+      basket: {
+        quantities: [i64Zero],
+      },
+      megaBasket: {
+        quantities: [i64Zero, i64Zero],
       },
     });
 
     // Deposit SRM.
-    let vaultBefore = await client.accounts.vault(registrarAddress);
+    let vaultBefore = await client.accounts.depositVault(registrarAddress);
     let amount = new BN(1);
 
     await client.deposit({
@@ -119,12 +126,12 @@ describe('End-to-end tests', () => {
       amount,
     });
 
-    let vaultAfter = await client.accounts.vault(registrarAddress);
+    let vaultAfter = await client.accounts.depositVault(registrarAddress);
     let result = vaultAfter.amount.sub(vaultBefore.amount);
     expect(amount).toEqual(result);
 
     // Deposit MSRM.
-    vaultBefore = await client.accounts.megaVault(registrarAddress);
+    vaultBefore = await client.accounts.depositMegaVault(registrarAddress);
     amount = new BN(2);
 
     await client.deposit({
@@ -133,13 +140,13 @@ describe('End-to-end tests', () => {
       amount,
     });
 
-    vaultAfter = await client.accounts.megaVault(registrarAddress);
+    vaultAfter = await client.accounts.depositMegaVault(registrarAddress);
     result = vaultAfter.amount.sub(vaultBefore.amount);
     expect(amount).toEqual(result);
 
     // Stake SRM.
     let poolVaultBefore = await client.accounts.poolVault(registrarAddress);
-    vaultBefore = await client.accounts.vault(registrarAddress);
+    vaultBefore = await client.accounts.depositVault(registrarAddress);
     let stakeToken = await client.allocSpt(false);
     amount = new BN(1);
 
@@ -150,17 +157,26 @@ describe('End-to-end tests', () => {
     });
 
     let poolVaultAfter = await client.accounts.poolVault(registrarAddress);
-    vaultAfter = await client.accounts.vault(registrarAddress);
+    vaultAfter = await client.accounts.depositVault(registrarAddress);
     let poolVaultResult = poolVaultAfter.amount.sub(poolVaultBefore.amount);
     let vaultResult = vaultBefore.amount.sub(vaultAfter.amount);
     let stakeTokenAfter = await getTokenAccount(client.connection, stakeToken);
     expect(poolVaultResult).toEqual(amount); // Balance up.
     expect(vaultResult).toEqual(amount); // Balance down.
     expect(stakeTokenAfter.amount.toNumber()).toEqual(amount.toNumber());
+    m = await client.accounts.member(member);
+    expect(m.lastActivePrices).toEqual({
+      basket: {
+        quantities: [amount],
+      },
+      megaBasket: {
+        quantities: [i64Zero, i64Zero],
+      },
+    });
 
     // StartStakeWithdrawal.
     poolVaultBefore = await client.accounts.poolVault(registrarAddress);
-    vaultBefore = await client.accounts.vault(registrarAddress);
+    vaultBefore = await client.accounts.depositVault(registrarAddress);
     let stakeTokenBefore = await getTokenAccount(client.connection, stakeToken);
 
     let { pendingWithdrawal, tx } = await client.startStakeWithdrawal({
@@ -170,7 +186,7 @@ describe('End-to-end tests', () => {
     });
 
     poolVaultAfter = await client.accounts.poolVault(registrarAddress);
-    vaultAfter = await client.accounts.vault(registrarAddress);
+    vaultAfter = await client.accounts.depositVault(registrarAddress);
     stakeTokenAfter = await getTokenAccount(client.connection, stakeToken);
     expect(stakeTokenBefore.amount.sub(stakeTokenAfter.amount)).toEqual(amount);
     expect(
@@ -206,7 +222,9 @@ describe('End-to-end tests', () => {
 
     const memberAfter = await client.accounts.member(member);
     expect(
-      memberAfter.books.stakeIntent.sub(memberBefore.books.stakeIntent),
+      memberAfter.balances.currentDeposit.sub(
+        memberBefore.balances.currentDeposit,
+      ),
     ).toEqual(amount);
   });
 });
