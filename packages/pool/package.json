@@ -27,12 +27,12 @@
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.8",
+    "@project-serum/borsh": "0.0.0",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.86.1",
-    "@project-serum/borsh": "0.0.0"
+    "@solana/web3.js": "^0.86.1"
   },
   "devDependencies": {
     "@solana/web3.js": "^0.86.1",
