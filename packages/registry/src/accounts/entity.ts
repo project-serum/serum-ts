@@ -15,8 +15,8 @@ export interface Entity {
 export interface Balances {
   sptAmount: BN;
   sptMegaAmount: BN;
-  stakeIntent: BN;
-  megaStakeIntent: BN;
+  currentDeposit: BN;
+  currentMegaDeposit: BN;
 }
 
 export type EntityState = Inactive | PendingDeactivation | Active;
@@ -30,8 +30,8 @@ export type Active = {};
 const BALANCES_LAYOUT: Layout<Balances> = struct([
   u64('sptAmount'),
   u64('sptMegaAmount'),
-  u64('stakeIntent'),
-  u64('megaStakeIntent'),
+  u64('currentDeposit'),
+  u64('currentMegaDeposit'),
 ]);
 
 const ENTITY_STATE_LAYOUT: Layout<EntityState> = rustEnum([
@@ -66,8 +66,8 @@ export const SIZE: number = encode({
   balances: {
     sptAmount: new BN(0),
     sptMegaAmount: new BN(0),
-    stakeIntent: new BN(0),
-    megaStakeIntent: new BN(0),
+    currentDeposit: new BN(0),
+    currentMegaDeposit: new BN(0),
   },
   generation: new BN(0),
   state: {
