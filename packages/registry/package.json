@@ -1,49 +1,33 @@
 {
   "name": "@project-serum/registry",
   "version": "0.0.0",
-  "description": "Serum node registration",
-  "main": "dist/index.umd.js",
-  "module": "dist/index.es5.js",
-  "types": "dist/lib/src/index.d.ts",
+  "description": "Package from interacting with the Serum Registry",
+  "repository": "project-serum/serum-ts",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
   "license": "Apache-2.0",
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": ">=10"
   },
   "scripts": {
-    "build": "yarn build:node && yarn build:browser",
-    "build:node": "tsc -b && rollup -c rollup/rollup.config.ts",
-		"build:browser": "tsc -b && rollup -c rollup/rollup.config.browser.ts",
-		"test": "yarn test:unit",
-		"test:unit": "jest test/unit",
-		"test:integration": "jest test/integration --detectOpenHandles",
-    "coverage": "jest --coverage test",
+    "build": "yarn build:node",
+    "build:node": "tsc && tsc -p tsconfig.cjs.json",
+    "test": "yarn test:unit",
+    "test:unit": "jest test/unit",
+    "test:integration": "jest test/integration --detectOpenHandles",
+    "coverage": "jest --coverage test/unit",
     "prepublishOnly": "yarn build"
   },
-  "jest": {
-    "transform": {
-      ".(ts)": "ts-jest"
-    },
-    "testEnvironment": "node",
-    "testRegex": "(/__tests__/.*|\\.(test|spec))\\.(ts)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js"
-    ]
-  },
-	"dependencies": {
-		"@project-serum/pool": "0.1.1",
-		"@project-serum/common": "0.0.0",
-		"@project-serum/borsh": "0.0.0",
+  "dependencies": {
+    "@project-serum/borsh": "0.0.0",
+    "@project-serum/common": "0.0.0",
+    "@project-serum/pool": "0.1.1",
     "@solana/spl-token": "0.0.11",
-		"bn.js": "^5.1.2",
+    "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
   "peerDependencies": {
     "@solana/web3.js": "^0.86.1"
-  },
-  "browser": {
-    "./dist/index.umd.js": "./dist/index.browser.umd.js",
-    "./dist/index.es5.js": "./dist/index.browser.es5.js"
   }
 }

@@ -8,7 +8,6 @@ import {
   u64,
 } from '@project-serum/borsh';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
-import { Watchtower, WATCHTOWER_LAYOUT } from './accounts/member';
 import BN from 'bn.js';
 
 export type RegistryInstruction =
@@ -22,6 +21,7 @@ export type RegistryInstruction =
   | Deposit
   | Withdraw
   | Stake
+  | MarkGeneration
   | StartStakeWithdrawal
   | EndStakeWithdrawal
   | CreateEntity;
@@ -49,11 +49,9 @@ type UpdateEntity = {
 
 type CreateMember = {
   delegate: PublicKey;
-  watchtower: Watchtower;
 };
 
 type UpdateMember = {
-  watchtower: Watchtower | null;
   delegate: PublicKey | null;
 };
 
@@ -70,6 +68,8 @@ type Withdraw = {
 type Stake = {
   amount: BN;
 };
+
+type MarkGeneration = {};
 
 type StartStakeWithdrawal = {
   amount: BN;
@@ -99,21 +99,13 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   ),
   struct([], 'createEntity'),
   struct([publicKey('leader')], 'updateEntity'),
-  struct(
-    [publicKey('delegate'), WATCHTOWER_LAYOUT.replicate('watchtower')],
-    'createMember',
-  ),
-  struct(
-    [
-      option(WATCHTOWER_LAYOUT.replicate('watchtowerInner'), 'watchtower'),
-      option(publicKey(), 'delegate'),
-    ],
-    'updateMember',
-  ),
+  struct([publicKey('delegate')], 'createMember'),
+  struct([option(publicKey(), 'delegate')], 'updateMember'),
   struct([], 'switchEntity'),
   struct([u64('amount')], 'deposit'),
   struct([u64('amount')], 'withdraw'),
   struct([u64('amount')], 'stake'),
+  struct([], 'markGeneration'),
   struct([u64('amount')], 'startStakeWithdrawal'),
   struct([], 'endStakeWithdrawal'),
 ]);

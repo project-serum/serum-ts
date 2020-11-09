@@ -5,7 +5,7 @@
   "main": "dist/lib/index.js",
 	"types": "dist/lib/index.d.ts",
   "exports": {
-    ".": "dist/lib/index.js"
+    ".": "./dist/lib/index.js"
   },
 	"license": "Apache-2.0",
   "engines": {
