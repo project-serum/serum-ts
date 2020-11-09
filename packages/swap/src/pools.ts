@@ -31,8 +31,9 @@ import {
   WRAPPED_SOL_MINT,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
-import { timeMs } from './utils';
+import {divideBnToNumber, timeMs} from './utils';
 import assert from 'assert';
+import BN from "bn.js";
 
 export class Pool {
   private _decoded: any;
@@ -842,6 +843,18 @@ export class Pool {
         holding: account.info.amount,
       };
     });
+  }
+
+  get fees(): {
+    tradeFee: number;
+    ownerFee: number;
+    withdrawFee: number;
+  } {
+    return {
+      tradeFee: divideBnToNumber(new BN(this._decoded.tradeFeeNumerator, 'le'), new BN(this._decoded.tradeFeeDenominator, 'le')),
+      ownerFee: divideBnToNumber(new BN(this._decoded.ownerTradeFeeNumerator, 'le'), new BN(this._decoded.ownerTradeFeeDenominator, 'le')),
+      withdrawFee: divideBnToNumber(new BN(this._decoded.ownerWithdrawFeeNumerator, 'le'), new BN(this._decoded.ownerWithdrawFeeDenominator, 'le')),
+    };
   }
 }
 
