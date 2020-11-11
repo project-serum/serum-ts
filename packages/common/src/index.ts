@@ -5,31 +5,33 @@ import {
   PublicKey,
   Transaction,
 } from '@solana/web3.js';
+import { Provider } from './provider';
 import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
 import { AccountInfo, AccountLayout, u64 } from '@solana/spl-token';
 import { TokenInstructions } from '@project-serum/serum';
 import BN from 'bn.js';
+
+export * from './provider';
 
 export const SPL_SHARED_MEMORY_ID = new PublicKey(
   'shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL',
 );
 
 export async function createMint(
-  connection: Connection,
-  payer: Account,
+  provider: Provider,
   authority?: PublicKey,
 ): Promise<PublicKey> {
   if (authority === undefined) {
-    authority = payer.publicKey;
+    authority = provider.wallet.publicKey;
   }
   const mint = new Account();
   const tx = new Transaction();
   tx.add(
     SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
+      fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: mint.publicKey,
       space: 82,
-      lamports: await connection.getMinimumBalanceForRentExemption(82),
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(82),
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeMint({
@@ -39,41 +41,42 @@ export async function createMint(
     }),
   );
 
-  await sendAndConfirmTransaction(connection, tx, [payer, mint]);
+  await provider.send(tx, [mint]);
 
   return mint.publicKey;
 }
 
 export async function createMintAndVault(
-  connection: Connection,
-  payer: Account,
+  provider: Provider,
   amount: BN,
   owner?: PublicKey,
 ): Promise<[PublicKey, PublicKey]> {
   if (owner === undefined) {
-    owner = payer.publicKey;
+    owner = provider.wallet.publicKey;
   }
   const mint = new Account();
   const vault = new Account();
-  const txn = new Transaction();
-  txn.add(
+  const tx = new Transaction();
+  tx.add(
     SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
+      fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: mint.publicKey,
       space: 82,
-      lamports: await connection.getMinimumBalanceForRentExemption(82),
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(82),
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeMint({
       mint: mint.publicKey,
       decimals: 0,
-      mintAuthority: payer.publicKey,
+      mintAuthority: provider.wallet.publicKey,
     }),
     SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
+      fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: vault.publicKey,
       space: 165,
-      lamports: await connection.getMinimumBalanceForRentExemption(165),
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(
+        165,
+      ),
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeAccount({
@@ -85,27 +88,28 @@ export async function createMintAndVault(
       mint: mint.publicKey,
       destination: vault.publicKey,
       amount,
-      mintAuthority: payer.publicKey,
+      mintAuthority: provider.wallet.publicKey,
     }),
   );
-  await sendAndConfirmTransaction(connection, txn, [payer, mint, vault]);
+  await provider.send(tx, [mint, vault]);
   return [mint.publicKey, vault.publicKey];
 }
 
 export async function createTokenAccount(
-  connection: Connection,
-  payer: Account,
+  provider: Provider,
   mint: PublicKey,
   owner: PublicKey,
 ): Promise<PublicKey> {
   const vault = new Account();
-  const txn = new Transaction();
-  txn.add(
+  const tx = new Transaction();
+  tx.add(
     SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
+      fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: vault.publicKey,
       space: 165,
-      lamports: await connection.getMinimumBalanceForRentExemption(165),
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(
+        165,
+      ),
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeAccount({
@@ -114,13 +118,12 @@ export async function createTokenAccount(
       owner,
     }),
   );
-  await sendAndConfirmTransaction(connection, txn, [payer, vault]);
+  await provider.send(tx, [vault]);
   return vault.publicKey;
 }
 
 export async function createAccountRentExempt(
-  connection: Connection,
-  payer: Account,
+  provider: Provider,
   programId: PublicKey,
   size: number,
 ): Promise<Account> {
@@ -128,34 +131,24 @@ export async function createAccountRentExempt(
   const tx = new Transaction();
   tx.add(
     SystemProgram.createAccount({
-      fromPubkey: payer.publicKey,
+      fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: acc.publicKey,
       space: size,
-      lamports: await connection.getMinimumBalanceForRentExemption(size),
+      lamports: await provider.connection.getMinimumBalanceForRentExemption(
+        size,
+      ),
       programId,
     }),
   );
-  await sendAndConfirmTransaction(connection, tx, [payer, acc]);
+  await provider.send(tx, [acc]);
   return acc;
 }
 
-export async function sendAndConfirmTransaction(
-  connection: Connection,
-  transaction: Transaction,
-  signers: Account[],
-) {
-  const txid = await connection.sendTransaction(transaction, signers, {
-    preflightCommitment: 'recent',
-  });
-  await connection.confirmTransaction(txid, 'recent');
-  return txid;
-}
-
 export async function getTokenAccount(
-  connection: Connection,
+  provider: Provider,
   addr: PublicKey,
 ): Promise<AccountInfo> {
-  let depositorAccInfo = await connection.getAccountInfo(addr);
+  let depositorAccInfo = await provider.connection.getAccountInfo(addr);
   if (depositorAccInfo === null) {
     throw new Error('Failed to find token account');
   }
