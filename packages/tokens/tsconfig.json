@@ -1,0 +1,9 @@
+{
+  "extends": "../../tsconfig.json",
+  "include": ["src", "./src/*.json"],
+  "compilerOptions": {
+    "outDir": "dist/lib",
+    "resolveJsonModule": true,
+    "composite": true
+  }
+}
