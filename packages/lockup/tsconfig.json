@@ -2,7 +2,18 @@
   "extends": "../../tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-    "outDir": "dist/lib",
-    "composite": true
+    "module": "es6",
+    "target": "es2019",
+
+    "outDir": "dist/esm/",
+    "rootDir": "./src",
+    "declarationDir": "dist",
+
+    "esModuleInterop": true,
+    "composite": true,
+    "baseUrl": ".",
+    "paths": {
+      "@solana/web3.js":  ["../../node_modules/@solana/web3.js/lib"]
+    }
   }
 }

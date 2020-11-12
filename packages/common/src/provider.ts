@@ -26,8 +26,6 @@ export class Provider {
     return new Provider(connection, wallet, opts);
   }
 
-  // Prepends the wallet as the fee payer to the given signer array, signs
-  // the transaction, and sends it off to the cluster.
   async send(
     tx: Transaction,
     signers?: Array<Account | undefined>,

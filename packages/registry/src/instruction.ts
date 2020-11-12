@@ -1,12 +1,5 @@
 import { u8, struct, Layout } from 'buffer-layout';
-import {
-  bool,
-  option,
-  i64,
-  publicKey,
-  rustEnum,
-  u64,
-} from '@project-serum/borsh';
+import { option, i64, publicKey, rustEnum, u64 } from '@project-serum/borsh';
 import { PublicKey, TransactionInstruction } from '@solana/web3.js';
 import BN from 'bn.js';
 
