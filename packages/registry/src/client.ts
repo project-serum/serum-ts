@@ -59,7 +59,7 @@ export default class Client {
     this.provider = cfg.provider;
     this.programId = cfg.programId;
     this.stakeProgramId = cfg.stakeProgramId;
-    this.accounts = new Accounts(cfg.provider);
+    this.accounts = new Accounts(cfg.provider, cfg.registrar);
     this.registrar = cfg.registrar;
   }
 
@@ -980,9 +980,15 @@ export default class Client {
 }
 
 class Accounts {
-  constructor(readonly provider: Provider) {}
+  constructor(
+    readonly provider: Provider,
+    readonly registrarAddress: PublicKey,
+  ) {}
 
-  async registrar(address: PublicKey): Promise<Registrar> {
+  async registrar(address?: PublicKey): Promise<Registrar> {
+    if (address === undefined) {
+      address = this.registrarAddress;
+    }
     const accountInfo = await this.provider.connection.getAccountInfo(address);
     if (accountInfo === null) {
       throw new Error(`Registrar does not exist ${address}`);

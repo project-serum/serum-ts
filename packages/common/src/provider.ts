@@ -48,8 +48,7 @@ export class Provider {
       await this.connection.getRecentBlockhash(opts.preflightCommitment)
     ).blockhash;
 
-    this.wallet.signTransaction(tx);
-
+    await this.wallet.signTransaction(tx);
     signerKps.forEach(kp => {
       tx.partialSign(kp);
     });

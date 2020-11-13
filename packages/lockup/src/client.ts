@@ -537,7 +537,10 @@ export default class Client {
 class Accounts {
   constructor(readonly provider: Provider, private safeAddress: PublicKey) {}
 
-  async safe(safeAddress: PublicKey): Promise<Safe> {
+  async safe(safeAddress?: PublicKey): Promise<Safe> {
+    if (safeAddress === undefined) {
+      safeAddress = this.safeAddress;
+    }
     const accountInfo = await this.provider.connection.getAccountInfo(
       safeAddress,
     );
