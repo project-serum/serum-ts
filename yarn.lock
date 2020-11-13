@@ -1555,6 +1555,15 @@
   dependencies:
     "@types/node" ">= 8"
 
+"@project-serum/pool@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@project-serum/pool/-/pool-0.1.1.tgz#c972213d28b3f3565dcd8a6ae960396430a76a8d"
+  integrity sha512-ivZEvWky46Xnfud1kgF0rFHlkKA8bXZQFDjWLCyi6VIgzou8i5R5nfNZls1xThnUa6yRRAuo3Wmne0xRaEhKSg==
+  dependencies:
+    "@project-serum/serum" "^0.13.8"
+    bn.js "^5.1.2"
+    buffer-layout "^1.2.0"
+
 "@project-serum/serum@^0.13.8":
   version "0.13.11"
   resolved "https://registry.yarnpkg.com/@project-serum/serum/-/serum-0.13.11.tgz#c55c830cbfb28cdc2b4e4076b1367d45ad19175d"
