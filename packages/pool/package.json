@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/pool",
-  "version": "0.1.1",
+  "version": "0.1.3",
   "description": "Library for interacting with the serum pools",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",

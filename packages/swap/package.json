@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/swap",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Serum Swap",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",

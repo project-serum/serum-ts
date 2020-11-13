@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/tokens",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Serum tokens",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",
