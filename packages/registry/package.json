@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/registry",
-  "version": "0.0.0",
+  "version": "0.0.1-alpha.0",
   "description": "Package from interacting with the Serum Registry",
   "repository": "project-serum/serum-ts",
   "main": "dist/cjs/index.js",
@@ -23,9 +23,9 @@
     "prepublishOnly": "yarn build"
   },
   "dependencies": {
-    "@project-serum/borsh": "0.0.0",
-    "@project-serum/common": "0.0.0",
-    "@project-serum/pool": "0.1.3",
+    "@project-serum/borsh": "^0.0.1-alpha.0",
+    "@project-serum/common": "^0.0.1-alpha.0",
+    "@project-serum/pool": "^0.1.4",
     "@solana/spl-token": "0.0.11",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"

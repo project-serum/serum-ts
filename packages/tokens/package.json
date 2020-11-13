@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/tokens",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Serum tokens",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",
@@ -27,9 +27,6 @@
       "tsx",
       "js"
     ]
-  },
-  "dependencies": {
-
   },
   "browser": {
     "./dist/index.umd.js": "./dist/index.browser.umd.js",
