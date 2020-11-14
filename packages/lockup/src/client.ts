@@ -7,6 +7,8 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
+  SendOptions,
+  Connection,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from '@solana/web3.js';
@@ -15,6 +17,8 @@ import {
   createMint,
   createTokenAccount,
   Provider,
+  Wallet,
+  NodeWallet,
 } from '@project-serum/common';
 import * as instruction from './instruction';
 import * as accounts from './accounts';
@@ -26,6 +30,16 @@ import {
   WhitelistEntry,
   SIZE as WHITELIST_SIZE,
 } from './accounts/whitelist';
+
+export const networks = {
+  devnet: {
+    url: 'https://devnet.solana.com',
+    programId: new PublicKey('Fp39W9Ed7Y8YQm4FmgPED62Y2gB5rVHm5aSdswECkdWp'),
+    safe: new PublicKey('A85rfmwbGqTKDXZoiVrYNNFbMPoud2sWeAb2HetfmAMB'),
+    srm: new PublicKey('2gsgrFTjFsckJiPifzkHP3tznMuqVbh5TTUcVd3iMVQx'),
+    god: new PublicKey('9PRbiYDXcFig3C6cu7VBFuypqbaPfqdq8knY85AgvrKw'),
+  },
+};
 
 type Config = {
   provider: Provider;
@@ -49,6 +63,24 @@ export default class Client {
     this.programId = cfg.programId;
     this.safe = cfg.safe;
     this.accounts = new Accounts(cfg.provider, cfg.safe);
+  }
+
+  // Connects to the devnet deployment of the lockup program.
+  static devnet(wallet?: Wallet, opts?: SendOptions): Client {
+    if (wallet === undefined) {
+      wallet = NodeWallet.local();
+    }
+    opts = opts || Provider.defaultOptions();
+    const connection = new Connection(
+      'https://devnet.solana.com',
+      opts.preflightCommitment,
+    );
+    const provider = new Provider(connection, wallet, opts);
+    return new Client({
+      provider,
+      programId: networks.devnet.programId,
+      safe: networks.devnet.safe,
+    });
   }
 
   static async initialize(

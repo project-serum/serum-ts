@@ -14,12 +14,16 @@ export class Provider {
     readonly opts: SendOptions,
   ) {}
 
-  static local(opts?: SendOptions): Provider {
-    opts = opts || {
+  static defaultOptions(): SendOptions {
+    return {
       preflightCommitment: 'max',
     };
+  }
+
+  static local(url?: string, opts?: SendOptions): Provider {
+    opts = opts || Provider.defaultOptions();
     const connection = new Connection(
-      'http://localhost:8899',
+      url || 'http://localhost:8899',
       opts.preflightCommitment,
     );
     const wallet = NodeWallet.local();
@@ -63,7 +67,7 @@ export class Provider {
   }
 }
 
-interface Wallet {
+export interface Wallet {
   signTransaction(tx: Transaction): Promise<Transaction>;
   publicKey: PublicKey;
 }

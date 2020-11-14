@@ -7,11 +7,12 @@ import {
   createMintAndVault,
   createTokenAccount,
 } from '@project-serum/common';
-import { Client } from '../../src';
+import { Client, networks } from '../../src';
 import { WhitelistEntry } from '../../src/accounts/whitelist';
 
 // When running this test, make sure to deploy the program and plugin the address.
-const programId = new PublicKey('CYUv3ZVE3JNCAzQs1yf1ViDY5DcdD2Y4DQTYrqWfgKGw');
+const programId = networks.devnet.programId;
+const url = networks.devnet.url;
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
@@ -21,7 +22,7 @@ describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
     // Genesis state.
     const commitment = 'recent';
-    const provider = Provider.local({
+    const provider = Provider.local(url, {
       preflightCommitment: commitment,
     });
     const [srmMint, god] = await createMintAndVault(
