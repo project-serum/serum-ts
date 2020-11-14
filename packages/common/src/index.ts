@@ -13,8 +13,14 @@ import BN from 'bn.js';
 
 export * from './provider';
 
+// Mainnet.
+// export const SPL_SHARED_MEMORY_ID = new PublicKey(
+//   'shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL',
+// );
+
+// Devnet.
 export const SPL_SHARED_MEMORY_ID = new PublicKey(
-  'shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL',
+  '3w2Q6XjS2BDpxHVRzs8oWbNuH7ivZp1mVo3mbq318oyG',
 );
 
 export async function createMint(

@@ -1,4 +1,4 @@
-import { Client } from '../../src';
+import { Client, networks } from '../../src';
 import { Provider } from '@project-serum/common';
 import BN from 'bn.js';
 import { PublicKey } from '@solana/web3.js';
@@ -10,12 +10,9 @@ import {
 
 // When running this test, make sure to deploy the following programs
 // and plugin the on-chain addresses, here.
-const registryProgramId = new PublicKey(
-  'ByuVvYgZkYFHggMq4XgKLQD9suQUTeMYKKq3ESS5G2qC',
-);
-const stakeProgramId = new PublicKey(
-  'FkANVRVhommwpuih8vEdhhTxM9pnjfoivk93vgshXW9M',
-);
+const registryProgramId = networks.devnet.programId;
+const stakeProgramId = networks.devnet.stakeProgramId;
+const url = networks.devnet.url;
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
@@ -24,7 +21,7 @@ const publicKeyZero = new PublicKey(Buffer.alloc(32));
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
     // Setup genesis state.
-    const provider = Provider.local({
+    const provider = Provider.local(url, {
       preflightCommitment: 'recent',
     });
     const [srmMint, god] = await createMintAndVault(

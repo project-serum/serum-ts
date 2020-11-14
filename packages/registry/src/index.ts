@@ -1,5 +1,6 @@
-import Client from './client';
+import { PublicKey } from '@solana/web3.js';
+import Client, { networks } from './client';
 import * as accounts from './accounts';
 import * as instruction from './instruction';
 
-export { Client, accounts, instruction };
+export { Client, networks, accounts, instruction };

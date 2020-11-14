@@ -8,6 +8,7 @@ import {
   PublicKey,
   Transaction,
   TransactionInstruction,
+  SendOptions,
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from '@solana/web3.js';
@@ -20,6 +21,8 @@ import {
   createAccountRentExempt,
   SPL_SHARED_MEMORY_ID,
   Provider,
+  Wallet,
+  NodeWallet,
 } from '@project-serum/common';
 import {
   encodePoolState,
@@ -41,6 +44,21 @@ import { Entity } from './accounts/entity';
 import { Member } from './accounts/member';
 import { Generation } from './accounts/generation';
 
+export const networks = {
+  devnet: {
+    url: 'https://devnet.solana.com',
+    programId: new PublicKey('HM7psK4cwnn7DXmzhRPbABB9vcA5UR4jLgBwGx98Ntqj'),
+    stakeProgramId: new PublicKey(
+      'FFXx3NM8fXxa4TainZ5o26xrzLuoZQCMZ238cyQGmX8H',
+    ),
+    registrar: new PublicKey('AraER5NbsTzDQV2h6gGz3b7WHfYAejQQbKdn9aSHaqKi'),
+    srm: new PublicKey('2gsgrFTjFsckJiPifzkHP3tznMuqVbh5TTUcVd3iMVQx'),
+    msrm: new PublicKey('4gq1S2B4yheTmvy61oArkBqZx7iCid6pvYbn242epFCk'),
+    god: new PublicKey('9PRbiYDXcFig3C6cu7VBFuypqbaPfqdq8knY85AgvrKw'),
+    megaGod: new PublicKey('dMyk9X7KjyHFAhdDNyEad9k2SaUMQ8Yy42CjMxZfi4V'),
+  },
+};
+
 type Config = {
   provider: Provider;
   programId: PublicKey;
@@ -61,6 +79,25 @@ export default class Client {
     this.stakeProgramId = cfg.stakeProgramId;
     this.accounts = new Accounts(cfg.provider, cfg.registrar);
     this.registrar = cfg.registrar;
+  }
+
+  // Connects to the devnet deployment of the program.
+  static devnet(wallet?: Wallet, opts?: SendOptions): Client {
+    if (wallet === undefined) {
+      wallet = NodeWallet.local();
+    }
+    opts = opts || Provider.defaultOptions();
+    const connection = new Connection(
+      'https://devnet.solana.com',
+      opts.preflightCommitment,
+    );
+    const provider = new Provider(connection, wallet, opts);
+    return new Client({
+      provider,
+      programId: networks.devnet.programId,
+      stakeProgramId: networks.devnet.stakeProgramId,
+      registrar: networks.devnet.registrar,
+    });
   }
 
   // Initializes both the registry and its associated staking pool.
