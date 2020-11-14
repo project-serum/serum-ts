@@ -1,8 +1,42 @@
-# serum-ts
+<div align="center">
+  <img height="170" src="http://github.com/project-serum/awesome-serum/blob/master/logo-serum.png?raw=true" />
 
-[![Build Status](https://travis-ci.com/project-serum/serum-ts.svg?branch=master)](https://travis-ci.com/project-serum/serum-ts)
-[![Discord Chat](https://img.shields.io/discord/739225212658122886?color=blueviolet)](https://discord.com/channels/739225212658122886)
-[![License](https://img.shields.io/github/license/project-serum/serum-dex?color=blue)](https://opensource.org/licenses/Apache-2.0)
+  <h1>serum-ts</h1>
+
+  <p>
+    <strong>Project Serum Monorepo</strong>
+  </p>
+
+  <p>
+    <a href="https://travis-ci.com/project-serum/serum-ts"><img alt="Build Status" src="https://travis-ci.com/project-serum/serum-ts.svg?branch=master" /></a>
+    <a href="https://discord.com/channels/739225212658122886"><img alt="Discord Chat" src="https://img.shields.io/discord/739225212658122886?color=blueviolet" /></a>
+    <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/github/license/project-serum/serum-dex?color=blue" /></a>
+  </p>
+
+  <h4>
+    <a href="https://projectserum.com/">Website</a>
+    <span> | </span>
+    <a href="https://serum-academy.com/en/">Academy</a>
+    <span> | </span>
+    <a href="https://github.com/project-serum/awesome-serum">Awesome</a>
+    <span> | </span>
+    <a href="https://dex.projectserum.com/#/">DEX</a>
+    <span> | </span>
+    <a href="https://github.com/project-serum/serum-dex">Rust</a>
+  </h4>
+</div>
+
+## Packages
+
+| Package                                             | Version                                                                                                                   | Description                                             |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| [`@project-serum/borsh`](/packages/borsh)           | [![npm](https://img.shields.io/npm/v/@project-serum/borsh.svg)](https://www.npmjs.com/package/@project-serum/borsh)           | Borsh serialization primitives |
+| [`@project-serum/common`](/packages/common)           | [![npm](https://img.shields.io/npm/v/@project-serum/common.svg)](https://www.npmjs.com/package/@project-serum/common)           | Common utilities |
+| [`@project-serum/lockup`](/packages/lockup) | [![npm](https://img.shields.io/npm/v/@project-serum/lockup.svg)](https://www.npmjs.com/package/@project-serum/lockup) | Client for interacting with the Lockup Program |
+| [`@project-serum/pool`](/packages/pool)             | [![npm](https://img.shields.io/npm/v/@project-serum/pool.svg)](https://www.npmjs.com/package/@project-serum/pool)             | Client for interacting with Pools |
+| [`@project-serum/registry`](/packages/registry)                 | [![npm](https://img.shields.io/npm/v/@project-serum/registry.svg)](https://www.npmjs.com/package/@project-serum/registry)                 | Client for interacting with the Registry Program |
+| [`@project-serum/swap`](/packages/swap)                 | [![npm](https://img.shields.io/npm/v/@project-serum/swap.svg)](https://www.npmjs.com/package/@project-serum/swap)                 | Client for interacting witht the Swap Program |
+| [`@project-serum/tokens`](/packages/tokens)                 | [![npm](https://img.shields.io/npm/v/@project-serum/tokens.svg)](https://www.npmjs.com/package/@project-serum/tokens)                 | Solana token addresses |
 
 ## Contributing
 
@@ -29,8 +63,6 @@ To build the workspace:
 yarn build
 ```
 
-In each package, the built javascript and typescript definitions will be in `dist/`. For direct browser testing of a client built from source, simply include the rollup artifact directly in your script tag, e.g., `<script src=/dist/index.umd.js></script>`.
-
 ### Testing
 
 To run all tests:
@@ -51,23 +83,4 @@ To apply lint fixes:
 
 ```
 yarn lint:fix
-```
-
-### Publishing new npm package versions
-
-This is a multi-package repo; packages are managed by `lerna`.
-
-First, bump the version number in all `package.json`:
-
-```sh
-git checkout -b mybranch
-lerna version  # bumps package numbers and creates a commit
-```
-
-Get the PR approved and merge it. Then pull the newly-updated master
-and push packages from it to npm:
-
-```sh
-git checkout master && git pull
-lerna publish from-package
 ```
