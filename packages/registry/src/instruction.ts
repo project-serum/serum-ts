@@ -44,6 +44,7 @@ type UpdateEntity = {
 
 type CreateMember = {
   delegate: PublicKey;
+  nonce: number;
 };
 
 type UpdateMember = {
@@ -96,7 +97,7 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   ),
   struct([], 'createEntity'),
   struct([publicKey('leader')], 'updateEntity'),
-  struct([publicKey('delegate')], 'createMember'),
+  struct([publicKey('delegate'), u8('nonce')], 'createMember'),
   struct([option(publicKey(), 'delegate')], 'updateMember'),
   struct([], 'switchEntity'),
   struct([u64('amount')], 'deposit'),

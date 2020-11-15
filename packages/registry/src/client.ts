@@ -420,6 +420,11 @@ export default class Client {
     }
 
     const member = new Account();
+    const [_, nonce] = await PublicKey.findProgramAddress(
+      [member.publicKey.toBuffer(), beneficiaryPubkey.toBuffer()],
+      this.programId,
+    );
+
     const tx = new Transaction();
     tx.add(
       SystemProgram.createAccount({
@@ -446,6 +451,7 @@ export default class Client {
         data: instruction.encode({
           createMember: {
             delegate: delegate,
+            nonce,
           },
         }),
       }),

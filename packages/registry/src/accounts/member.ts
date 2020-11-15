@@ -16,6 +16,7 @@ export interface Member {
   generation: BN;
   balances: MemberBalances;
   lastActivePrices: PoolPrices;
+  nonce: number;
 }
 
 interface MemberBalances {
@@ -56,6 +57,7 @@ const MEMBER_LAYOUT: Layout<Member> = struct([
   u64('generation'),
   MEMBER_BALANCES_LAYOUT.replicate('balances'),
   POOL_PRICES_LAYOUT.replicate('lastActivePrices'),
+  u8('nonce'),
 ]);
 
 export function decode(data: Buffer): Member {
@@ -91,4 +93,5 @@ export const SIZE: number = encode({
     },
   },
   lastActivePrices: defaultPoolPrices(),
+  nonce: 0,
 }).length;
