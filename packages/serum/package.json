@@ -3,7 +3,7 @@
   "version": "0.13.11",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
-  "repository": "project-serum/serum-js",
+  "repository": "project-serum/serum-ts",
   "main": "lib/index.js",
   "source": "src/index.js",
   "types": "lib/index.d.ts",
