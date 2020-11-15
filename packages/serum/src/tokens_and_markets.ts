@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
-import Markets from "./markets.json";
-import TokenMints from "./token-mints.json";
+import Markets from './markets.json';
+import TokenMints from './token-mints.json';
 
 export function getLayoutVersion(programId: PublicKey) {
   if (
@@ -16,23 +16,26 @@ export function getLayoutVersion(programId: PublicKey) {
   return 2;
 }
 
-export const TOKEN_MINTS: Array<{ address: PublicKey; name: string }> = TokenMints.map(mint => {
+export const TOKEN_MINTS: Array<{
+  address: PublicKey;
+  name: string;
+}> = TokenMints.map((mint) => {
   return {
     address: new PublicKey(mint.address),
-    name: mint.name
-  }
-})
+    name: mint.name,
+  };
+});
 
 export const MARKETS: Array<{
   address: PublicKey;
   name: string;
   programId: PublicKey;
   deprecated: boolean;
-}> = Markets.map(market => {
+}> = Markets.map((market) => {
   return {
     address: new PublicKey(market.address),
     name: market.name,
     programId: new PublicKey(market.programId),
     deprecated: market.deprecated,
-  }
-})
+  };
+});
