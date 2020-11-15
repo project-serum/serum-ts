@@ -4,8 +4,10 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import IconButton from '@material-ui/core/IconButton';
 import Typography from '@material-ui/core/Typography';
-import Avatar from '@material-ui/core/Avatar';
+import Container from '@material-ui/core/Container';
+import Button from '@material-ui/core/Button';
 import { WalletConnectButton } from './components/Wallet';
+import AddIcon from '@material-ui/icons/Add';
 
 type Props = {};
 
@@ -36,24 +38,47 @@ function Nav(props: PropsWithChildren<Props>): ReactElement {
 									display: 'flex',
 									flexDirection: 'column',
 									justifyContent: 'center',
-									marginRight: '24px',
+									marginRight: '12px',
 								}}>
-									<Avatar alt="Logo" src="http://github.com/project-serum/awesome-serum/blob/master/logo-serum.png?raw=true" />
+		<img style={{
+			display: 'block',
+			height: '35px',}}
+		alt="Logo"
+		src="http://dex.projectserum.com/static/media/logo.49174c73.svg"
+		/>
 								</div>
 								<IconButton color="inherit" edge="start">
 									<Typography variant="h6">
-										Vesting Accounts
+										Lockup
 									</Typography>
 								</IconButton>
 							</div>
-						</Link>
-						<WalletConnectButton />
+		</Link>
+		<div style={{
+			display: 'flex',
+		}}>
+		<div style={{
+			marginRight: '24px',
+			display: 'flex',
+			justifyContent: 'center',
+			flexDirection: 'column',
+		}}>
+		<div style={{ width:'24px', height: '24px', }}>
+		<Link to={'/new'} style={{ color: 'inherit', textDecoration: 'none'}}>
+		<AddIcon />
+		</Link>
+		</div>
+		</div>
+		<WalletConnectButton />
+		</div>
 					</div>
 				</Toolbar>
 			</AppBar>
-			<div>
-				{props.children}
-			</div>
+			<Container fixed maxWidth="md">
+				<div style={{ marginTop: '24px' }}>
+					{props.children}
+				</div>
+			</Container>
 		</div>
 	);
 }

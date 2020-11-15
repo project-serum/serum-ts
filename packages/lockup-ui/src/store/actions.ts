@@ -7,4 +7,5 @@ export enum ActionType {
   WalletSetProvider,
   WalletIsConnected,
   NetworkSetUrl,
+  OwnedTokenAccountsSet,
 }
