@@ -17,7 +17,7 @@
   },
   "rules": {
     "no-constant-condition": ["error", { "checkLoops": false }],
-    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "no-empty-function": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "off"
   }
