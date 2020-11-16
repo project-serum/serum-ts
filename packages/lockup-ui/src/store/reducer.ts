@@ -1,6 +1,7 @@
 import { Action, ActionType } from './actions';
 import { PublicKey } from '@solana/web3.js';
 import { AccountInfo as TokenAccount } from '@solana/spl-token';
+import { accounts } from '@project-serum/lockup';
 
 export default function reducer(
   state: State = initialState,
@@ -20,6 +21,9 @@ export default function reducer(
     case ActionType.OwnedTokenAccountsSet:
       newState.ownedTokenAccounts = action.item.ownedTokenAccounts;
       return newState;
+    case ActionType.VestingAccountsSet:
+      newState.vestingAccounts = action.item.vestingAccounts;
+      return newState;
     default:
       return newState;
   }
@@ -30,6 +34,7 @@ export type State = {
   walletIsConnected: boolean;
   networkUrl?: string;
   ownedTokenAccounts: OwnedTokenAccount[];
+  vestingAccounts: VestingAccount[];
 };
 
 export const initialState: State = {
@@ -37,6 +42,12 @@ export const initialState: State = {
   walletIsConnected: false,
   networkUrl: 'https://devnet.solana.com',
   ownedTokenAccounts: [],
+  vestingAccounts: [],
+};
+
+export type VestingAccount = {
+  publicKey: PublicKey;
+  vesting: accounts.vesting.Vesting;
 };
 
 type OwnedTokenAccount = {

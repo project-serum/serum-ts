@@ -57,25 +57,13 @@ function Nav(props: PropsWithChildren<Props>): ReactElement {
 		<div style={{
 			display: 'flex',
 		}}>
-		<div style={{
-			marginRight: '24px',
-			display: 'flex',
-			justifyContent: 'center',
-			flexDirection: 'column',
-		}}>
-		<div style={{ width:'24px', height: '24px', }}>
-		<Link to={'/new'} style={{ color: 'inherit', textDecoration: 'none'}}>
-		<AddIcon />
-		</Link>
-		</div>
-		</div>
 		<WalletConnectButton />
 		</div>
 					</div>
 				</Toolbar>
 			</AppBar>
 			<Container fixed maxWidth="md">
-				<div style={{ marginTop: '24px' }}>
+				<div style={{ marginTop: '24px', marginBottom: '24px', }}>
 					{props.children}
 				</div>
 			</Container>

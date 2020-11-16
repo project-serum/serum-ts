@@ -8,4 +8,5 @@ export enum ActionType {
   WalletIsConnected,
   NetworkSetUrl,
   OwnedTokenAccountsSet,
+  VestingAccountsSet,
 }
