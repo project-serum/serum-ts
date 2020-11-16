@@ -14,7 +14,7 @@ import {
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import {
-  createMint,
+  createMintInstructions,
   createTokenAccount,
   Provider,
   Wallet,
@@ -192,10 +192,17 @@ export default class Client {
       this.safe,
       safe,
     );
-    const lockedTokenMint = await createMint(this.provider, vaultAuthority);
+
+    const lockedTokenMint = new Account();
+    const createLockedTokenMintInstructions = await createMintInstructions(
+      this.provider,
+      vaultAuthority,
+      lockedTokenMint.publicKey,
+    );
 
     const tx = new Transaction();
     tx.add(
+      ...createLockedTokenMintInstructions,
       // Allocate account.
       SystemProgram.createAccount({
         fromPubkey: this.provider.wallet.publicKey,
@@ -218,7 +225,11 @@ export default class Client {
           },
           { pubkey: vault, isWritable: true, isSigner: false },
           { pubkey: this.safe, isWritable: false, isSigner: false },
-          { pubkey: lockedTokenMint, isWritable: true, isSigner: false },
+          {
+            pubkey: lockedTokenMint.publicKey,
+            isWritable: true,
+            isSigner: false,
+          },
           { pubkey: vaultAuthority, isWritable: false, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
@@ -237,14 +248,14 @@ export default class Client {
       }),
     );
 
-    let signers = [vesting, depositorAuthority];
+    let signers = [vesting, lockedTokenMint, depositorAuthority];
 
     let txSig = await this.provider.send(tx, signers);
 
     return {
       tx: txSig,
       vesting: vesting.publicKey,
-      lockedTokenMint,
+      lockedTokenMint: lockedTokenMint.publicKey,
     };
   }
 
