@@ -4,7 +4,6 @@ import Layout from './Layout';
 import NewVestingAccount from './pages/NewVestingAccount';
 import VestingAccounts from './pages/VestingAccounts';
 
-
 export default function Routes() {
   return (
     <React.Fragment>
