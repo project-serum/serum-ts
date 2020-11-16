@@ -96,24 +96,28 @@ export default function NewVesting() {
                 value={fromAccount}
                 onChange={e => setFromAccount(e.target.value as string)}
               >
-                {ownedTokenAccounts.map(ownedTokenAccount => {
-                  return (
-                    <MenuItem value={ownedTokenAccount.publicKey.toString()}>
-                      <div
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <div>{`${ownedTokenAccount.publicKey}`}</div>
+                {ownedTokenAccounts.length === 0 ? (
+                  <MenuItem value={''}>No token accounts found</MenuItem>
+                ) : (
+                  ownedTokenAccounts.map(ownedTokenAccount => {
+                    return (
+                      <MenuItem value={ownedTokenAccount.publicKey.toString()}>
                         <div
-                          style={{ float: 'right', color: '#ccc' }}
-                        >{`${ownedTokenAccount.accountInfo.tokenAccount.amount}`}</div>
-                      </div>
-                    </MenuItem>
-                  );
-                })}
+                          style={{
+                            width: '100%',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                          }}
+                        >
+                          <div>{`${ownedTokenAccount.publicKey}`}</div>
+                          <div
+                            style={{ float: 'right', color: '#ccc' }}
+                          >{`${ownedTokenAccount.accountInfo.tokenAccount.amount}`}</div>
+                        </div>
+                      </MenuItem>
+                    );
+                  })
+                )}
               </Select>
               <FormHelperText>Token account to send from</FormHelperText>
             </FormControl>
