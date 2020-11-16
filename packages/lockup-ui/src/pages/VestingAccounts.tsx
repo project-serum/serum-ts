@@ -130,8 +130,6 @@ function VestingAccountCard(props: VestingAccountCardProps) {
   // Now push the start window forward to the real start date, making the first period shorter.
   vestingDates[0] = formatDate(new Date(startTs.toNumber() * 1000));
 
-	console.log('vesting dates', vestingDates);
-
   // Now do the same thing on the vertical axis.
   const rewardOverflow = vesting.vesting.startBalance.mod(
     vesting.vesting.periodCount,

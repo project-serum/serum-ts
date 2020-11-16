@@ -14,7 +14,9 @@
     "build": "lerna run build",
     "lint": "eslint 'packages/*/{src,test}/**/*.ts' && prettier -c 'packages/*/{src,test}/**/*.ts'",
     "lint:fix": "eslint --fix 'packages/*/{src,test}/**/*.ts' && prettier --write 'packages/*/{src,test}/**/*.ts'",
-    "deploy:docs": "lerna run docs && gh-pages -d docs",
+    "deploy": "run-s deploy:docs build deploy:apps && gh-pages -d docs",
+    "deploy:docs": "lerna run docs",
+    "deploy:apps": "lerna run deploy:app",
     "test": "lerna run test --concurrency 1 --stream"
   },
   "lint-staged": {
