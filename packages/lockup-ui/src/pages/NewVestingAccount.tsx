@@ -1,18 +1,9 @@
-import React, { ReactNode, useState } from 'react';
+import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import BN from 'bn.js';
-import { Client, networks } from '@project-serum/lockup';
-import {
-  Provider,
-  getTokenAccount,
-  sleep,
-  createMintAndVault,
-  createTokenAccount,
-} from '@project-serum/common';
+import { networks } from '@project-serum/lockup';
 import { PublicKey } from '@solana/web3.js';
-// @ts-ignore
-import Wallet from '@project-serum/sol-wallet-adapter';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
@@ -68,7 +59,7 @@ export default function NewVesting() {
   const { client } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
 
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   return (
     <>
@@ -219,7 +210,7 @@ export default function NewVesting() {
                 enqueueSnackbar('Creating vesting acount...', {
                   variant: 'info',
                 });
-                const { tx, vesting } = await client.createVesting({
+                const { vesting } = await client.createVesting({
                   beneficiary: new PublicKey(beneficiary),
                   endTs: new BN(timestamp),
                   periodCount: new BN(periodCount),
