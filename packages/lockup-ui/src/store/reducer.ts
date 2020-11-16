@@ -24,6 +24,8 @@ export default function reducer(
     case ActionType.VestingAccountsSet:
       newState.vestingAccounts = action.item.vestingAccounts;
       return newState;
+    case ActionType.ClearStore:
+      return { ...initialState };
     default:
       return newState;
   }
