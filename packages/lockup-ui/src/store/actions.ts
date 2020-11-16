@@ -9,4 +9,5 @@ export enum ActionType {
   NetworkSetUrl,
   OwnedTokenAccountsSet,
   VestingAccountsSet,
+  ClearStore,
 }

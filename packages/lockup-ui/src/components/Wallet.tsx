@@ -64,21 +64,33 @@ export function WalletConnectButton(): ReactElement {
   );
   const dispatch = useDispatch();
   const { wallet, client } = useWallet();
-
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     wallet.on('disconnect', () => {
       dispatch({
-        type: ActionType.WalletIsConnected,
-        item: { walletIsConnected: false },
+        type: ActionType.ClearStore,
+        item: {},
       });
       enqueueSnackbar('Disconnected from wallet', {
         variant: 'info',
         autoHideDuration: 2500,
       });
     });
-  });
+    wallet.on('connect', async () => {
+      dispatch({
+        type: ActionType.WalletIsConnected,
+        item: {
+          walletIsConnected: true,
+        },
+      });
+      await Promise.all([fetchOwnedTokenAccounts(), fetchVestingAccounts()]);
+      enqueueSnackbar(`Connection established ${wallet.publicKey.toBase58()}`, {
+        variant: 'success',
+        autoHideDuration: 2500,
+      });
+    });
+  }, [wallet]);
 
   const fetchOwnedTokenAccounts = async () => {
     const ownedTokenAccounts = await getOwnedTokenAccounts(
@@ -107,20 +119,6 @@ export function WalletConnectButton(): ReactElement {
   };
 
   const connect = () => {
-    wallet.once('connect', async () => {
-      closeSnackbar();
-      dispatch({
-        type: ActionType.WalletIsConnected,
-        item: {
-          walletIsConnected: true,
-        },
-      });
-      await Promise.all([fetchOwnedTokenAccounts(), fetchVestingAccounts()]);
-      enqueueSnackbar(`Connection established ${wallet.publicKey.toBase58()}`, {
-        variant: 'success',
-        autoHideDuration: 2500,
-      });
-    });
     wallet.connect();
   };
 
