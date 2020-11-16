@@ -33,7 +33,7 @@ export const NEEDS_ASSIGNMENT_LAYOUT: Layout<NeedsAssignment> = struct([
   u8('nonce'),
 ]);
 
-const VESTING_LAYOUT: Layout<Vesting> = struct([
+export const VESTING_LAYOUT: Layout<Vesting> = struct([
   bool('initialized'),
   option(
     NEEDS_ASSIGNMENT_LAYOUT.replicate('needsAssignmentInner'),

@@ -2817,6 +2817,11 @@
   dependencies:
     base-x "^3.0.6"
 
+"@types/chartist@^0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@types/chartist/-/chartist-0.11.0.tgz#d64416f3b3781057301b3e22987eea4516fccaf8"
+  integrity sha512-YDJuUm0TkKj2WW6GlYmhOuBkaYzZBGJMvZz1X+Qp0Oj8oY3aozQ/YeWw4aNhfpyk5df0DKf6psjMftJI+GThtA==
+
 "@types/connect@^3.4.33":
   version "3.4.33"
   resolved "https://registry.yarnpkg.com/@types/connect/-/connect-3.4.33.tgz#31610c901eca573b8713c3330abc6e6b9f588546"
@@ -4719,6 +4724,11 @@ chardet@^0.7.0:
   version "0.7.0"
   resolved "https://registry.yarnpkg.com/chardet/-/chardet-0.7.0.tgz#90094849f0937f2eedc2425d0d28a9e5f0cbad9e"
   integrity sha512-mT8iDcrh03qDGRRmoA2hmBJnxpllMR+0/0qlzjqZES6NdiWDcZkCNAk4rPFZ9Q85r27unkiNNg8ZOiwZXBHwcA==
+
+chartist@^0.11.4:
+  version "0.11.4"
+  resolved "https://registry.yarnpkg.com/chartist/-/chartist-0.11.4.tgz#e96e1c573d8b67478920a3a6ae52359d9fc8d8b7"
+  integrity sha512-H4AimxaUD738/u9Mq8t27J4lh6STsLi4BQHt65nOtpLk3xyrBPaLiLMrHw7/WV9CmsjGA02WihjuL5qpSagLYw==
 
 check-types@^11.1.1:
   version "11.1.2"
@@ -12273,7 +12283,7 @@ promzard@^0.3.0:
   dependencies:
     read "1"
 
-prop-types@^15.6.2, prop-types@^15.7.2:
+prop-types@^15.5.8, prop-types@^15.6.2, prop-types@^15.7.2:
   version "15.7.2"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.7.2.tgz#52c41e75b8c87e72b9d9360e0206b99dcbffa6c5"
   integrity sha512-8QQikdH7//R2vurIJSutZ1smHYTcLpRWEOlHnzcWHmBYrOGUysKwSsrC89BCiFj3CbrfJ/nXFdJepOVrY1GCHQ==
@@ -12465,6 +12475,13 @@ react-app-polyfill@^2.0.0:
     raf "^3.4.1"
     regenerator-runtime "^0.13.7"
     whatwg-fetch "^3.4.1"
+
+react-chartist@^0.14.3:
+  version "0.14.3"
+  resolved "https://registry.yarnpkg.com/react-chartist/-/react-chartist-0.14.3.tgz#e016a08ab5c94d3d1842c04a64755ceb660d3202"
+  integrity sha512-FXIml3c98nClpzautiB4JI9+URc5j9cO5e/ZSEikB7r4bBOoX/6vdxvOlyfoOIm19H4uY6L7zNsIKOuWDGsdDg==
+  dependencies:
+    prop-types "^15.5.8"
 
 react-dev-utils@^11.0.0:
   version "11.0.0"

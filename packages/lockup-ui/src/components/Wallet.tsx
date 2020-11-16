@@ -15,7 +15,7 @@ import { State as StoreState } from '../store/reducer';
 import { ActionType } from '../store/actions';
 // @ts-ignore
 import Wallet from '@project-serum/sol-wallet-adapter';
-import { Client } from '@project-serum/lockup';
+import { Client, accounts, networks } from '@project-serum/lockup';
 import { Connection, PublicKey } from '@solana/web3.js';
 import * as bs58 from 'bs58';
 import * as BufferLayout from 'buffer-layout';
@@ -74,7 +74,10 @@ export function WalletConnectButton(): ReactElement {
         type: ActionType.WalletIsConnected,
         item: { walletIsConnected: false },
       });
-      enqueueSnackbar('Disconnected from wallet');
+      enqueueSnackbar('Disconnected from wallet', {
+        variant: 'info',
+        autoHideDuration: 2500,
+      });
     });
   }, [wallet]);
 
@@ -89,12 +92,23 @@ export function WalletConnectButton(): ReactElement {
         ownedTokenAccounts,
       },
     });
-    console.log('OWNED', ownedTokenAccounts);
+  };
+
+  const fetchVestingAccounts = async () => {
+    const vestingAccounts = await getVestingAccounts(
+      client.provider.connection,
+      wallet.publicKey,
+    );
+    dispatch({
+      type: ActionType.VestingAccountsSet,
+      item: {
+        vestingAccounts,
+      },
+    });
   };
 
   const connect = () => {
-    enqueueSnackbar('Connecting to wallet...');
-    wallet.once('connect', () => {
+    wallet.once('connect', async () => {
       closeSnackbar();
       dispatch({
         type: ActionType.WalletIsConnected,
@@ -102,10 +116,11 @@ export function WalletConnectButton(): ReactElement {
           walletIsConnected: true,
         },
       });
-      enqueueSnackbar(
-        `Connectection established ${wallet.publicKey.toBase58()}`,
-      );
-      fetchOwnedTokenAccounts();
+      await Promise.all([fetchOwnedTokenAccounts(), fetchVestingAccounts()]);
+      enqueueSnackbar(`Connection established ${wallet.publicKey.toBase58()}`, {
+        variant: 'success',
+        autoHideDuration: 2500,
+      });
     });
     wallet.connect();
   };
@@ -164,13 +179,65 @@ export async function getOwnedTokenAccounts(
   );
 }
 
+export async function getVestingAccounts(
+  connection: Connection,
+  publicKey: PublicKey,
+) {
+  let filters = getVestingAccountsFilters(publicKey);
+
+  // @ts-ignore
+  let resp = await connection._rpcRequest('getProgramAccounts', [
+    networks.devnet.programId.toBase58(),
+    {
+      commitment: connection.commitment,
+      filters,
+    },
+  ]);
+  if (resp.error) {
+    throw new Error(
+      'failed to get token accounts owned by ' +
+        publicKey.toBase58() +
+        ': ' +
+        resp.error.message,
+    );
+  }
+
+  return (
+    resp.result
+      // @ts-ignore
+      .map(({ pubkey, account: { data, executable, owner, lamports } }) => {
+        data = bs58.decode(data);
+        return {
+          publicKey: new PublicKey(pubkey),
+          vesting: accounts.vesting.decode(data),
+        };
+      })
+  );
+}
+
+function getVestingAccountsFilters(publicKey: PublicKey) {
+  return [
+    {
+      memcmp: {
+        // todo: update once we move the option around
+        // @ts-ignore
+        offset: 35, //accounts.vesting.VESTING_LAYOUT.offsetOf('beneficiary'),
+        bytes: publicKey.toBase58(),
+      },
+    },
+    {
+      dataSize: accounts.vesting.SIZE,
+    },
+  ];
+}
+
+// todo: remove
 export const ACCOUNT_LAYOUT = BufferLayout.struct([
   BufferLayout.blob(32, 'mint'),
   BufferLayout.blob(32, 'owner'),
   BufferLayout.nu64('amount'),
   BufferLayout.blob(93),
 ]);
-
 export const MINT_LAYOUT = BufferLayout.struct([
   BufferLayout.blob(44),
   BufferLayout.u8('decimals'),
