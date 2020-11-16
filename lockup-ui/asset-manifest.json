@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/lockup-ui/static/css/main.6dea0f05.chunk.css",
+    "main.js": "/lockup-ui/static/js/main.3f2b57b2.chunk.js",
+    "main.js.map": "/lockup-ui/static/js/main.3f2b57b2.chunk.js.map",
+    "runtime-main.js": "/lockup-ui/static/js/runtime-main.f79ccca4.js",
+    "runtime-main.js.map": "/lockup-ui/static/js/runtime-main.f79ccca4.js.map",
+    "static/js/2.15d6d52f.chunk.js": "/lockup-ui/static/js/2.15d6d52f.chunk.js",
+    "static/js/2.15d6d52f.chunk.js.map": "/lockup-ui/static/js/2.15d6d52f.chunk.js.map",
+    "static/js/3.39ce5f09.chunk.js": "/lockup-ui/static/js/3.39ce5f09.chunk.js",
+    "static/js/3.39ce5f09.chunk.js.map": "/lockup-ui/static/js/3.39ce5f09.chunk.js.map",
+    "index.html": "/lockup-ui/index.html",
+    "static/css/main.6dea0f05.chunk.css.map": "/lockup-ui/static/css/main.6dea0f05.chunk.css.map",
+    "static/js/2.15d6d52f.chunk.js.LICENSE.txt": "/lockup-ui/static/js/2.15d6d52f.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.f79ccca4.js",
+    "static/js/2.15d6d52f.chunk.js",
+    "static/css/main.6dea0f05.chunk.css",
+    "static/js/main.3f2b57b2.chunk.js"
+  ]
+}
