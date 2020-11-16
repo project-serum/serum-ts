@@ -4,6 +4,7 @@ import {
   SystemProgram,
   PublicKey,
   Transaction,
+  TransactionInstruction,
 } from '@solana/web3.js';
 import { Provider } from './provider';
 import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
@@ -31,25 +32,40 @@ export async function createMint(
     authority = provider.wallet.publicKey;
   }
   const mint = new Account();
+  const instructions = await createMintInstructions(
+    provider,
+    authority,
+    mint.publicKey,
+  );
+
   const tx = new Transaction();
-  tx.add(
+  tx.add(...instructions);
+
+  await provider.send(tx, [mint]);
+
+  return mint.publicKey;
+}
+
+export async function createMintInstructions(
+  provider: Provider,
+  authority: PublicKey,
+  mint: PublicKey,
+): Promise<TransactionInstruction[]> {
+  let instructions = [
     SystemProgram.createAccount({
       fromPubkey: provider.wallet.publicKey,
-      newAccountPubkey: mint.publicKey,
+      newAccountPubkey: mint,
       space: 82,
       lamports: await provider.connection.getMinimumBalanceForRentExemption(82),
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeMint({
-      mint: mint.publicKey,
+      mint,
       decimals: 0,
       mintAuthority: authority,
     }),
-  );
-
-  await provider.send(tx, [mint]);
-
-  return mint.publicKey;
+  ];
+  return instructions;
 }
 
 export async function createMintAndVault(

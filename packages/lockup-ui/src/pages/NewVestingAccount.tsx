@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import BN from 'bn.js';
 import { networks } from '@project-serum/lockup';
@@ -16,6 +16,7 @@ import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { State as StoreState } from '../store/reducer';
+import { ActionType } from '../store/actions';
 import { useWallet } from '../components/Wallet';
 
 export default function NewVesting() {
@@ -60,6 +61,7 @@ export default function NewVesting() {
   const [isLoading, setIsLoading] = useState(false);
 
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
   return (
     <>
@@ -210,13 +212,23 @@ export default function NewVesting() {
                 enqueueSnackbar('Creating vesting acount...', {
                   variant: 'info',
                 });
-                const { vesting } = await client.createVesting({
+                let { vesting } = await client.createVesting({
                   beneficiary: new PublicKey(beneficiary),
                   endTs: new BN(timestamp),
                   periodCount: new BN(periodCount),
                   depositAmount: new BN(amount),
                   needsAssignment: null,
                   depositor: new PublicKey(fromAccount),
+                });
+                const vestingAccount = await client.accounts.vesting(vesting);
+                dispatch({
+                  type: ActionType.VestingAccountCreate,
+                  item: {
+                    vesting: {
+                      publicKey: vesting,
+                      vesting: vestingAccount,
+                    },
+                  },
                 });
                 setIsLoading(false);
                 enqueueSnackbar(`Vesting account created ${vesting}`, {

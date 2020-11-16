@@ -66,6 +66,14 @@ export function WalletConnectButton(): ReactElement {
   const { wallet, client } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
 
+  const connect = () => {
+    wallet.connect();
+  };
+
+  const disconnect = () => {
+    wallet.disconnect();
+  };
+
   useEffect(() => {
     wallet.on('disconnect', () => {
       dispatch({
@@ -84,47 +92,40 @@ export function WalletConnectButton(): ReactElement {
           walletIsConnected: true,
         },
       });
+
+      const fetchOwnedTokenAccounts = async () => {
+        const ownedTokenAccounts = await getOwnedTokenAccounts(
+          client.provider.connection,
+          wallet.publicKey,
+        );
+        dispatch({
+          type: ActionType.OwnedTokenAccountsSet,
+          item: {
+            ownedTokenAccounts,
+          },
+        });
+      };
+
+      const fetchVestingAccounts = async () => {
+        const vestingAccounts = await getVestingAccounts(
+          client.provider.connection,
+          wallet.publicKey,
+        );
+        dispatch({
+          type: ActionType.VestingAccountsSet,
+          item: {
+            vestingAccounts,
+          },
+        });
+      };
+
       await Promise.all([fetchOwnedTokenAccounts(), fetchVestingAccounts()]);
       enqueueSnackbar(`Connection established ${wallet.publicKey.toBase58()}`, {
         variant: 'success',
         autoHideDuration: 2500,
       });
     });
-  }, [wallet]);
-
-  const fetchOwnedTokenAccounts = async () => {
-    const ownedTokenAccounts = await getOwnedTokenAccounts(
-      client.provider.connection,
-      wallet.publicKey,
-    );
-    dispatch({
-      type: ActionType.OwnedTokenAccountsSet,
-      item: {
-        ownedTokenAccounts,
-      },
-    });
-  };
-
-  const fetchVestingAccounts = async () => {
-    const vestingAccounts = await getVestingAccounts(
-      client.provider.connection,
-      wallet.publicKey,
-    );
-    dispatch({
-      type: ActionType.VestingAccountsSet,
-      item: {
-        vestingAccounts,
-      },
-    });
-  };
-
-  const connect = () => {
-    wallet.connect();
-  };
-
-  const disconnect = () => {
-    wallet.disconnect();
-  };
+  }, [wallet, dispatch, enqueueSnackbar, client.provider.connection]);
 
   return isConnected ? (
     <Button color="inherit" onClick={disconnect}>

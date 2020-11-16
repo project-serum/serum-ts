@@ -112,11 +112,10 @@ function VestingAccountCard(props: VestingAccountCardProps) {
   const startTs = vesting.vesting.startTs;
   const endTs = vesting.vesting.endTs;
 
-  const tsOverflow = endTs.sub(startTs)
-																	.mod(vesting.vesting.periodCount);
+  const tsOverflow = endTs.sub(startTs).mod(vesting.vesting.periodCount);
   const shiftedStartTs = startTs.sub(tsOverflow);
 
-  const period = (endTs.sub(shiftedStartTs)).div(vesting.vesting.periodCount);
+  const period = endTs.sub(shiftedStartTs).div(vesting.vesting.periodCount);
 
   // Make the horizontal axis evenly spaced.
   //
@@ -125,7 +124,9 @@ function VestingAccountCard(props: VestingAccountCardProps) {
   const vestingDates = [
     ...Array(vesting.vesting.periodCount.toNumber() + 1),
   ].map((_, idx) => {
-    return formatDate(new Date((shiftedStartTs.toNumber() + idx * period.toNumber()) * 1000));
+    return formatDate(
+      new Date((shiftedStartTs.toNumber() + idx * period.toNumber()) * 1000),
+    );
   });
   // Now push the start window forward to the real start date, making the first period shorter.
   vestingDates[0] = formatDate(new Date(startTs.toNumber() * 1000));
@@ -228,5 +229,5 @@ function VestingAccountCard(props: VestingAccountCardProps) {
 
 // TODO: locale format without minutes, hours, seconds?
 function formatDate(d: Date): string {
-  return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
 }
