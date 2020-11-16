@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import React from 'react';
 import { useSelector } from 'react-redux';
 import { useWallet } from '../components/Wallet';
 import { State as StoreState, VestingAccount } from '../store/reducer';
@@ -14,9 +14,6 @@ import { FixedScaleAxis, IChartOptions, Interpolation } from 'chartist';
 import { Link as RouterLink } from 'react-router-dom';
 import Button from '@material-ui/core/Button';
 import BN from 'bn.js';
-
-const SRM_URL =
-  'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x476c5E26a75bd202a9683ffD34359C0CC15be0fF/logo.png';
 
 export default function VestingAccounts() {
   const { wallet } = useWallet();
@@ -155,9 +152,6 @@ function VestingAccountCard(props: VestingAccountCardProps) {
   const endLabel = formatDate(
     new Date(vesting.vesting.endTs.toNumber() * 1000),
   );
-  const withdrawn =
-    vesting.vesting.startBalance.toNumber() -
-    vesting.vesting.balance.toNumber();
 
   const currencyLabel = 'SRM'; // todo: don't hardcode.
   const urlSuffix = '?cluster=devnet'; // todo: don't hardcode

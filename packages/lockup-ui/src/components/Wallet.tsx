@@ -1,5 +1,4 @@
 import React, {
-  Context,
   PropsWithChildren,
   ReactElement,
   ReactNode,
@@ -79,7 +78,7 @@ export function WalletConnectButton(): ReactElement {
         autoHideDuration: 2500,
       });
     });
-  }, [wallet]);
+  });
 
   const fetchOwnedTokenAccounts = async () => {
     const ownedTokenAccounts = await getOwnedTokenAccounts(
