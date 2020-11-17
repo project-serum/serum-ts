@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/serum-ts/lockup-ui/static/css/main.6dea0f05.chunk.css",
-    "main.js": "/serum-ts/lockup-ui/static/js/main.d6f39027.chunk.js",
-    "main.js.map": "/serum-ts/lockup-ui/static/js/main.d6f39027.chunk.js.map",
-    "runtime-main.js": "/serum-ts/lockup-ui/static/js/runtime-main.bb55c1e4.js",
-    "runtime-main.js.map": "/serum-ts/lockup-ui/static/js/runtime-main.bb55c1e4.js.map",
-    "static/js/2.9da2b8ed.chunk.js": "/serum-ts/lockup-ui/static/js/2.9da2b8ed.chunk.js",
-    "static/js/2.9da2b8ed.chunk.js.map": "/serum-ts/lockup-ui/static/js/2.9da2b8ed.chunk.js.map",
-    "static/js/3.cd064f53.chunk.js": "/serum-ts/lockup-ui/static/js/3.cd064f53.chunk.js",
-    "static/js/3.cd064f53.chunk.js.map": "/serum-ts/lockup-ui/static/js/3.cd064f53.chunk.js.map",
+    "main.js": "/serum-ts/lockup-ui/static/js/main.fa7089fd.chunk.js",
+    "main.js.map": "/serum-ts/lockup-ui/static/js/main.fa7089fd.chunk.js.map",
+    "runtime-main.js": "/serum-ts/lockup-ui/static/js/runtime-main.2335b315.js",
+    "runtime-main.js.map": "/serum-ts/lockup-ui/static/js/runtime-main.2335b315.js.map",
+    "static/js/2.e5f411a1.chunk.js": "/serum-ts/lockup-ui/static/js/2.e5f411a1.chunk.js",
+    "static/js/2.e5f411a1.chunk.js.map": "/serum-ts/lockup-ui/static/js/2.e5f411a1.chunk.js.map",
+    "static/js/3.df6df116.chunk.js": "/serum-ts/lockup-ui/static/js/3.df6df116.chunk.js",
+    "static/js/3.df6df116.chunk.js.map": "/serum-ts/lockup-ui/static/js/3.df6df116.chunk.js.map",
     "index.html": "/serum-ts/lockup-ui/index.html",
     "static/css/main.6dea0f05.chunk.css.map": "/serum-ts/lockup-ui/static/css/main.6dea0f05.chunk.css.map",
-    "static/js/2.9da2b8ed.chunk.js.LICENSE.txt": "/serum-ts/lockup-ui/static/js/2.9da2b8ed.chunk.js.LICENSE.txt"
+    "static/js/2.e5f411a1.chunk.js.LICENSE.txt": "/serum-ts/lockup-ui/static/js/2.e5f411a1.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
-    "static/js/runtime-main.bb55c1e4.js",
-    "static/js/2.9da2b8ed.chunk.js",
+    "static/js/runtime-main.2335b315.js",
+    "static/js/2.e5f411a1.chunk.js",
     "static/css/main.6dea0f05.chunk.css",
-    "static/js/main.d6f39027.chunk.js"
+    "static/js/main.fa7089fd.chunk.js"
   ]
 }
