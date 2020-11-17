@@ -1,16 +1,17 @@
 import { struct, Layout } from 'buffer-layout';
-import { bool, i64, publicKey, rustEnum, u64 } from '@project-serum/borsh';
+import { bool, i64, publicKey, u64 as borshU64 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
+import { u64 } from '@solana/spl-token';
 import BN from 'bn.js';
 
 export interface PendingWithdrawal {
   initialized: boolean;
-  burned: boolean;
   member: PublicKey;
+  burned: boolean;
+  pool: PublicKey;
   startTs: BN;
   endTs: BN;
   sptAmount: BN;
-  pool: PublicKey;
   payment: PendingPayment;
 }
 
@@ -20,18 +21,18 @@ export interface PendingPayment {
 }
 
 const PENDING_PAYMENT_LAYOUT: Layout<PendingPayment> = struct([
-  u64('assetAmount'),
-  u64('megaAssetAmount'),
+  borshU64('assetAmount'),
+  borshU64('megaAssetAmount'),
 ]);
 
 const PENDING_WITHDRAWAL_LAYOUT: Layout<PendingWithdrawal> = struct([
   bool('initialized'),
-  bool('burned'),
   publicKey('member'),
+  bool('burned'),
+  publicKey('pool'),
   i64('startTs'),
   i64('endTs'),
-  u64('sptAmount'),
-  publicKey('pool'),
+  borshU64('sptAmount'),
   PENDING_PAYMENT_LAYOUT.replicate('payment'),
 ]);
 
@@ -45,16 +46,20 @@ export function encode(pw: PendingWithdrawal): Buffer {
   return buffer.slice(0, len);
 }
 
-export const SIZE: number = encode({
-  initialized: false,
-  burned: false,
-  member: new PublicKey(Buffer.alloc(32)),
-  startTs: new BN(0),
-  endTs: new BN(0),
-  sptAmount: new BN(0),
-  pool: new PublicKey(Buffer.alloc(32)),
-  payment: {
-    assetAmount: new BN(0),
-    megaAssetAmount: new BN(0),
-  },
-}).length;
+export function defaultPendingWithdrawal(): PendingWithdrawal {
+  return {
+    initialized: false,
+    member: new PublicKey(Buffer.alloc(32)),
+    burned: false,
+    pool: new PublicKey(Buffer.alloc(32)),
+    startTs: new u64(0),
+    endTs: new u64(0),
+    sptAmount: new u64(0),
+    payment: {
+      assetAmount: new u64(0),
+      megaAssetAmount: new u64(0),
+    },
+  };
+}
+
+export const SIZE: number = encode(defaultPendingWithdrawal()).length;

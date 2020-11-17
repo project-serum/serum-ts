@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"

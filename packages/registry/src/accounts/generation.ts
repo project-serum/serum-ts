@@ -1,7 +1,8 @@
 import { struct, Layout } from 'buffer-layout';
 import { Basket } from '@project-serum/pool';
-import { bool, i64, publicKey, rustEnum, u64 } from '@project-serum/borsh';
+import { bool, publicKey, u64 as borshU64 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
+import { u64 } from '@solana/spl-token';
 import BN from 'bn.js';
 
 export interface Generation {
@@ -24,7 +25,7 @@ export const POOL_PRICES_LAYOUT: Layout<PoolPrices> = struct([
 const GENERATION_LAYOUT: Layout<Generation> = struct([
   bool('initialized'),
   publicKey('entity'),
-  u64('generation'),
+  borshU64('generation'),
   POOL_PRICES_LAYOUT.replicate('lastActivePrices'),
 ]);
 
@@ -38,13 +39,6 @@ export function encode(g: Generation): Buffer {
   return buffer.slice(0, len);
 }
 
-export const SIZE: number = encode({
-  initialized: false,
-  entity: new PublicKey(Buffer.alloc(32)),
-  generation: new BN(0),
-  lastActivePrices: defaultPoolPrices(),
-}).length;
-
 export function defaultPoolPrices(): PoolPrices {
   return {
     basket: {
@@ -55,3 +49,21 @@ export function defaultPoolPrices(): PoolPrices {
     },
   };
 }
+
+export function defaultGeneration(): Generation {
+  return {
+    initialized: false,
+    entity: new PublicKey(Buffer.alloc(32)),
+    generation: new u64(0),
+    lastActivePrices: {
+      basket: {
+        quantities: [new u64(0)],
+      },
+      megaBasket: {
+        quantities: [new u64(0), new u64(0)],
+      },
+    },
+  };
+}
+
+export const SIZE: number = encode(defaultGeneration()).length;

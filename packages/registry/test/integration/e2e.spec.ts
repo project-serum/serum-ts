@@ -1,18 +1,21 @@
-import { Client, networks } from '../../src';
-import { Provider } from '@project-serum/common';
 import BN from 'bn.js';
 import { PublicKey } from '@solana/web3.js';
 import {
   getTokenAccount,
   sleep,
   createMintAndVault,
+  Provider,
+  networks,
 } from '@project-serum/common';
+import { Client } from '../../src';
 
-// When running this test, make sure to deploy the following programs
-// and plugin the on-chain addresses, here.
-const registryProgramId = networks.devnet.programId;
-const stakeProgramId = networks.devnet.stakeProgramId;
-const url = networks.devnet.url;
+// When running this test, make sure to deploy the programs and plug them
+// into the localhost network config.
+const network = networks.localhost;
+const registryProgramId = network.registryProgramId;
+const stakeProgramId = network.stakeProgramId;
+const metaEntityProgramId = network.metaEntityProgramId;
+const url = network.url;
 
 const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
@@ -20,6 +23,7 @@ const publicKeyZero = new PublicKey(Buffer.alloc(32));
 
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
+    Client.setRetbuf(network.retbuf, network.retbufProgramId);
     // Setup genesis state.
     const provider = Provider.local(url, {
       preflightCommitment: 'recent',
@@ -37,6 +41,7 @@ describe('End-to-end tests', () => {
     let [client, { registrar: registrarAddress }] = await Client.initialize(
       provider,
       {
+        metaEntityProgramId,
         programId: registryProgramId,
         stakeProgramId,
         mint: srmMint,
@@ -62,11 +67,16 @@ describe('End-to-end tests', () => {
       rewardActivationThreshold: null,
       maxStakePerEntity: null,
     });
+
     registrar = await client.accounts.registrar(registrarAddress);
     expect(registrar.withdrawalTimelock.toNumber()).toEqual(2);
 
     // Create Entity.
-    let { entity } = await client.createEntity({});
+    let { entity } = await client.createEntity({
+      name: '',
+      about: '',
+      imageUrl: '',
+    });
 
     let e = await client.accounts.entity(entity);
     expect(e.initialized).toBe(true);
@@ -84,8 +94,10 @@ describe('End-to-end tests', () => {
     });
 
     // Create Member.
-    let { member } = await client.createMember({ entity });
-
+    let { member, spt, sptMega } = await client.createMember({
+      entity,
+      delegate: new PublicKey(Buffer.alloc(32)),
+    });
     let m = await client.accounts.member(member);
     expect(m.initialized).toBe(true);
     expect(m.registrar).toEqual(registrarAddress);
@@ -119,7 +131,6 @@ describe('End-to-end tests', () => {
     // Deposit SRM.
     let vaultBefore = await client.accounts.depositVault(registrarAddress);
     let amount = new BN(1);
-
     await client.deposit({
       member,
       depositor: god,
@@ -147,20 +158,19 @@ describe('End-to-end tests', () => {
     // Stake SRM.
     let poolVaultBefore = await client.accounts.poolVault(registrarAddress);
     vaultBefore = await client.accounts.depositVault(registrarAddress);
-    let stakeToken = await client.allocSpt(false);
     amount = new BN(1);
 
     await client.stake({
       member,
       amount,
-      stakeToken,
+      spt,
     });
 
     let poolVaultAfter = await client.accounts.poolVault(registrarAddress);
     vaultAfter = await client.accounts.depositVault(registrarAddress);
     let poolVaultResult = poolVaultAfter.amount.sub(poolVaultBefore.amount);
     let vaultResult = vaultBefore.amount.sub(vaultAfter.amount);
-    let stakeTokenAfter = await getTokenAccount(provider, stakeToken);
+    let stakeTokenAfter = await getTokenAccount(provider, spt);
     expect(poolVaultResult).toEqual(amount); // Balance up.
     expect(vaultResult).toEqual(amount); // Balance down.
     expect(stakeTokenAfter.amount.toNumber()).toEqual(amount.toNumber());
@@ -177,17 +187,17 @@ describe('End-to-end tests', () => {
     // StartStakeWithdrawal.
     poolVaultBefore = await client.accounts.poolVault(registrarAddress);
     vaultBefore = await client.accounts.depositVault(registrarAddress);
-    let stakeTokenBefore = await getTokenAccount(provider, stakeToken);
+    let stakeTokenBefore = await getTokenAccount(provider, spt);
 
     let { pendingWithdrawal, tx } = await client.startStakeWithdrawal({
       member,
       amount,
-      stakeToken,
+      spt,
     });
 
     poolVaultAfter = await client.accounts.poolVault(registrarAddress);
     vaultAfter = await client.accounts.depositVault(registrarAddress);
-    stakeTokenAfter = await getTokenAccount(provider, stakeToken);
+    stakeTokenAfter = await getTokenAccount(provider, spt);
     expect(stakeTokenBefore.amount.sub(stakeTokenAfter.amount)).toEqual(amount);
     expect(
       poolVaultBefore.amount.sub(poolVaultAfter.amount).toNumber(),

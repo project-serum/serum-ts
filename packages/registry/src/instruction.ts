@@ -1,6 +1,17 @@
-import { u8, struct, Layout } from 'buffer-layout';
-import { option, i64, publicKey, rustEnum, u64 } from '@project-serum/borsh';
-import { PublicKey, TransactionInstruction } from '@solana/web3.js';
+import { Layout } from 'buffer-layout';
+import {
+  vec,
+  bool,
+  option,
+  i64,
+  publicKey,
+  rustEnum,
+  u64,
+  u32,
+  struct,
+  u8,
+} from '@project-serum/borsh';
+import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
 
 export type RegistryInstruction =
@@ -17,7 +28,13 @@ export type RegistryInstruction =
   | MarkGeneration
   | StartStakeWithdrawal
   | EndStakeWithdrawal
-  | CreateEntity;
+  | CreateEntity
+  | Slash
+  | DropPoolReward
+  | DropLockedReward
+  | DropUnlockedReward
+  | ClaimLockedReward
+  | ClaimUnlockedReward;
 
 type Initialize = {
   authority: PublicKey;
@@ -36,15 +53,17 @@ type UpdateRegistrar = {
   maxStakePerEntity: BN | null;
 };
 
-type CreateEntity = {};
+type CreateEntity = {
+  metadata: PublicKey;
+};
 
 type UpdateEntity = {
-  leader: PublicKey;
+  leader: PublicKey | null;
+  metadata: PublicKey | null;
 };
 
 type CreateMember = {
   delegate: PublicKey;
-  nonce: number;
 };
 
 type UpdateMember = {
@@ -73,6 +92,37 @@ type StartStakeWithdrawal = {
 
 type EndStakeWithdrawal = {};
 
+type Slash = {};
+
+type DropPoolReward = {
+  totals: BN[];
+};
+
+type DropLockedReward = {
+  total: BN;
+  expiryTs: BN;
+  expiryReceiver: PublicKey;
+  periodCount: BN;
+  nonce: number;
+};
+
+type DropUnlockedReward = {
+  total: BN;
+  expiryTs: BN;
+  expiryReceiver: PublicKey;
+  nonce: number;
+};
+
+type ClaimLockedReward = {
+  cursor: number;
+  // Nonce for the vesting account to be created.
+  nonce: number;
+};
+
+type ClaimUnlockedReward = {
+  cursor: number;
+};
+
 const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct(
     [
@@ -95,9 +145,12 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
     ],
     'updateRegistrar',
   ),
-  struct([], 'createEntity'),
-  struct([publicKey('leader')], 'updateEntity'),
-  struct([publicKey('delegate'), u8('nonce')], 'createMember'),
+  struct([publicKey('metadata')], 'createEntity'),
+  struct(
+    [option(publicKey(), 'leader'), option(publicKey(), 'metadata')],
+    'updateEntity',
+  ),
+  struct([publicKey('delegate')], 'createMember'),
   struct([option(publicKey(), 'delegate')], 'updateMember'),
   struct([], 'switchEntity'),
   struct([u64('amount')], 'deposit'),
@@ -106,6 +159,25 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct([], 'markGeneration'),
   struct([u64('amount')], 'startStakeWithdrawal'),
   struct([], 'endStakeWithdrawal'),
+  struct([u64('amount')], 'slash'),
+  struct([vec(u64(), 'totals')], 'dropPoolReward'),
+  struct(
+    [
+      u64('total'),
+      i64('endTs'),
+      i64('expiryTs'),
+      publicKey('expiryReceiver'),
+      u64('periodCount'),
+      u8('nonce'),
+    ],
+    'dropLockedReward',
+  ),
+  struct(
+    [u64('total'), i64('expiryTs'), publicKey('expiryReceiver'), u8('nonce')],
+    'dropUnlockedReward',
+  ),
+  struct([u32('cursor'), u8('nonce')], 'claimLockedReward'),
+  struct([u32('cursor')], 'claimUnlockedReward'),
 ]);
 
 export function decode(data: Buffer): RegistryInstruction {

@@ -1,6 +1,7 @@
 import { PublicKey } from '@solana/web3.js';
-import Client, { networks } from './client';
+import Client from './client';
 import * as accounts from './accounts';
 import * as instruction from './instruction';
+import * as metaEntity from './meta-entity';
 
-export { Client, networks, accounts, instruction };
+export { Client, accounts, instruction, metaEntity };
