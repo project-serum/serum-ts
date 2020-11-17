@@ -6,17 +6,17 @@ import {
   sleep,
   createMintAndVault,
   createTokenAccount,
+  networks,
 } from '@project-serum/common';
-import { Client, networks } from '../../src';
+import { Client } from '../../src';
 import { WhitelistEntry } from '../../src/accounts/whitelist';
 
 // When running this test, make sure to deploy the program and plugin the address.
-const programId = networks.devnet.programId;
-const url = networks.devnet.url;
+const network = networks.localhost;
+const programId = network.lockupProgramId;
+const url = network.url;
 
-const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
-const publicKeyZero = new PublicKey(Buffer.alloc(32));
 
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
@@ -29,13 +29,10 @@ describe('End-to-end tests', () => {
       provider,
       new BN(1000000000),
     );
-
     // Initialize the safe.
     const [client, { safe }] = await Client.initialize(provider, {
       programId,
-      mint: srmMint,
     });
-
     // Whitelist add.
     let entry = await generateWhitelistEntry();
     await client.whitelistAdd({
@@ -68,18 +65,15 @@ describe('End-to-end tests', () => {
     const endTs = new BN((blockTime as number) + 100);
     const periodCount = new BN(10);
     const depositAmount = new BN([0, 0, 0, 0, 0, 0, 0, 100]);
-    const { vesting, lockedTokenMint } = await client.createVesting({
+    const { vesting } = await client.createVesting({
       beneficiary: provider.wallet.publicKey,
       endTs,
       periodCount,
       depositAmount,
-      needsAssignment: null,
       depositor: god,
     });
     let vestingAcc = await client.accounts.vesting(vesting);
     expect(vestingAcc.initialized).toEqual(true);
-    expect(vestingAcc.needsAssignment).toEqual(null);
-    expect(vestingAcc.claimed).toEqual(false);
     expect(vestingAcc.beneficiary).toEqual(provider.wallet.publicKey);
     expect(vestingAcc.balance.toNumber()).toEqual(depositAmount.toNumber());
     expect(vestingAcc.startBalance.toNumber()).toEqual(
@@ -87,38 +81,25 @@ describe('End-to-end tests', () => {
     );
     expect(vestingAcc.endTs.toNumber()).toEqual(endTs.toNumber());
     expect(vestingAcc.periodCount.toNumber()).toEqual(periodCount.toNumber());
-    expect(vestingAcc.lockedNftMint).toEqual(lockedTokenMint);
-    expect(vestingAcc.lockedNftToken).toEqual(publicKeyZero);
     expect(vestingAcc.whitelistOwned).toEqual(u64Zero);
-
-    // Claim a Vesting account.
-    const { lockedTokenAccount } = await client.claim({
-      vesting,
-      lockedTokenMint,
-    });
-    vestingAcc = await client.accounts.vesting(vesting);
-    expect(vestingAcc.lockedNftToken).toEqual(lockedTokenAccount);
-    let token = await getTokenAccount(provider, lockedTokenAccount);
-    expect(token.amount).toEqual(depositAmount);
-    expect(token.owner).toEqual(vestingAcc.beneficiary);
 
     // Wait for a vesting period to pass.
     await sleep(5 * 1000);
 
-    // Redeem some locked SRM.
+    // Withdraw some locked SRM.
     const tokenAccount = await createTokenAccount(
       provider,
       srmMint,
       provider.wallet.publicKey,
     );
-    const redeemAmount = new BN([0, 0, 0, 0, 0, 0, 0, 10]);
-    await client.redeem({
-      amount: redeemAmount,
+    const withdrawAmount = new BN([0, 0, 0, 0, 0, 0, 0, 10]);
+    await client.withdraw({
+      amount: withdrawAmount,
       vesting,
       tokenAccount,
     });
-    token = await getTokenAccount(provider, tokenAccount);
-    expect(token.amount).toEqual(redeemAmount);
+    let token = await getTokenAccount(provider, tokenAccount);
+    expect(token.amount).toEqual(withdrawAmount);
   });
 });
 

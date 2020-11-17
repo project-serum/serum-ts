@@ -15,8 +15,8 @@
   },
   "scripts": {
     "build": "yarn build:node",
-    "build:node": "tsc && tsc -p tsconfig.cjs.json",
-    "test": "yarn test:unit",
+		"build:node": "tsc && tsc -p tsconfig.cjs.json",
+		"watch": "tsc --watch",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration --detectOpenHandles",
     "coverage": "jest --coverage test/unit",
@@ -25,7 +25,7 @@
   "dependencies": {
     "@project-serum/borsh": "^0.0.1-alpha.0",
     "@project-serum/common": "^0.0.1-alpha.2",
-    "@project-serum/pool": "^0.2.0-alpha.0",
+    "@project-serum/lockup": "^0.0.1-alpha.2",
     "@solana/spl-token": "0.0.11",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"

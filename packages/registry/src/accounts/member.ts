@@ -1,22 +1,28 @@
-import { struct, u8, Layout } from 'buffer-layout';
-import { bool, publicKey, u64 } from '@project-serum/borsh';
+import { struct, u8, u32, Layout } from 'buffer-layout';
+import {
+  bool,
+  publicKey,
+  u64 as borshU64,
+  i64 as borshI64,
+} from '@project-serum/borsh';
+import { u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import {
-  PoolPrices,
-  POOL_PRICES_LAYOUT,
-  defaultPoolPrices,
-} from './generation';
+import { PoolPrices, POOL_PRICES_LAYOUT } from './generation';
 
 export interface Member {
   initialized: boolean;
   registrar: PublicKey;
-  entity: PublicKey;
   beneficiary: PublicKey;
+  entity: PublicKey;
   generation: BN;
   balances: MemberBalances;
   lastActivePrices: PoolPrices;
-  nonce: number;
+  metadata: PublicKey;
+  spt: PublicKey;
+  sptMega: PublicKey;
+  rewardsCursor: number;
+  lastStakeTs: BN;
 }
 
 interface MemberBalances {
@@ -36,28 +42,32 @@ interface OriginalDeposit {
 
 const ORIGINAL_DEPOSIT_LAYOUT: Layout<OriginalDeposit> = struct([
   publicKey('owner'),
-  u64('deposit'),
-  u64('megaDeposit'),
+  borshU64('deposit'),
+  borshU64('megaDeposit'),
 ]);
 
 const MEMBER_BALANCES_LAYOUT: Layout<MemberBalances> = struct([
-  u64('sptAmount'),
-  u64('sptMegaAmount'),
-  u64('currentDeposit'),
-  u64('currentMegaDeposit'),
+  borshU64('sptAmount'),
+  borshU64('sptMegaAmount'),
+  borshU64('currentDeposit'),
+  borshU64('currentMegaDeposit'),
   ORIGINAL_DEPOSIT_LAYOUT.replicate('main'),
   ORIGINAL_DEPOSIT_LAYOUT.replicate('delegate'),
 ]);
 
-const MEMBER_LAYOUT: Layout<Member> = struct([
+export const MEMBER_LAYOUT: Layout<Member> = struct([
   bool('initialized'),
   publicKey('registrar'),
-  publicKey('entity'),
   publicKey('beneficiary'),
-  u64('generation'),
+  publicKey('entity'),
+  borshU64('generation'),
   MEMBER_BALANCES_LAYOUT.replicate('balances'),
   POOL_PRICES_LAYOUT.replicate('lastActivePrices'),
-  u8('nonce'),
+  publicKey('metadata'),
+  publicKey('spt'),
+  publicKey('sptMega'),
+  u32('rewardsCursor'),
+  borshI64('lastStakeTs'),
 ]);
 
 export function decode(data: Buffer): Member {
@@ -70,28 +80,43 @@ export function encode(m: Member): Buffer {
   return buffer.slice(0, len);
 }
 
-export const SIZE: number = encode({
-  initialized: false,
-  registrar: new PublicKey(Buffer.alloc(32)),
-  entity: new PublicKey(Buffer.alloc(32)),
-  beneficiary: new PublicKey(Buffer.alloc(32)),
-  generation: new BN(0),
-  balances: {
-    sptAmount: new BN(0),
-    sptMegaAmount: new BN(0),
-    currentDeposit: new BN(0),
-    currentMegaDeposit: new BN(0),
-    main: {
-      owner: new PublicKey(Buffer.alloc(32)),
-      deposit: new BN(0),
-      megaDeposit: new BN(0),
+export function defaultMember(): Member {
+  return {
+    initialized: false,
+    registrar: new PublicKey(Buffer.alloc(32)),
+    beneficiary: new PublicKey(Buffer.alloc(32)),
+    entity: new PublicKey(Buffer.alloc(32)),
+    generation: new u64(0),
+    balances: {
+      sptAmount: new u64(0),
+      sptMegaAmount: new u64(0),
+      currentDeposit: new u64(0),
+      currentMegaDeposit: new u64(0),
+      main: {
+        owner: new PublicKey(Buffer.alloc(32)),
+        deposit: new u64(0),
+        megaDeposit: new u64(0),
+      },
+      delegate: {
+        owner: new PublicKey(Buffer.alloc(32)),
+        deposit: new u64(0),
+        megaDeposit: new u64(0),
+      },
     },
-    delegate: {
-      owner: new PublicKey(Buffer.alloc(32)),
-      deposit: new BN(0),
-      megaDeposit: new BN(0),
+    lastActivePrices: {
+      basket: {
+        quantities: [new u64(0)],
+      },
+      megaBasket: {
+        quantities: [new u64(0), new u64(0)],
+      },
     },
-  },
-  lastActivePrices: defaultPoolPrices(),
-  nonce: 0,
-}).length;
+    metadata: new PublicKey(Buffer.alloc(32)),
+    spt: new PublicKey(Buffer.alloc(32)),
+    sptMega: new PublicKey(Buffer.alloc(32)),
+    rewardsCursor: 0,
+    lastStakeTs: new BN(0),
+  };
+}
+
+export const SIZE: number = encode(defaultMember()).length;
