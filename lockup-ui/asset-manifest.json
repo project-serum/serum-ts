@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/serum-ts/lockup-ui/static/css/main.6dea0f05.chunk.css",
-    "main.js": "/serum-ts/lockup-ui/static/js/main.9442320f.chunk.js",
-    "main.js.map": "/serum-ts/lockup-ui/static/js/main.9442320f.chunk.js.map",
+    "main.js": "/serum-ts/lockup-ui/static/js/main.79daee5d.chunk.js",
+    "main.js.map": "/serum-ts/lockup-ui/static/js/main.79daee5d.chunk.js.map",
     "runtime-main.js": "/serum-ts/lockup-ui/static/js/runtime-main.236865ae.js",
     "runtime-main.js.map": "/serum-ts/lockup-ui/static/js/runtime-main.236865ae.js.map",
-    "static/js/2.f0231db2.chunk.js": "/serum-ts/lockup-ui/static/js/2.f0231db2.chunk.js",
-    "static/js/2.f0231db2.chunk.js.map": "/serum-ts/lockup-ui/static/js/2.f0231db2.chunk.js.map",
+    "static/js/2.f0c3b30f.chunk.js": "/serum-ts/lockup-ui/static/js/2.f0c3b30f.chunk.js",
+    "static/js/2.f0c3b30f.chunk.js.map": "/serum-ts/lockup-ui/static/js/2.f0c3b30f.chunk.js.map",
     "static/js/3.a819a3e6.chunk.js": "/serum-ts/lockup-ui/static/js/3.a819a3e6.chunk.js",
     "static/js/3.a819a3e6.chunk.js.map": "/serum-ts/lockup-ui/static/js/3.a819a3e6.chunk.js.map",
     "index.html": "/serum-ts/lockup-ui/index.html",
     "static/css/main.6dea0f05.chunk.css.map": "/serum-ts/lockup-ui/static/css/main.6dea0f05.chunk.css.map",
-    "static/js/2.f0231db2.chunk.js.LICENSE.txt": "/serum-ts/lockup-ui/static/js/2.f0231db2.chunk.js.LICENSE.txt"
+    "static/js/2.f0c3b30f.chunk.js.LICENSE.txt": "/serum-ts/lockup-ui/static/js/2.f0c3b30f.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.236865ae.js",
-    "static/js/2.f0231db2.chunk.js",
+    "static/js/2.f0c3b30f.chunk.js",
     "static/css/main.6dea0f05.chunk.css",
-    "static/js/main.9442320f.chunk.js"
+    "static/js/main.79daee5d.chunk.js"
   ]
 }
