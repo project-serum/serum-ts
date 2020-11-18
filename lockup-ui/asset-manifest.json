@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/serum-ts/lockup-ui/static/css/main.6dea0f05.chunk.css",
-    "main.js": "/serum-ts/lockup-ui/static/js/main.8ae76225.chunk.js",
-    "main.js.map": "/serum-ts/lockup-ui/static/js/main.8ae76225.chunk.js.map",
+    "main.js": "/serum-ts/lockup-ui/static/js/main.fdd74702.chunk.js",
+    "main.js.map": "/serum-ts/lockup-ui/static/js/main.fdd74702.chunk.js.map",
     "runtime-main.js": "/serum-ts/lockup-ui/static/js/runtime-main.501993cb.js",
     "runtime-main.js.map": "/serum-ts/lockup-ui/static/js/runtime-main.501993cb.js.map",
     "static/js/2.fe48cf20.chunk.js": "/serum-ts/lockup-ui/static/js/2.fe48cf20.chunk.js",
@@ -17,6 +17,6 @@
     "static/js/runtime-main.501993cb.js",
     "static/js/2.fe48cf20.chunk.js",
     "static/css/main.6dea0f05.chunk.css",
-    "static/js/main.8ae76225.chunk.js"
+    "static/js/main.fdd74702.chunk.js"
   ]
 }
