@@ -484,7 +484,7 @@ export class Market {
   async findBestFeeDiscountKey(
     connection: Connection,
     ownerAddress: PublicKey,
-    cacheDurationMs = 0,
+    cacheDurationMs = 30000,
   ): Promise<{ pubkey: PublicKey | null; feeTier: number }> {
     const accounts = await this.findFeeDiscountKeys(
       connection,
