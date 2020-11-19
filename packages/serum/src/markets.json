@@ -592,5 +592,11 @@
         "name": "LUA/USDT",
         "deprecated": false,
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "AF2oQQaLtcrTnQyVs3EPTdyw57TPaK6njKYDq2Qw7LqP",
+        "name": "SWAG/USDT",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
     }
 ]

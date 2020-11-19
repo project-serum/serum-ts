@@ -160,5 +160,10 @@
     "tokenSymbol": "KEEP",
     "mintAddress": "GUohe4DJUA5FKPWo3joiPgsB7yzer7LpDmt1Vhzy3Zht",
     "tokenName": "Wrapped KEEP"
+  },
+  {
+    "tokenSymbol": "SWAG",
+    "mintAddress": "9F9fNTT6qwjsu4X4yWYKZpsbw5qT7o6yR2i57JF2jagy",
+    "tokenName": "Wrapped SWAG"
   }
 ]
