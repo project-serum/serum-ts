@@ -944,11 +944,6 @@ export default class Client {
 
   async sendMessage(req: SendMessageRequest): Promise<SendMessageResponse> {
     const { from, ts, content, mqueue } = req;
-    let data = metaEntity.accounts.mqueue.encode({
-      from,
-      ts,
-      content,
-    });
     const tx = new Transaction();
     tx.add(
       new TransactionInstruction({
@@ -956,7 +951,11 @@ export default class Client {
         programId: this.metaEntityProgramId,
         data: metaEntity.instruction.encode({
           sendMessage: {
-            data,
+            msg: {
+              from,
+              ts,
+              content,
+            },
           },
         }),
       }),

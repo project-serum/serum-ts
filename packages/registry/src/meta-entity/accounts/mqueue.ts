@@ -1,43 +1,29 @@
-import { struct, Layout, u32 } from 'buffer-layout';
+import { struct, Layout } from 'buffer-layout';
 import { publicKey, u64, str } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
+import { Ring, RingItemDecoder } from '../../accounts/ring';
 
+const CAPACITY = 500;
 const MESSAGE_SIZE = 320;
-const MAX_MESSAGES = 500;
-const MESSAGE_START = 8;
 
-export const SIZE = MAX_MESSAGES * MESSAGE_SIZE + MESSAGE_START;
-
-export class MQueue {
-  constructor(private data: Buffer) {}
-
-  messages(): Array<Message> {
-    let messages = [];
-    let idx = this.tail();
-    let head = this.head();
-    while (idx % MAX_MESSAGES !== head) {
-      messages.push(this.message_at(idx));
-      idx += 1;
+export class MQueue extends Ring<Message> {
+  constructor(data: Buffer) {
+    super(data, new MessageDecoder(), CAPACITY, MESSAGE_SIZE);
+    if (data.length != this.bufferSize()) {
+      throw new Error(
+        `expected data length ${this.bufferSize()} got ${data.length}`,
+      );
     }
-    return messages;
   }
-
-  message_at(idx: number): Message {
-    let start = idx * MESSAGE_SIZE + MESSAGE_START;
-    let end = start + MESSAGE_SIZE;
-    let bytes = this.data.slice(start, end);
-    return decode(bytes);
+  static accountSize(): number {
+    return CAPACITY * MESSAGE_SIZE + Ring.MESSAGE_START;
   }
+}
 
-  head(): number {
-    let bytes = this.data.slice(0, 4);
-    return u32().decode(bytes);
-  }
-
-  tail(): number {
-    let bytes = this.data.slice(4, 8);
-    return u32().decode(bytes);
+class MessageDecoder implements RingItemDecoder<Message> {
+  decode(data: Buffer): Message {
+    return decode(data);
   }
 }
 
@@ -47,7 +33,7 @@ export interface Message {
   content: string;
 }
 
-const MESSAGE_LAYOUT: Layout<Message> = struct([
+export const MESSAGE_LAYOUT: Layout<Message> = struct([
   publicKey('from'),
   u64('ts'),
   str('content'),
