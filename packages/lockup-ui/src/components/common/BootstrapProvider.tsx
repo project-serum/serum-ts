@@ -100,55 +100,39 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
     const fetchPoolData = async () => {
       const registrar = await registryClient.accounts.registrar();
       await sleep(1000 * 2);
-      const pool = await registryClient.accounts.pool(registrar);
-      await sleep(1000 * 2);
       const poolVault = await registryClient.accounts.poolVault(registrar);
       await sleep(1000 * 2);
-      const megaPool = await registryClient.accounts.megaPool(registrar);
-      await sleep(1000 * 2);
-      const megaPoolVaults = await registryClient.accounts.megaPoolVaults(
+      const megaPoolVault = await registryClient.accounts.megaPoolVault(
         registrar,
       );
       await sleep(1000 * 2);
       const poolTokenMint = await registryClient.accounts.poolTokenMint(
-        pool,
         registrar,
       );
       await sleep(1000 * 2);
       const megaPoolTokenMint = await registryClient.accounts.megaPoolTokenMint(
-        megaPool,
         registrar,
       );
 
       dispatch({
         type: ActionType.RegistrySetPools,
         item: {
-          pool: {
-            publicKey: registrar.pool,
-            account: pool,
-          },
           poolTokenMint: {
-            publicKey: pool.poolTokenMint,
+            publicKey: registrar.poolMint,
             account: poolTokenMint,
           },
           poolVault: {
-            publicKey: pool.assets[0].vaultAddress,
+            publicKey: registrar.poolVault,
             account: poolVault,
           },
-          megaPool: {
-            publicKey: registrar.megaPool,
-            account: megaPool,
-          },
           megaPoolTokenMint: {
-            publicKey: megaPool.poolTokenMint,
+            publicKey: registrar.poolMintMega,
             account: megaPoolTokenMint,
           },
-          megaPoolVaults: megaPoolVaults.map((v, idx) => {
-            return {
-              publicKey: megaPool.assets[idx].vaultAddress,
-              account: v,
-            };
-          }),
+          megaPoolVault: {
+            publicKey: registrar.poolVaultMega,
+            account: megaPoolVault,
+          },
         },
       });
     };

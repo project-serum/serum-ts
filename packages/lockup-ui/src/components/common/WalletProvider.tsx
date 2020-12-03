@@ -48,7 +48,6 @@ export default function WalletProvider(
     const connection = new Connection(network.url, preflightCommitment);
     const wallet = new Wallet(walletProvider, network.url);
     const provider = new Provider(connection, wallet, opts);
-    RegistryClient.setRetbuf(network.retbuf, network.retbufProgramId);
 
     return {
       wallet,
@@ -60,7 +59,6 @@ export default function WalletProvider(
       registryClient: new RegistryClient({
         provider,
         programId: network.registryProgramId,
-        stakeProgramId: network.stakeProgramId,
         metaEntityProgramId: network.metaEntityProgramId,
         registrar: network.registrar,
         rewardEventQueue: network.rewardEventQueue,

@@ -15,7 +15,6 @@ export interface Entity {
   registrar: PublicKey;
   leader: PublicKey;
   balances: Balances;
-  generation: BN;
   state: EntityState;
   metadata: PublicKey;
 }
@@ -57,7 +56,6 @@ const ENTITY_LAYOUT: Layout<Entity> = struct([
   publicKey('registrar'),
   publicKey('leader'),
   BALANCES_LAYOUT.replicate('balances'),
-  borshU64('generation'),
   ENTITY_STATE_LAYOUT.replicate('state'),
   publicKey('metadata'),
 ]);
@@ -83,7 +81,6 @@ export function defaultEntity(): Entity {
       currentDeposit: new u64(0),
       currentMegaDeposit: new u64(0),
     },
-    generation: new u64(0),
     state: {
       pendingDeactivation: {
         deactivationStartTs: new u64(0),

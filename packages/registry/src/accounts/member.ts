@@ -8,16 +8,13 @@ import {
 import { u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import { PoolPrices, POOL_PRICES_LAYOUT } from './generation';
 
 export interface Member {
   initialized: boolean;
   registrar: PublicKey;
   beneficiary: PublicKey;
   entity: PublicKey;
-  generation: BN;
   balances: MemberBalances;
-  lastActivePrices: PoolPrices;
   metadata: PublicKey;
   spt: PublicKey;
   sptMega: PublicKey;
@@ -60,9 +57,7 @@ export const MEMBER_LAYOUT: Layout<Member> = struct([
   publicKey('registrar'),
   publicKey('beneficiary'),
   publicKey('entity'),
-  borshU64('generation'),
   MEMBER_BALANCES_LAYOUT.replicate('balances'),
-  POOL_PRICES_LAYOUT.replicate('lastActivePrices'),
   publicKey('metadata'),
   publicKey('spt'),
   publicKey('sptMega'),
@@ -86,7 +81,6 @@ export function defaultMember(): Member {
     registrar: new PublicKey(Buffer.alloc(32)),
     beneficiary: new PublicKey(Buffer.alloc(32)),
     entity: new PublicKey(Buffer.alloc(32)),
-    generation: new u64(0),
     balances: {
       sptAmount: new u64(0),
       sptMegaAmount: new u64(0),
@@ -101,14 +95,6 @@ export function defaultMember(): Member {
         owner: new PublicKey(Buffer.alloc(32)),
         deposit: new u64(0),
         megaDeposit: new u64(0),
-      },
-    },
-    lastActivePrices: {
-      basket: {
-        quantities: [new u64(0)],
-      },
-      megaBasket: {
-        quantities: [new u64(0), new u64(0)],
       },
     },
     metadata: new PublicKey(Buffer.alloc(32)),

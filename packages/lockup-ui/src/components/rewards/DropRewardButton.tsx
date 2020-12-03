@@ -48,7 +48,6 @@ enum PoolTabViewModel {
 enum RewardTypeViewModel {
   Unlocked,
   Locked,
-  Pool,
 }
 
 type DropRewardsDialogProps = {
@@ -60,7 +59,9 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
   const { open, onClose } = props;
 
   const [poolTab, setPoolTab] = useState(PoolTabViewModel.Srm);
-  const [rewardTypeTab, setRewardTypeTab] = useState(RewardTypeViewModel.Pool);
+  const [rewardTypeTab, setRewardTypeTab] = useState(
+    RewardTypeViewModel.Unlocked,
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -73,7 +74,6 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
       </DialogTitle>
       <DialogContent>
         <Tabs value={rewardTypeTab} onChange={(_e, t) => setRewardTypeTab(t)}>
-          <Tab value={RewardTypeViewModel.Pool} label="Pool" />
           <Tab value={RewardTypeViewModel.Unlocked} label="Unlocked" />
           <Tab value={RewardTypeViewModel.Locked} label="Locked" />
         </Tabs>
@@ -85,9 +85,6 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
           <Tab value={PoolTabViewModel.Srm} label="Pool" />
           <Tab value={PoolTabViewModel.Msrm} label="Mega Pool" />
         </Tabs>
-        {rewardTypeTab === RewardTypeViewModel.Pool && (
-          <DropPoolForm onClose={onClose} poolTab={poolTab} />
-        )}
         {rewardTypeTab === RewardTypeViewModel.Unlocked && (
           <DropUnlockedForm onClose={onClose} poolTab={poolTab} />
         )}
@@ -99,28 +96,28 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
   );
 }
 
-type DropPoolFormProps = {
+type DropUnlockedFormProps = {
   onClose: () => void;
   poolTab: PoolTabViewModel;
 };
 
-function DropUnlockedForm(props: DropPoolFormProps) {
+function DropUnlockedForm(props: DropUnlockedFormProps) {
   const { onClose, poolTab } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
   const {
     network,
-    pool,
-    megaPool,
     poolTokenMint,
     megaPoolTokenMint,
+    poolVault,
+    megaPoolVault,
   } = useSelector((state: StoreState) => {
     return {
       network: state.common.network,
-      pool: state.registry.pool!,
       poolTokenMint: state.registry.poolTokenMint!,
-      megaPool: state.registry.megaPool!,
       megaPoolTokenMint: state.registry.megaPoolTokenMint!,
+      poolVault: state.registry.poolVault!,
+      megaPoolVault: state.registry.megaPoolVault!,
     };
   });
 
@@ -155,8 +152,8 @@ function DropUnlockedForm(props: DropPoolFormProps) {
           depositorMint: mint as PublicKey,
           pool:
             poolTab === PoolTabViewModel.Srm
-              ? pool.publicKey
-              : megaPool.publicKey,
+              ? poolVault.publicKey
+              : megaPoolVault.publicKey,
           poolTokenMint:
             poolTab === PoolTabViewModel.Srm
               ? poolTokenMint.publicKey
@@ -197,23 +194,25 @@ function DropUnlockedForm(props: DropPoolFormProps) {
   );
 }
 
-function DropLockedForm(props: DropPoolFormProps) {
+type DropLockedFormProps = DropUnlockedFormProps;
+
+function DropLockedForm(props: DropLockedFormProps) {
   const { onClose, poolTab } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
   const {
     network,
-    pool,
-    megaPool,
+    poolVault,
+    megaPoolVault,
     poolTokenMint,
     megaPoolTokenMint,
   } = useSelector((state: StoreState) => {
     return {
       network: state.common.network,
-      pool: state.registry.pool!,
       poolTokenMint: state.registry.poolTokenMint!,
-      megaPool: state.registry.megaPool!,
       megaPoolTokenMint: state.registry.megaPoolTokenMint!,
+      poolVault: state.registry.poolVault!,
+      megaPoolVault: state.registry.megaPoolVault!,
     };
   });
 
@@ -251,8 +250,8 @@ function DropLockedForm(props: DropPoolFormProps) {
           depositorMint: mint as PublicKey,
           pool:
             poolTab === PoolTabViewModel.Srm
-              ? pool.publicKey
-              : megaPool.publicKey,
+              ? poolVault.publicKey
+              : megaPoolVault.publicKey,
           poolTokenMint:
             poolTab === PoolTabViewModel.Srm
               ? poolTokenMint.publicKey
@@ -472,150 +471,6 @@ function DropVendorForm(props: DropVendorFormProps) {
         <Button onClick={onCancel}>Cancel</Button>
         <Button
           onClick={onClick}
-          type="submit"
-          color="primary"
-          disabled={!isSendEnabled}
-        >
-          Send
-        </Button>
-      </DialogActions>
-    </>
-  );
-}
-
-type DropLockedFormProps = {
-  poolTab: PoolTabViewModel;
-  onClose: () => void;
-};
-
-function DropPoolForm(props: DropLockedFormProps) {
-  const { poolTab, onClose } = props;
-  const snack = useSnackbar();
-  const { network, pool, poolVault, megaPool, megaPoolVaults } = useSelector(
-    (state: StoreState) => {
-      return {
-        network: state.common.network,
-        pool: state.registry.pool!,
-        poolVault: state.registry.poolVault!,
-        megaPool: state.registry.megaPool!,
-        megaPoolVaults: state.registry.megaPoolVaults!,
-      };
-    },
-  );
-  const { registryClient } = useWallet();
-  const [srmFromAccount, setSrmFromAccount] = useState<null | PublicKey>(null);
-  const [msrmFromAccount, setMsrmFromAccount] = useState<null | PublicKey>(
-    null,
-  );
-  const [rewardAmount, setRewardAmount] = useState<null | number>(null);
-  const [rewardMegaAmount, setRewardMegaAmount] = useState<null | number>(null);
-
-  const sendPoolRewards = async () => {
-    await notification.withTx(
-      snack,
-      'Dropping reward on pool...',
-      'Pool reward dropped',
-      async () => {
-        let { tx } = await registryClient.dropPoolReward({
-          pool:
-            poolTab === PoolTabViewModel.Srm
-              ? pool.publicKey
-              : megaPool.publicKey,
-          srmDepositor: srmFromAccount as PublicKey,
-          msrmDepositor:
-            poolTab === PoolTabViewModel.Msrm
-              ? (msrmFromAccount as PublicKey)
-              : undefined,
-          srmAmount: new BN(rewardAmount!),
-          msrmAmount:
-            poolTab === PoolTabViewModel.Msrm
-              ? new BN(rewardMegaAmount!)
-              : undefined,
-          poolSrmVault:
-            poolTab === PoolTabViewModel.Msrm
-              ? megaPoolVaults[0].publicKey
-              : poolVault.publicKey,
-          poolMsrmVault:
-            poolTab === PoolTabViewModel.Msrm
-              ? megaPoolVaults[1].publicKey
-              : undefined,
-        });
-        return tx;
-      },
-    );
-    onClose();
-  };
-
-  const isSendEnabled = (() => {
-    // todo
-    return true;
-  })();
-
-  return (
-    <>
-      <div>
-        <div style={{ display: 'flex', marginBottom: '10px' }}>
-          <div style={{ flex: 1 }}>
-            <OwnedTokenAccountsSelect
-              style={{ height: '100%' }}
-              mint={network.srm}
-              onChange={(f: PublicKey) => setSrmFromAccount(f)}
-            />
-            <FormHelperText>SRM account to send from</FormHelperText>
-          </div>
-          <TextField
-            style={{ width: '200px', marginLeft: '24px' }}
-            id="outlined-number"
-            label="Amount"
-            type="number"
-            InputLabelProps={{
-              shrink: true,
-            }}
-            variant="outlined"
-            onChange={e => setRewardAmount(parseInt(e.target.value) as number)}
-            InputProps={{ inputProps: { min: 0 } }}
-          />
-        </div>
-        {poolTab === PoolTabViewModel.Msrm && (
-          <div style={{ display: 'flex' }}>
-            <div style={{ flex: 1 }}>
-              <OwnedTokenAccountsSelect
-                style={{ height: '100%' }}
-                mint={network.msrm}
-                onChange={(f: PublicKey) => setMsrmFromAccount(f)}
-              />
-              <FormHelperText>MSRM account to send from</FormHelperText>
-            </div>
-            <TextField
-              style={{ width: '200px', marginLeft: '24px' }}
-              id="outlined-number"
-              label="Amount"
-              type="number"
-              InputLabelProps={{
-                shrink: true,
-              }}
-              variant="outlined"
-              onChange={e =>
-                setRewardMegaAmount(parseInt(e.target.value) as number)
-              }
-              InputProps={{ inputProps: { min: 0 } }}
-            />
-          </div>
-        )}
-      </div>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button
-          onClick={() =>
-            sendPoolRewards().catch(err => {
-              snack.enqueueSnackbar(
-                `Error dropping unlocked reward: ${err.toString()}`,
-                {
-                  variant: 'error',
-                },
-              );
-            })
-          }
           type="submit"
           color="primary"
           disabled={!isSendEnabled}

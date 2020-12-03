@@ -75,7 +75,7 @@ describe('End-to-end tests', () => {
     let vestingAcc = await client.accounts.vesting(vesting);
     expect(vestingAcc.initialized).toEqual(true);
     expect(vestingAcc.beneficiary).toEqual(provider.wallet.publicKey);
-    expect(vestingAcc.balance.toNumber()).toEqual(depositAmount.toNumber());
+    expect(vestingAcc.outstanding.toNumber()).toEqual(depositAmount.toNumber());
     expect(vestingAcc.startBalance.toNumber()).toEqual(
       depositAmount.toNumber(),
     );

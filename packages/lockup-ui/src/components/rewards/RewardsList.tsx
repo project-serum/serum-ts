@@ -10,7 +10,7 @@ import Typography from '@material-ui/core/Typography';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import * as registry from '@project-serum/registry';
-import { PoolState } from '@project-serum/pool';
+import { AccountInfo as TokenAccount } from '@solana/spl-token';
 import { Network, ProgramAccount } from '@project-serum/common';
 
 type RewardsListProps = {
@@ -39,49 +39,6 @@ type RewardListItemProps = {
 };
 
 function RewardListItem(props: RewardListItemProps) {
-  const { rli, network } = props;
-  if (rli.reward.poolDrop !== undefined) {
-    return (
-      <PoolRewardListItem cursor={rli.cursor} poolDrop={rli.reward.poolDrop} />
-    );
-  } else {
-    return <LockUnlockRewardListItem rli={rli} network={network} />;
-  }
-}
-
-type PoolRewardListItemProps = {
-  poolDrop: registry.accounts.PoolDrop;
-  cursor: number;
-};
-
-function PoolRewardListItem(props: PoolRewardListItemProps) {
-  const { poolDrop, cursor } = props;
-
-  let amountLabel = `${poolDrop.totals[0].toString()} SRM`;
-  if (poolDrop.totals.length === 2) {
-    amountLabel += ` ${poolDrop.totals[1].toString()} MSRM`;
-  }
-  let lockedLabel = 'unlocked';
-  let fromLabel = `${poolDrop.pool.toString()} | ${poolDrop.from.toString()} | ${cursor}`;
-  return (
-    <>
-      <ListItem button>
-        <LockIcon style={{ visibility: 'hidden', marginRight: '16px' }} />
-        <ListItemText
-          primary={<>{`${amountLabel} ${lockedLabel}`}</>}
-          secondary={fromLabel}
-        />
-      </ListItem>
-    </>
-  );
-}
-
-type LockUnlockRewardListItemProps = {
-  network: Network;
-  rli: RewardListItemViewModel;
-};
-
-function LockUnlockRewardListItem(props: LockUnlockRewardListItemProps) {
   const { rli, network } = props;
 
   const rewardEvent = rli.reward.lockedAlloc ?? rli.reward.unlockedAlloc!;
@@ -130,21 +87,21 @@ function LockUnlockRewardListItem(props: LockUnlockRewardListItemProps) {
         {rli.vendor === undefined ? (
           <CircularProgress />
         ) : (
-          <LockUnlockRewardDetails vendor={rli.vendor} />
+          <RewardListItemDetails vendor={rli.vendor} />
         )}
       </Collapse>
     </>
   );
 }
 
-type LockUnlockRewardDetailsProps = {
+type RewardListItemDetailsProps = {
   vendor: ProgramAccount<
     | registry.accounts.LockedRewardVendor
     | registry.accounts.UnlockedRewardVendor
   >;
 };
 
-function LockUnlockRewardDetails(props: LockUnlockRewardDetailsProps) {
+function RewardListItemDetails(props: RewardListItemDetailsProps) {
   let { vendor } = props;
 
   return (
@@ -223,5 +180,5 @@ type Context = {
       | registry.accounts.UnlockedRewardVendor
     >
   >;
-  pool: ProgramAccount<PoolState>;
+  pool: ProgramAccount<TokenAccount>;
 };

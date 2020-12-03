@@ -10,41 +10,20 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
-import { AccountInfo as TokenAccount } from '@solana/spl-token';
 import { accounts } from '@project-serum/registry';
 import { State as StoreState, ProgramAccount } from '../store/reducer';
-import { PoolPrices } from './Stake';
 
 export default function Me() {
-  const {
-    poolTokenMint,
-    poolVault,
-    megaPoolTokenMint,
-    megaPoolVaults,
-    member,
-  } = useSelector((state: StoreState) => {
+  const { member } = useSelector((state: StoreState) => {
     return {
-      poolTokenMint: state.registry.poolTokenMint,
-      poolVault: state.registry.poolVault,
-      megaPoolTokenMint: state.registry.megaPoolTokenMint,
-      megaPoolVaults: state.registry.megaPoolVaults,
       member: state.registry.member,
     };
-  });
-
-  const prices = new PoolPrices({
-    poolVault: poolVault!.account,
-    poolTokenMint: poolTokenMint!.account,
-    megaPoolVaults: megaPoolVaults!.map(
-      (v: ProgramAccount<TokenAccount>) => v.account,
-    ),
-    megaPoolTokenMint: megaPoolTokenMint!.account,
   });
 
   return (
     <div style={{ display: 'flex', width: '100%' }}>
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
-        {member && <MemberBalancesCard prices={prices} member={member} />}
+        {member && <MemberBalancesCard member={member} />}
       </div>
     </div>
   );
@@ -52,11 +31,10 @@ export default function Me() {
 
 type MemberBalancesCardProps = {
   member: ProgramAccount<accounts.Member>;
-  prices: PoolPrices;
 };
 
 function MemberBalancesCard(props: MemberBalancesCardProps) {
-  const { member, prices } = props;
+  const { member } = props;
   const rows = [
     {
       token: 'SRM',
@@ -87,24 +65,16 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
       balance: member.account.balances.main.megaDeposit.toString(),
     },
   ];
-  let value = prices.basket(member.account.balances.sptAmount, false)
-    .quantities;
-  let megaValue = prices.megaBasket(
-    member.account.balances.sptMegaAmount,
-    false,
-  ).quantities;
   const poolRows = [
     {
       pool: 'Stake Pool',
       account: member.account.spt.toString(),
       shares: member.account.balances.sptAmount.toString(),
-      value: `${value} SRM`,
     },
     {
       pool: 'Mega Stake Pool',
       account: member.account.sptMega.toString(),
       shares: member.account.balances.sptMegaAmount.toString(),
-      value: `${megaValue[0]} SRM, ${megaValue[1]} MSRM`,
     },
   ];
   return (
@@ -135,7 +105,6 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
                   <TableCell>Pool</TableCell>
                   <TableCell align="left">Account</TableCell>
                   <TableCell align="right">Shares</TableCell>
-                  <TableCell align="right">Value</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -150,7 +119,6 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
                       </div>
                     </TableCell>
                     <TableCell align="right">{row.shares}</TableCell>
-                    <TableCell align="right">{row.value}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -243,19 +211,6 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
               </TableBody>
             </Table>
           </TableContainer>
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            right: '16px',
-            bottom: '16px',
-            display: 'flex',
-            flexDirection: 'row-reverse',
-          }}
-        >
-          <Typography color="textSecondary">
-            Generation {member.account.generation.toString()}
-          </Typography>
         </div>
       </CardContent>
     </Card>

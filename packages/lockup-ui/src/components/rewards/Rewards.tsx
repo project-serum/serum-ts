@@ -21,8 +21,8 @@ export default function Rewards() {
       rewardEventQueue: state.registry.rewardEventQueue!,
       member: state.registry.member!,
       network: state.common.network,
-      pool: state.registry.pool!,
       vendors: state.registry.vendors,
+      pool: state.registry.poolVault!,
     };
   });
   const { rewardEventQueue, network, member, vendors } = ctx;

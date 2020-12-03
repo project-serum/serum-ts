@@ -12,18 +12,7 @@ export interface PendingWithdrawal {
   startTs: BN;
   endTs: BN;
   sptAmount: BN;
-  payment: PendingPayment;
 }
-
-export interface PendingPayment {
-  assetAmount: BN;
-  megaAssetAmount: BN;
-}
-
-const PENDING_PAYMENT_LAYOUT: Layout<PendingPayment> = struct([
-  borshU64('assetAmount'),
-  borshU64('megaAssetAmount'),
-]);
 
 const PENDING_WITHDRAWAL_LAYOUT: Layout<PendingWithdrawal> = struct([
   bool('initialized'),
@@ -33,7 +22,6 @@ const PENDING_WITHDRAWAL_LAYOUT: Layout<PendingWithdrawal> = struct([
   i64('startTs'),
   i64('endTs'),
   borshU64('sptAmount'),
-  PENDING_PAYMENT_LAYOUT.replicate('payment'),
 ]);
 
 export function decode(data: Buffer): PendingWithdrawal {
@@ -55,10 +43,6 @@ export function defaultPendingWithdrawal(): PendingWithdrawal {
     startTs: new u64(0),
     endTs: new u64(0),
     sptAmount: new u64(0),
-    payment: {
-      assetAmount: new u64(0),
-      megaAssetAmount: new u64(0),
-    },
   };
 }
 

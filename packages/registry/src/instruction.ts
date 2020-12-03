@@ -1,7 +1,5 @@
 import { Layout } from 'buffer-layout';
 import {
-  vec,
-  bool,
   option,
   i64,
   publicKey,
@@ -25,12 +23,9 @@ export type RegistryInstruction =
   | Deposit
   | Withdraw
   | Stake
-  | MarkGeneration
   | StartStakeWithdrawal
   | EndStakeWithdrawal
   | CreateEntity
-  | Slash
-  | DropPoolReward
   | DropLockedReward
   | DropUnlockedReward
   | ClaimLockedReward
@@ -84,19 +79,11 @@ type Stake = {
   amount: BN;
 };
 
-type MarkGeneration = {};
-
 type StartStakeWithdrawal = {
   amount: BN;
 };
 
 type EndStakeWithdrawal = {};
-
-type Slash = {};
-
-type DropPoolReward = {
-  totals: BN[];
-};
 
 type DropLockedReward = {
   total: BN;
@@ -156,11 +143,8 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct([u64('amount')], 'deposit'),
   struct([u64('amount')], 'withdraw'),
   struct([u64('amount')], 'stake'),
-  struct([], 'markGeneration'),
   struct([u64('amount')], 'startStakeWithdrawal'),
   struct([], 'endStakeWithdrawal'),
-  struct([u64('amount')], 'slash'),
-  struct([vec(u64(), 'totals')], 'dropPoolReward'),
   struct(
     [
       u64('total'),

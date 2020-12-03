@@ -29,15 +29,8 @@ class RewardEventDecoder implements RingItemDecoder<RewardEvent> {
 }
 
 export type RewardEvent = {
-  poolDrop?: PoolDrop;
   lockedAlloc?: LockedAlloc;
   unlockedAlloc?: UnlockedAlloc;
-};
-
-export type PoolDrop = {
-  from: PublicKey;
-  totals: BN[];
-  pool: PublicKey;
 };
 
 export type LockedAlloc = {
@@ -57,10 +50,6 @@ export type UnlockedAlloc = {
 };
 
 const REWARD_EVENT_LAYOUT: Layout<RewardEvent> = rustEnum([
-  struct(
-    [publicKey('from'), vec(u64(), 'totals'), publicKey('pool')],
-    'poolDrop',
-  ),
   struct(
     [
       publicKey('from'),

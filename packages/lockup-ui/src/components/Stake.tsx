@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
-import BN from 'bn.js';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
@@ -13,7 +12,6 @@ import FormControl from '@material-ui/core/FormControl';
 import Typography from '@material-ui/core/Typography';
 import { MintInfo, AccountInfo as TokenAccount, u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
-import { PoolState, Basket } from '@project-serum/pool';
 import { accounts } from '@project-serum/registry';
 import { useWallet } from '../components/common/WalletProvider';
 import { ViewTransactionOnExplorerButton } from '../components/common/Notification';
@@ -25,23 +23,19 @@ export default function Stake() {
   const { registryClient } = useWallet();
   const dispatch = useDispatch();
   const {
-    pool,
     poolTokenMint,
     poolVault,
-    megaPool,
     megaPoolTokenMint,
-    megaPoolVaults,
+    megaPoolVault,
     member,
     registrar,
     entity,
   } = useSelector((state: StoreState) => {
     return {
-      pool: state.registry.pool,
       poolTokenMint: state.registry.poolTokenMint,
       poolVault: state.registry.poolVault,
-      megaPool: state.registry.megaPool,
       megaPoolTokenMint: state.registry.megaPoolTokenMint,
-      megaPoolVaults: state.registry.megaPoolVaults,
+      megaPoolVault: state.registry.megaPoolVault,
       member: state.registry.member,
       registrar: state.registry.registrar,
       entity: state.registry.entities
@@ -57,24 +51,11 @@ export default function Stake() {
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
-  const prices = new PoolPrices({
-    poolVault: poolVault!.account,
-    poolTokenMint: poolTokenMint!.account,
-    megaPoolVaults: megaPoolVaults!.map(
-      (v: ProgramAccount<TokenAccount>) => v.account,
-    ),
-    megaPoolTokenMint: megaPoolTokenMint!.account,
-  });
-  const poolSharePrice = prices.basket(new BN(1), true).quantities[0] + ' SRM';
-  const megaPoolSharePrice = (() => {
-    const b = prices.megaBasket(new BN(1), true).quantities;
-    return `${b[0]} SRM, ${b[1]} MSRM`;
-  })();
-
   const createPoolTokens = async (
     amount: number,
     spt: PublicKey,
     label: string,
+    isMega?: boolean,
   ) => {
     enqueueSnackbar(`Creating ${spt} ${label} Pool tokens`, {
       variant: 'info',
@@ -83,7 +64,8 @@ export default function Stake() {
       member: member!.publicKey,
       amount: new u64(amount),
       entity: entity?.publicKey,
-      spt: spt,
+      spt,
+      isMega,
     });
     const updatedMember = await registryClient.accounts.member(
       member!.publicKey,
@@ -120,6 +102,7 @@ export default function Stake() {
     amount: number,
     spt: PublicKey,
     label: string,
+    isMega?: boolean,
   ) => {
     enqueueSnackbar(
       `Initiating redemption for ${amount} ${label} Pool tokens`,
@@ -133,7 +116,8 @@ export default function Stake() {
         amount: new u64(amount),
         entity: entity?.publicKey,
         registrar: registrar!.account,
-        spt: spt,
+        spt,
+        isMega,
       },
     );
     const updatedMember = await registryClient.accounts.member(
@@ -201,20 +185,24 @@ export default function Stake() {
 
   const createMsrmPool = async (shares: number) => {
     if (shares > 0) {
-      createPoolTokens(shares, member!.account.sptMega, 'MSRM').catch(err => {
-        enqueueSnackbar(`Error creating msrm pool: ${err.toString()}`, {
-          variant: 'error',
-        });
-      });
+      createPoolTokens(shares, member!.account.sptMega, 'MSRM', true).catch(
+        err => {
+          enqueueSnackbar(`Error creating msrm pool: ${err.toString()}`, {
+            variant: 'error',
+          });
+        },
+      );
     }
   };
   const redeemMsrmPool = async (shares: number) => {
     if (shares > 0) {
-      redeemPoolTokens(shares, member!.account.sptMega, 'MSRM').catch(err => {
-        enqueueSnackbar(`Error redeeming msrm pool: ${err.toString()}`, {
-          variant: 'error',
-        });
-      });
+      redeemPoolTokens(shares, member!.account.sptMega, 'MSRM', true).catch(
+        err => {
+          enqueueSnackbar(`Error redeeming msrm pool: ${err.toString()}`, {
+            variant: 'error',
+          });
+        },
+      );
     }
   };
 
@@ -223,22 +211,16 @@ export default function Stake() {
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
         <PoolCard
           title={'Stake Pool'}
-          pool={pool!}
-          poolSharePrice={poolSharePrice}
+          pool={poolVault!}
           poolTokenMint={poolTokenMint!}
-          assetsLabel={`${poolVault!.account.amount} SRM`}
           disabled={member === undefined}
           create={createSrmPool}
           redeem={redeemSrmPool}
         />
         <PoolCard
           title={'Mega Stake Pool'}
-          pool={megaPool!}
-          poolSharePrice={megaPoolSharePrice}
+          pool={megaPoolVault!}
           poolTokenMint={megaPoolTokenMint!}
-          assetsLabel={`${megaPoolVaults![0].account.amount} SRM, ${
-            megaPoolVaults![1].account.amount
-          } MSRM`}
           disabled={member === undefined}
           create={createMsrmPool}
           redeem={redeemMsrmPool}
@@ -255,26 +237,15 @@ export default function Stake() {
 
 type PoolCardProps = {
   title: string;
-  pool: ProgramAccount<PoolState>;
-  poolSharePrice: string;
+  pool: ProgramAccount<TokenAccount>;
   poolTokenMint: ProgramAccount<MintInfo>;
-  assetsLabel: string;
   disabled: boolean;
   create: (shares: number) => void;
   redeem: (shares: number) => void;
 };
 
 function PoolCard(props: PoolCardProps) {
-  const {
-    title,
-    create,
-    redeem,
-    pool,
-    poolSharePrice,
-    poolTokenMint,
-    assetsLabel,
-    disabled,
-  } = props;
+  const { title, create, redeem, pool, poolTokenMint, disabled } = props;
   const [srmPoolAmount, setSrmPoolAmount] = useState<null | number>(null);
 
   return (
@@ -307,11 +278,6 @@ function PoolCard(props: PoolCardProps) {
           <Typography>
             Outstanding: {poolTokenMint.account.supply.toString()}
           </Typography>
-          <Typography style={{ marginTop: '10px', fontWeight: 'bold' }}>
-            Pool Assets
-          </Typography>
-          <Typography>Total basket: {assetsLabel}</Typography>
-          <Typography>Price per share: {poolSharePrice}</Typography>
         </div>
         <div style={{ width: '190px' }}>
           <div style={{ marginBottom: '10px' }}>
@@ -332,7 +298,7 @@ function PoolCard(props: PoolCardProps) {
               variant="contained"
               onClick={() => create(srmPoolAmount as number)}
             >
-              Create
+              Stake
             </Button>
             <Button
               disabled={disabled || srmPoolAmount === null || srmPoolAmount < 1}
@@ -341,7 +307,7 @@ function PoolCard(props: PoolCardProps) {
               style={{ marginLeft: '10px' }}
               onClick={() => redeem(srmPoolAmount as number)}
             >
-              Redeem
+              Unstake
             </Button>
           </div>
         </div>
@@ -355,15 +321,25 @@ type RedemptionListProps = {
 };
 
 function RedemptionList(props: RedemptionListProps) {
-  const { pendingWithdrawals, member } = useSelector((state: StoreState) => {
-    const member = state.registry.member;
-    return {
-      member,
-      pendingWithdrawals: member
-        ? state.registry.pendingWithdrawals.get(member.publicKey.toString())
-        : [],
-    };
-  });
+  const { pendingWithdrawals, member, registrar } = useSelector(
+    (state: StoreState) => {
+      const member = state.registry.member;
+      return {
+        member,
+        registrar: state.registry.registrar!,
+        pendingWithdrawals: member
+          ? state.registry.pendingWithdrawals.get(member.publicKey.toString())
+          : [],
+      };
+    },
+  );
+  const sptLabel = (poolVault: PublicKey): string => {
+    if (poolVault === registrar.account.poolVault) {
+      return 'SRM';
+    } else {
+      return 'MSRM';
+    }
+  };
   return (
     <div style={props.style}>
       <Card
@@ -427,7 +403,7 @@ function RedemptionList(props: RedemptionListProps) {
                       </div>
                     </div>
                     <Typography style={{ fontSize: '14px' }}>
-                      {`${pw.account.payment.assetAmount} SRM, ${pw.account.payment.megaAssetAmount} MSRM`}
+                      {`${pw.account.sptAmount} ${sptLabel(pw.account.pool)}`}
                     </Typography>
                     <Typography style={{ fontSize: '14px' }}>
                       {`Start: ${new Date(
@@ -572,66 +548,4 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
       </IconButton>
     </div>
   );
-}
-
-type PoolPricesConfig = {
-  poolVault: TokenAccount;
-  poolTokenMint: MintInfo;
-  megaPoolVaults: TokenAccount[];
-  megaPoolTokenMint: MintInfo;
-};
-
-export class PoolPrices {
-  private poolVault: TokenAccount;
-  private poolTokenMint: MintInfo;
-  private megaPoolVaults: TokenAccount[];
-  private megaPoolTokenMint: MintInfo;
-
-  constructor(cfg: PoolPricesConfig) {
-    this.poolVault = cfg.poolVault!;
-    this.poolTokenMint = cfg.poolTokenMint!;
-    this.megaPoolVaults = cfg.megaPoolVaults!;
-    this.megaPoolTokenMint = cfg.megaPoolTokenMint!;
-  }
-
-  // TODO: replace these methods with `getPoolBasket` from the pool package.
-  basket(sptAmount: BN, roundUp: boolean): Basket {
-    if (this.poolTokenMint.supply.toNumber() === 0) {
-      return { quantities: [new u64(sptAmount)] };
-    }
-    // TODO: need to more thoughtfully handle the case where the token supply
-    //       resets *and* there exists rewards in the pool.
-    return {
-      quantities: [
-        this.poolVault.amount
-          .mul(sptAmount)
-          .add(roundUp ? this.poolTokenMint.supply.sub(new BN(1)) : new BN(0))
-          .div(this.poolTokenMint.supply),
-      ],
-    };
-  }
-  // TODO: replace these methods with `getPoolBasket` from the pool package.
-  megaBasket(sptAmount: BN, roundUp: boolean): Basket {
-    if (this.megaPoolVaults.length !== 2) {
-      throw new Error('invariant violation');
-    }
-    if (this.megaPoolTokenMint.supply.toNumber() === 0) {
-      return { quantities: [new u64(0), new u64(sptAmount)] };
-    }
-    const quantities = this.megaPoolVaults.map((v, idx) => {
-      if (v.amount.toNumber() === 0) {
-        if (idx === 1) {
-          throw new Error('invariant violation');
-        }
-        return new BN(0);
-      }
-      return v.amount
-        .mul(sptAmount)
-        .add(roundUp ? this.megaPoolTokenMint.supply.sub(new BN(1)) : new BN(0))
-        .div(this.megaPoolTokenMint.supply);
-    });
-    return {
-      quantities,
-    };
-  }
 }

@@ -164,7 +164,6 @@ function NetworkEnvironment() {
       </Typography>
       <ul>
         <li>Registry Program: {network.registryProgramId.toString()}</li>
-        <li>Stake Pool Program: {network.stakeProgramId.toString()}</li>
         <li>Lockup Program: {network.lockupProgramId.toString()}</li>
         <li>Meta Entity Program: {network.lockupProgramId.toString()}</li>
         <li>Registrar Account: {network.registrar.toString()}</li>
@@ -199,10 +198,13 @@ function NetworkEnvironment() {
             </li>
             <li>Vault: {registrar.account.vault.toString()}</li>
             <li>Mega vault: {registrar.account.megaVault.toString()}</li>
-            <li>Pool: {registrar.account.pool.toString()}</li>
-            <li>Mega pool: {registrar.account.megaPool.toString()}</li>
+            <li>Pool vault: {registrar.account.poolVault.toString()}</li>
             <li>
-              Pool program id: {registrar.account.poolProgramId.toString()}
+              Mega pool vault: {registrar.account.poolVaultMega.toString()}
+            </li>
+            <li>Pool token: {registrar.account.poolMint.toString()}</li>
+            <li>
+              Mega pool token: {registrar.account.poolMintMega.toString()}
             </li>
           </ul>
           <Typography
