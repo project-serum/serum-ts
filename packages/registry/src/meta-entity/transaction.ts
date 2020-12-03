@@ -48,9 +48,9 @@ export async function initializeInstrs(
       fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: mqueue.publicKey,
       lamports: await provider.connection.getMinimumBalanceForRentExemption(
-        accounts.mqueue.SIZE,
+        accounts.mqueue.MQueue.accountSize(),
       ),
-      space: accounts.mqueue.SIZE,
+      space: accounts.mqueue.MQueue.accountSize(),
       programId,
     }),
     new TransactionInstruction({

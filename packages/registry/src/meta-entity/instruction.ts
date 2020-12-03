@@ -8,6 +8,7 @@ import {
   vecU8,
 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
+import { Message, MESSAGE_LAYOUT } from './accounts/mqueue';
 
 export type MetaEntityInstruction =
   | { initialize: Initialize }
@@ -31,7 +32,7 @@ type UpdateMetaEntity = {
 };
 
 type SendMessage = {
-  data: Buffer;
+  msg: Message;
 };
 
 const META_ENTITY_INSTRUCTION_LAYOUT: Layout<MetaEntityInstruction> = rustEnum([
@@ -54,7 +55,7 @@ const META_ENTITY_INSTRUCTION_LAYOUT: Layout<MetaEntityInstruction> = rustEnum([
     ],
     'updateMetaEntity',
   ),
-  struct([vecU8('data')], 'sendMessage'),
+  struct([MESSAGE_LAYOUT.replicate('msg')], 'sendMessage'),
 ]);
 
 export function decode(data: Buffer): MetaEntityInstruction {
