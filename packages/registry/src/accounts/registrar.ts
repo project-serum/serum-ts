@@ -12,12 +12,13 @@ export interface Registrar {
   maxStakePerEntity: BN;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
+  rewardEventQueue: PublicKey;
   vault: PublicKey;
   megaVault: PublicKey;
-  pool: PublicKey;
-  megaPool: PublicKey;
-  poolProgramId: PublicKey;
-  rewardEventQueue: PublicKey;
+  poolVault: PublicKey;
+  poolVaultMega: PublicKey;
+  poolMint: PublicKey;
+  poolMintMega: PublicKey;
 }
 
 const REGISTRAR_LAYOUT: Layout<Registrar> = struct([
@@ -28,12 +29,13 @@ const REGISTRAR_LAYOUT: Layout<Registrar> = struct([
   borshU64('maxStakePerEntity'),
   i64('withdrawalTimelock'),
   i64('deactivationTimelock'),
+  publicKey('rewardEventQueue'),
   publicKey('vault'),
   publicKey('megaVault'),
-  publicKey('pool'),
-  publicKey('megaPool'),
-  publicKey('poolProgramId'),
-  publicKey('rewardEventQueue'),
+  publicKey('poolVault'),
+  publicKey('poolVaultMega'),
+  publicKey('poolMint'),
+  publicKey('poolMintMega'),
 ]);
 
 export function decode(data: Buffer): Registrar {
@@ -54,12 +56,13 @@ export const SIZE: number = encode({
   maxStakePerEntity: new u64(0),
   withdrawalTimelock: new u64(0),
   deactivationTimelock: new u64(0),
+  rewardEventQueue: new PublicKey(Buffer.alloc(32)),
   vault: new PublicKey(Buffer.alloc(32)),
   megaVault: new PublicKey(Buffer.alloc(32)),
-  pool: new PublicKey(Buffer.alloc(32)),
-  megaPool: new PublicKey(Buffer.alloc(32)),
-  poolProgramId: new PublicKey(Buffer.alloc(32)),
-  rewardEventQueue: new PublicKey(Buffer.alloc(32)),
+  poolVault: new PublicKey(Buffer.alloc(32)),
+  poolMint: new PublicKey(Buffer.alloc(32)),
+  poolMintMega: new PublicKey(Buffer.alloc(32)),
+  poolVaultMega: new PublicKey(Buffer.alloc(32)),
 }).length;
 
 export const STAKE_POOL_NAME = '';

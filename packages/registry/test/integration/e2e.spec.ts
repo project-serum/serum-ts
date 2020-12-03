@@ -13,7 +13,6 @@ import { Client } from '../../src';
 // into the localhost network config.
 const network = networks.localhost;
 const registryProgramId = network.registryProgramId;
-const stakeProgramId = network.stakeProgramId;
 const metaEntityProgramId = network.metaEntityProgramId;
 const url = network.url;
 
@@ -23,7 +22,6 @@ const publicKeyZero = new PublicKey(Buffer.alloc(32));
 
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
-    Client.setRetbuf(network.retbuf, network.retbufProgramId);
     // Setup genesis state.
     const provider = Provider.local(url, {
       preflightCommitment: 'recent',
@@ -43,7 +41,6 @@ describe('End-to-end tests', () => {
       {
         metaEntityProgramId,
         programId: registryProgramId,
-        stakeProgramId,
         mint: srmMint,
         megaMint: msrmMint,
         withdrawalTimelock: new BN(60),
@@ -82,7 +79,6 @@ describe('End-to-end tests', () => {
     expect(e.initialized).toBe(true);
     expect(e.registrar).toEqual(registrarAddress);
     expect(e.leader).toEqual(provider.wallet.publicKey);
-    expect(e.generation).toEqual(u64Zero);
     expect(e.balances).toEqual({
       sptAmount: u64Zero,
       sptMegaAmount: u64Zero,
@@ -117,14 +113,6 @@ describe('End-to-end tests', () => {
         owner: publicKeyZero,
         deposit: u64Zero,
         megaDeposit: u64Zero,
-      },
-    });
-    expect(m.lastActivePrices).toEqual({
-      basket: {
-        quantities: [i64Zero],
-      },
-      megaBasket: {
-        quantities: [i64Zero, i64Zero],
       },
     });
 
@@ -164,6 +152,7 @@ describe('End-to-end tests', () => {
       member,
       amount,
       spt,
+      isMega: false,
     });
 
     let poolVaultAfter = await client.accounts.poolVault(registrarAddress);
@@ -175,14 +164,6 @@ describe('End-to-end tests', () => {
     expect(vaultResult).toEqual(amount); // Balance down.
     expect(stakeTokenAfter.amount.toNumber()).toEqual(amount.toNumber());
     m = await client.accounts.member(member);
-    expect(m.lastActivePrices).toEqual({
-      basket: {
-        quantities: [amount],
-      },
-      megaBasket: {
-        quantities: [i64Zero, i64Zero],
-      },
-    });
 
     // StartStakeWithdrawal.
     poolVaultBefore = await client.accounts.poolVault(registrarAddress);
@@ -193,6 +174,7 @@ describe('End-to-end tests', () => {
       member,
       amount,
       spt,
+      isMega: false,
     });
 
     poolVaultAfter = await client.accounts.poolVault(registrarAddress);
@@ -211,13 +193,6 @@ describe('End-to-end tests', () => {
     expect(pw.burned).toBe(false);
     expect(pw.member).toEqual(member);
     expect(pw.sptAmount.toNumber()).toEqual(amount.toNumber());
-    // TODO: don't stringify.
-    expect(JSON.stringify(pw.payment)).toEqual(
-      JSON.stringify({
-        assetAmount: amount,
-        megaAssetAmount: u64Zero,
-      }),
-    );
 
     // Wait for withdrawal timelock to pass.
     await sleep(registrar.withdrawalTimelock.toNumber() * 3 * 1000);

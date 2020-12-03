@@ -1,7 +1,6 @@
 import { AccountInfo as TokenAccount, MintInfo } from '@solana/spl-token';
 import * as lockup from '@project-serum/lockup';
 import * as registry from '@project-serum/registry';
-import { PoolState } from '@project-serum/pool';
 import {
   ProgramAccount as CommonProgramAccount,
   networks,
@@ -100,12 +99,10 @@ export default function reducer(
       newState.registry.member = action.item.member;
       return newState;
     case ActionType.RegistrySetPools:
-      newState.registry.pool = action.item.pool;
       newState.registry.poolTokenMint = action.item.poolTokenMint;
       newState.registry.poolVault = action.item.poolVault;
-      newState.registry.megaPool = action.item.megaPool;
       newState.registry.megaPoolTokenMint = action.item.megaPoolTokenMint;
-      newState.registry.megaPoolVaults = action.item.megaPoolVaults;
+      newState.registry.megaPoolVault = action.item.megaPoolVault;
       return newState;
     case ActionType.RegistrySetRegistrar:
       newState.registry.registrar = action.item.registrar;
@@ -214,12 +211,10 @@ export type RegistryState = {
     ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>
   >;
   member?: ProgramAccount<registry.accounts.Member>;
-  pool?: ProgramAccount<PoolState>;
   poolTokenMint?: ProgramAccount<MintInfo>;
   poolVault?: ProgramAccount<TokenAccount>;
-  megaPool?: ProgramAccount<PoolState>;
   megaPoolTokenMint?: ProgramAccount<MintInfo>;
-  megaPoolVaults?: ProgramAccount<TokenAccount>[];
+  megaPoolVault?: ProgramAccount<TokenAccount>;
   registrar?: ProgramAccount<registry.accounts.Registrar>;
   pendingWithdrawals: Map<
     string,

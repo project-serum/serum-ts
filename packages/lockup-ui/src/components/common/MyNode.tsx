@@ -138,9 +138,6 @@ function MyNodeBanner(props: MyNodeBannerProps) {
                   ? member?.account.entity.toString()
                   : 'Account not found. Please create a stake account.'}
               </Typography>
-              <Typography color="textSecondary">
-                Generation {member ? entity?.account.generation.toString() : 0}
-              </Typography>
             </div>
             <div>
               <div>

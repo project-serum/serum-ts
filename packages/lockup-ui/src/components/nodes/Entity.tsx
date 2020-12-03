@@ -152,17 +152,6 @@ function StakeContent(props: StakeContentProps) {
           amount={entity.account.balances.currentMegaDeposit.toString()}
         />
       </Grid>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row-reverse',
-          marginTop: '50px',
-        }}
-      >
-        <Typography color="textSecondary">
-          Generation {entity.account.generation.toString()}
-        </Typography>
-      </div>
     </div>
   );
 }
