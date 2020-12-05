@@ -43,6 +43,7 @@ import { PendingWithdrawal } from './accounts/pending-withdrawal';
 import { Entity } from './accounts/entity';
 import { Member } from './accounts/member';
 import { Generation } from './accounts/generation';
+import { SERUM_FEE_OWNER_ADDRESS } from '@project-serum/pool/dist/lib/instructions';
 
 export const networks = {
   devnet: {
@@ -173,6 +174,17 @@ export default class Client {
     const poolMint = await createMint(provider, poolVaultAuthority);
     const megaPoolMint = await createMint(provider, megaPoolVaultAuthority);
 
+    const poolFeesAccount = await createTokenAccount(
+      provider,
+      poolMint,
+      SERUM_FEE_OWNER_ADDRESS,
+    );
+    const megaPoolFeesAccount = await createTokenAccount(
+      provider,
+      megaPoolMint,
+      SERUM_FEE_OWNER_ADDRESS,
+    );
+
     const createTx = new Transaction();
     createTx.add(
       // Create registrar.
@@ -222,6 +234,9 @@ export default class Client {
         [poolVault],
         poolVaultAuthority,
         poolVaultNonce,
+        poolFeesAccount,
+        poolFeesAccount,
+        150,
         additionalAccounts,
       ),
       // Initialize mega pool.
@@ -233,6 +248,9 @@ export default class Client {
         [megaPoolVault, megaPoolMegaVault],
         megaPoolVaultAuthority,
         megaPoolVaultNonce,
+        megaPoolFeesAccount,
+        megaPoolFeesAccount,
+        150,
         additionalAccounts,
       ),
       // Iniitalize registrar.
@@ -1328,6 +1346,9 @@ function poolStateSize(assetLen: number): number {
       };
     }),
     name: STAKE_POOL_NAME,
+    initializerFeeVault: new PublicKey(Buffer.alloc(32)),
+    serumFeeVault: new PublicKey(Buffer.alloc(32)),
+    feeRate: 150,
     adminKey: new PublicKey(Buffer.alloc(32)),
     customState: Buffer.from([]),
   }).length;

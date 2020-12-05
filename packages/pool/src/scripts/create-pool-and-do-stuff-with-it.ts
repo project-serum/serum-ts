@@ -12,9 +12,10 @@ import { readFile } from 'fs';
 import BN from 'bn.js';
 import { PoolTransactions } from '../transactions';
 import { getPoolBasket, loadPoolInfo, PoolInfo, UserInfo } from '../index';
+import { getAssociatedTokenAddress } from '@project-serum/associated-token';
 
 const POOL_PROGRAM_ID = new PublicKey(
-  'C6DXD7VDvktuRj1YMCGfKtWFJocaFnmKHvkv2JyxMvD6',
+  'ERvQUuLLY89DcwiUYemUgogdt2TFh7CG7cNW1fEFzeMJ',
 );
 
 async function doStuff() {
@@ -44,6 +45,7 @@ async function doStuff() {
     poolStateSpace: 1000,
     programId: POOL_PROGRAM_ID,
     poolName: 'Test Pool',
+    feeRate: 2500,
   });
   console.log('Pool address:', poolAddress.toBase58());
   for (const { transaction, signers } of transactions) {
@@ -57,7 +59,10 @@ async function doStuff() {
   console.log(poolInfo);
   const userInfo: UserInfo = {
     owner: payer.publicKey,
-    poolTokenAccount: transactions[0].signers[1].publicKey,
+    poolTokenAccount: await getAssociatedTokenAddress(
+      payer.publicKey,
+      poolInfo.state.poolTokenMint,
+    ),
     assetAccounts: [vault1, vault2],
   };
 
@@ -129,7 +134,7 @@ async function doStuff() {
   {
     const { transaction, signers } = PoolTransactions.execute(
       poolInfo,
-      { redeem: new BN(2000000) },
+      { redeem: new BN(2000000 - poolInfo.state.feeRate) },
       userInfo,
       {
         quantities: [new BN(200), new BN(600)],

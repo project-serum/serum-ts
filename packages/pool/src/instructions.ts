@@ -25,13 +25,27 @@ export interface UserInfo {
    *  Owner or delegate of the token accounts.
    */
   owner: PublicKey;
+  /**
+   * Optional spl-token account to which referral fees should be sent.
+   */
+  referrer?: PublicKey;
 }
 
 export const RETBUF_PROGRAM_ID = new PublicKey(
-  // TODO
+  // TODO: switch to shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL once that exists on mainnet
   'Fb5VbxAy7Q6HKjWrggEvEtifBfM7T4HukisF1yyVRN4y',
 );
 
+export const SERUM_FEE_OWNER_ADDRESS = new PublicKey(
+  'DeqYsmBd9BnrbgUwQjVH4sQWK71dEgE6eoZFw3Rp4ftE',
+);
+
+/**
+ * Low-level API for constructing and encoding pool instructions.
+ *
+ * For a higher-level API that handles initializing accounts and approving token
+ * transfers, use {@link PoolTransactions}.
+ */
 export class PoolInstructions {
   /**
    * Instruction to initialize a pool.
@@ -45,6 +59,9 @@ export class PoolInstructions {
    * @param vaultSigner Mint authority for `poolTokenMint` and owner of
    * `poolTokenMint`.
    * @param vaultSignerNonce Nonce used to generate `vaultSigner`.
+   * @param serumFeeAccount Pool token spl-token account owned by the serum fee owner.
+   * @param initializerFeeAccount Pool token spl-token account owned by the pool initializer.
+   * @param feeRate Fee rate for creations/redemptions times 10^6.
    * @param additionalAccounts Any custom pool-specific accounts needed to
    * initialize the pool.
    * @param customData Any custom pool-specific data needed to initialize the pool
@@ -57,6 +74,9 @@ export class PoolInstructions {
     vaults: PublicKey[],
     vaultSigner: PublicKey,
     vaultSignerNonce: number,
+    serumFeeAccount: PublicKey,
+    initializerFeeAccount: PublicKey,
+    feeRate: number,
     additionalAccounts?: AccountMeta[],
     customData?: Buffer,
   ): TransactionInstruction {
@@ -70,6 +90,8 @@ export class PoolInstructions {
           isWritable: true,
         })),
         { pubkey: vaultSigner, isSigner: false, isWritable: false },
+        { pubkey: serumFeeAccount, isSigner: false, isWritable: false },
+        { pubkey: initializerFeeAccount, isSigner: false, isWritable: false },
         {
           pubkey: SYSVAR_RENT_PUBKEY,
           isSigner: false,
@@ -83,6 +105,7 @@ export class PoolInstructions {
           vaultSignerNonce,
           assetsLength: vaults.length,
           poolName,
+          feeRate,
           customData: customData ?? Buffer.alloc(0),
         },
       }),
@@ -166,6 +189,21 @@ export class PoolInstructions {
           isWritable: true,
         })),
         { pubkey: user.owner, isSigner: true, isWritable: false },
+        {
+          pubkey: pool.state.serumFeeVault,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: pool.state.initializerFeeVault,
+          isSigner: false,
+          isWritable: true,
+        },
+        {
+          pubkey: user.referrer ?? pool.state.serumFeeVault,
+          isSigner: false,
+          isWritable: true,
+        },
         { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
         ...pool.state.accountParams.map(paramInfo => ({
           pubkey: paramInfo.address,

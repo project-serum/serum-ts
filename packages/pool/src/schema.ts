@@ -1,4 +1,4 @@
-import { struct, u8 } from 'buffer-layout';
+import { struct, u32, u8 } from 'buffer-layout';
 import {
   bool,
   i64,
@@ -31,6 +31,12 @@ export interface PoolState {
   accountParams: ParamDesc[];
   /** User-friendly name for the pool. */
   name: string;
+  /** Token vault address for fees collected by the pool for Serum. */
+  serumFeeVault: PublicKey;
+  /** Token vault address for fees collected by the pool for the pool initializer. */
+  initializerFeeVault: PublicKey;
+  /** Fee on creations/redemptions, times 10^6. */
+  feeRate: number;
   /** Admin for the pool. Not used by default but may have pool-specific semantics. */
   adminKey: PublicKey | null;
   /** Custom pool-specific state. */
@@ -59,6 +65,7 @@ export interface InitializePoolRequest {
   vaultSignerNonce: number;
   assetsLength: number;
   poolName: string;
+  feeRate: number;
   customData: Buffer;
 }
 
@@ -89,6 +96,9 @@ export const PoolState: Layout<PoolState> = tagged(
     u8('vaultSignerNonce'),
     vec(ParamDesc, 'accountParams'),
     str('name'),
+    publicKey('serumFeeVault'),
+    publicKey('initializerFeeVault'),
+    u32('feeRate'),
     option(publicKey(), 'adminKey'),
     vecU8('customState'),
   ]),
@@ -106,6 +116,7 @@ export const InitializePoolRequest: Layout<InitializePoolRequest> = struct([
   u8('vaultSignerNonce'),
   u8('assetsLength'),
   str('poolName'),
+  u32('feeRate'),
   vecU8('customData'),
 ]);
 

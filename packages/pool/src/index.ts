@@ -57,7 +57,9 @@ export async function getPoolBasket(
   connection: Connection,
   pool: PoolInfo,
   action: PoolAction,
-  payer: PublicKey,
+  payer: PublicKey = new PublicKey(
+    'H6WR1VVoiwWz1GMSBALwUNNazvE7UhAZEjaYTTSwvV8D',
+  ),
 ): Promise<Basket> {
   const { transaction } = PoolTransactions.getBasket(pool, action, payer);
   const { value } = await simulateTransaction(
@@ -72,8 +74,11 @@ export async function getPoolBasket(
   if (value.logs) {
     for (let i = value.logs.length - 2; i >= 0; --i) {
       if (
-        value.logs[i + 1] ===
-          'Call BPF program ' + RETBUF_PROGRAM_ID.toBase58() &&
+        (value.logs[i + 1] ===
+          'Call BPF program ' + RETBUF_PROGRAM_ID.toBase58() ||
+          value.logs[i + 1].startsWith(
+            'Program ' + RETBUF_PROGRAM_ID.toBase58() + ' invoke [',
+          )) &&
         value.logs[i].startsWith('Program log: ')
       ) {
         const data = Buffer.from(

@@ -11,31 +11,38 @@ describe('PoolState', () => {
       ),
       assets: [
         {
-          mint: new PublicKey('HsQhg1k93vEA326SXxnGj1sZrdupG7rj5T6g5cMgk1ed'),
+          mint: new PublicKey('BLvBqiEt4C2zn5dZmGLwBocFSbhbsZadV7Hd9oaSHNqj'),
           vaultAddress: new PublicKey(
-            'HsQhg1k93vEA326SXxnGj1sZrdupG7rj5T6g5cMgk1ed',
+            'GSUcLyZfwK5MUC8hkjGEAZLCkvjru3jk6nK29N1ciKrF',
           ),
         },
       ],
       vaultSigner: new PublicKey(
-        'HsQhg1k93vEA326SXxnGj1sZrdupG7rj5T6g5cMgk1ed',
+        '4pvTcVX3K4mc1dLs1vQ8Sq3Z2NWVGXsjpfJ6tmvnj533',
       ),
       vaultSignerNonce: 0,
       accountParams: [
         {
           address: new PublicKey(
-            'HsQhg1k93vEA326SXxnGj1sZrdupG7rj5T6g5cMgk1ed',
+            'HvLPFuTLa8RShBiQfT17tKntA69pNoV7o2XXSyRnaf4e',
           ),
           writable: true,
         },
         {
           address: new PublicKey(
-            'HsQhg1k93vEA326SXxnGj1sZrdupG7rj5T6g5cMgk1ed',
+            '6J6QfKjcQojqGZwRNoQ4do48UnV5KqNM7M5Rb2e6eDWx',
           ),
           writable: false,
         },
       ],
       name: 'Test',
+      serumFeeVault: new PublicKey(
+        '77AkdYcu3DjtzmJYRVnFymfcdaqJjjFhRnKyyDPjQHYF',
+      ),
+      initializerFeeVault: new PublicKey(
+        '4HfeDayMfG9GtaJ9ZBsuDFWHYH3eYiiTXRpFL8uyiYHi',
+      ),
+      feeRate: 150,
       adminKey: null,
       customState: Buffer.alloc(10),
     };

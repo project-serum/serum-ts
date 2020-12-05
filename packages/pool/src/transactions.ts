@@ -2,6 +2,7 @@ import {
   PoolInfo,
   PoolInstructions,
   RETBUF_PROGRAM_ID,
+  SERUM_FEE_OWNER_ADDRESS,
   UserInfo,
 } from './instructions';
 import {
@@ -16,6 +17,10 @@ import { TokenInstructions } from '@project-serum/serum';
 import { Basket, PoolAction } from './schema';
 import BN from 'bn.js';
 import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import {
+  createAssociatedTokenAccount,
+  getAssociatedTokenAddress,
+} from '@project-serum/associated-token';
 
 export interface TransactionAndSigners {
   transaction: Transaction;
@@ -62,13 +67,21 @@ export interface SimplePoolParams {
    * taken and to which the newly created pool tokens are sent.
    */
   creator: PublicKey;
-  /** Spl-token accounts from which the inital pool assets are taken. */
+  /** Spl-token accounts from which the initial pool assets are taken. */
   creatorAssets: PublicKey[];
+
+  /** Fee rate for creations and redemptions, times 10 ** 6. */
+  feeRate?: number;
 
   /** Any additional accounts needed to initalize the pool. */
   additionalAccounts?: AccountMeta[];
 }
 
+/**
+ * High-level API for constructing transactions to interact with pools.
+ *
+ * For a lower-level API, see {@link PoolInstructions}.
+ */
 export class PoolTransactions {
   /**
    * Transaction to initialize a simple pool.
@@ -94,6 +107,7 @@ export class PoolTransactions {
       initialAssetQuantities,
       creator,
       creatorAssets,
+      feeRate = 2500,
       additionalAccounts = [],
     } = params;
     if (assetMints.length !== initialAssetQuantities.length) {
@@ -111,15 +125,24 @@ export class PoolTransactions {
       programId,
     );
     const poolTokenMint = new Account();
-    const creatorPoolTokenAccount = new Account();
-    const vaultAccounts = assetMints.map(() => new Account());
+    const creatorPoolTokenAddress = await getAssociatedTokenAddress(
+      creator,
+      poolTokenMint.publicKey,
+    );
+    const vaultAddresses = await Promise.all(
+      assetMints.map(mint => getAssociatedTokenAddress(vaultSigner, mint)),
+    );
+    const serumFeeAddress = await getAssociatedTokenAddress(
+      SERUM_FEE_OWNER_ADDRESS,
+      poolTokenMint.publicKey,
+    );
 
     // Split into two transactions to stay under the size limit.
     // Ideally all instructions that transfer tokens happen in the second transaction,
     // so they get reverted if the pool creation fails.
     const setup = {
       transaction: new Transaction(),
-      signers: [poolTokenMint, creatorPoolTokenAccount, ...vaultAccounts],
+      signers: [poolTokenMint],
     };
     const finalize = {
       transaction: new Transaction(),
@@ -129,10 +152,6 @@ export class PoolTransactions {
     const mintAccountSpace = 82;
     const mintAccountLamports = await connection.getMinimumBalanceForRentExemption(
       mintAccountSpace,
-    );
-    const tokenAccountSpace = 165;
-    const tokenAccountLamports = await connection.getMinimumBalanceForRentExemption(
-      tokenAccountSpace,
     );
 
     // Initialize pool token.
@@ -149,23 +168,21 @@ export class PoolTransactions {
         decimals: poolMintDecimals,
         mintAuthority: creator,
       }),
-      SystemProgram.createAccount({
-        fromPubkey: creator,
-        newAccountPubkey: creatorPoolTokenAccount.publicKey,
-        space: tokenAccountSpace,
-        lamports: tokenAccountLamports,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      TokenInstructions.initializeAccount({
-        account: creatorPoolTokenAccount.publicKey,
-        mint: poolTokenMint.publicKey,
-        owner: creator,
-      }),
+      await createAssociatedTokenAccount(
+        creator,
+        creator,
+        poolTokenMint.publicKey,
+      ),
+      await createAssociatedTokenAccount(
+        creator,
+        SERUM_FEE_OWNER_ADDRESS,
+        poolTokenMint.publicKey,
+      ),
     );
     finalize.transaction.add(
       TokenInstructions.mintTo({
         mint: poolTokenMint.publicKey,
-        destination: creatorPoolTokenAccount.publicKey,
+        destination: creatorPoolTokenAddress,
         amount: initialPoolMintSupply,
         mintAuthority: creator,
       }),
@@ -178,31 +195,22 @@ export class PoolTransactions {
     );
 
     // Initialize vault accounts.
-    assetMints.forEach((mint, index) => {
-      const vault = vaultAccounts[index];
-      setup.transaction.add(
-        SystemProgram.createAccount({
-          fromPubkey: creator,
-          newAccountPubkey: vault.publicKey,
-          space: tokenAccountSpace,
-          lamports: tokenAccountLamports,
-          programId: TOKEN_PROGRAM_ID,
-        }),
-        TokenInstructions.initializeAccount({
-          account: vault.publicKey,
-          mint,
-          owner: vaultSigner,
-        }),
-      );
-      finalize.transaction.add(
-        TokenInstructions.transfer({
-          source: creatorAssets[index],
-          destination: vault.publicKey,
-          amount: initialAssetQuantities[index],
-          owner: creator,
-        }),
-      );
-    });
+    await Promise.all(
+      assetMints.map(async (mint, index) => {
+        const vault = vaultAddresses[index];
+        setup.transaction.add(
+          await createAssociatedTokenAccount(creator, vaultSigner, mint),
+        );
+        finalize.transaction.add(
+          TokenInstructions.transfer({
+            source: creatorAssets[index],
+            destination: vault,
+            amount: initialAssetQuantities[index],
+            owner: creator,
+          }),
+        );
+      }),
+    );
 
     // Initialize pool account.
     finalize.transaction.add(
@@ -220,9 +228,12 @@ export class PoolTransactions {
         poolStateAccount.publicKey,
         poolTokenMint.publicKey,
         poolName,
-        vaultAccounts.map(vault => vault.publicKey),
+        vaultAddresses,
         vaultSigner,
         vaultSignerNonce,
+        serumFeeAddress,
+        creatorPoolTokenAddress,
+        feeRate,
         additionalAccounts,
       ),
     );
