@@ -355,7 +355,6 @@ function EntityDialog(props: EntityDialogProps) {
         style={{
           backgroundColor: '#fbfbfb',
           padding: 0,
-          minHeight: '797px',
         }}
       >
         {entity && <Entity entity={entity} />}

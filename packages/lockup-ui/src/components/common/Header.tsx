@@ -18,8 +18,8 @@ import * as registry from '@project-serum/registry';
 import { networks } from '@project-serum/common';
 import { State as StoreState, ProgramAccount } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
-import { ViewTransactionOnExplorerButton } from './Notification';
 import { useWallet } from './WalletProvider';
+import * as bootstrap from './BootstrapProvider';
 
 type HeaderProps = {
   isAppReady: boolean;
@@ -174,6 +174,7 @@ function NetworkSelector() {
       >
         {Object.keys(networks).map((n: string) => (
           <MenuItem
+            key={n}
             onClick={() => {
               handleClose();
               dispatch({
@@ -193,10 +194,9 @@ function NetworkSelector() {
 }
 
 function UserSelector() {
-  const { wallet } = useWallet();
   const dispatch = useDispatch();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { lockupClient, registryClient } = useWallet();
+  const { wallet, lockupClient, registryClient } = useWallet();
   const { network, member } = useSelector((state: StoreState) => {
     return {
       member: state.registry.member,
@@ -212,7 +212,7 @@ function UserSelector() {
     // TODO: separate member creation from entity joining (i.e., make it so that
     //       entity doesn't need to be specified here).
     const entity = network.defaultEntity;
-    const { tx, member } = await registryClient.createMember({
+    const { member } = await registryClient.createMember({
       entity,
       delegate: await lockupClient.accounts.vaultAuthority(
         lockupClient.programId,
@@ -220,21 +220,11 @@ function UserSelector() {
         wallet.publicKey,
       ),
     });
-    const memberAcc = await registryClient.accounts.member(member);
-    dispatch({
-      type: ActionType.RegistrySetMember,
-      item: {
-        member: {
-          publicKey: member,
-          account: memberAcc,
-        },
-      },
-    });
     closeSnackbar();
-    enqueueSnackbar(`Stake account created ${member}`, {
+    enqueueSnackbar(`Stake account created ${member.toString()}`, {
       variant: 'success',
-      action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
+    bootstrap.subscribeMember(member, registryClient, dispatch);
   };
   return (
     <Select
@@ -257,7 +247,7 @@ function UserSelector() {
         }
       }}
     >
-      {member === undefined && (
+      {member.isReady && member.data === undefined && (
         <MenuItem value="create-member">
           <div
             onClick={() =>

@@ -6,7 +6,7 @@ import React, {
   useContext,
 } from 'react';
 import { useSelector } from 'react-redux';
-import { Connection } from '@solana/web3.js';
+import { Connection, ConfirmOptions } from '@solana/web3.js';
 // @ts-ignore
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { Provider } from '@project-serum/common';
@@ -41,11 +41,11 @@ export default function WalletProvider(
   });
 
   const { wallet, lockupClient, registryClient } = useMemo(() => {
-    const preflightCommitment = 'recent';
-    const opts: { preflightCommitment: 'recent' } = {
-      preflightCommitment,
+    const opts: ConfirmOptions = {
+      preflightCommitment: 'recent',
+      commitment: 'recent',
     };
-    const connection = new Connection(network.url, preflightCommitment);
+    const connection = new Connection(network.url, opts.preflightCommitment);
     const wallet = new Wallet(walletProvider, network.url);
     const provider = new Provider(connection, wallet, opts);
 

@@ -18,12 +18,15 @@ type Props = {
 
 export default function Entity(props: Props) {
   const { entity } = props;
-  let { isWalletConnected, member } = useSelector((state: StoreState) => {
-    return {
-      isWalletConnected: state.common.isWalletConnected,
-      member: state.registry.member,
-    };
-  });
+  let { isWalletConnected, member, registrar } = useSelector(
+    (state: StoreState) => {
+      return {
+        isWalletConnected: state.common.isWalletConnected,
+        member: state.registry.member,
+        registrar: state.registry.registrar!,
+      };
+    },
+  );
 
   return (
     <>
@@ -89,11 +92,15 @@ export default function Entity(props: Props) {
               }}
             >
               <div style={{ flex: 1 }}></div>
-              {isWalletConnected && member !== undefined && (
+              {isWalletConnected && member.data !== undefined && (
                 <>
-                  {member.account.entity.toString() !==
+                  {member.data!.account.member.entity.toString() !==
                   entity.publicKey.toString() ? (
-                    <JoinButton entity={entity} member={member} />
+                    <JoinButton
+                      registrar={registrar}
+                      entity={entity}
+                      member={member.data!}
+                    />
                   ) : (
                     <Button
                       disableElevation
@@ -142,14 +149,6 @@ function StakeContent(props: StakeContentProps) {
         <BalanceGridItem
           label="Mega Stake Pool Shares"
           amount={entity.account.balances.sptMegaAmount.toString()}
-        />
-        <BalanceGridItem
-          label="Free SRM Balance"
-          amount={entity.account.balances.currentDeposit.toString()}
-        />
-        <BalanceGridItem
-          label="Free MSRM Balance"
-          amount={entity.account.balances.currentMegaDeposit.toString()}
         />
       </Grid>
     </div>
@@ -223,11 +222,12 @@ function BalanceGridItem(props: BalanceGridItemProps) {
 
 type JoinButtonProps = {
   entity: ProgramAccount<registry.accounts.Entity>;
-  member: ProgramAccount<registry.accounts.Member>;
+  member: ProgramAccount<registry.accounts.MemberDeref>;
+  registrar: ProgramAccount<registry.accounts.Registrar>;
 };
 
 function JoinButton(props: JoinButtonProps) {
-  const { entity, member } = props;
+  const { entity, member, registrar } = props;
   const { registryClient } = useWallet();
   const dispatch = useDispatch();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
@@ -237,32 +237,18 @@ function JoinButton(props: JoinButtonProps) {
       variant: 'info',
     });
 
-    const oldEntity = member.account.entity;
+    const oldEntity = member.account.member.entity;
     const newEntity = entity.publicKey;
 
     const { tx } = await registryClient.switchEntity({
       member: member.publicKey,
-      entity: oldEntity,
       newEntity,
+      registrar: registrar.account,
     });
 
-    const memberAccount = await registryClient.accounts.member(
-      member.publicKey,
-    );
     const updatedOldEntity = await registryClient.accounts.entity(oldEntity);
     const updatedNewEntity = await registryClient.accounts.entity(newEntity);
 
-    // TODO: instead of updating here, we should stream in all updates by following
-    //       the blockchain and updating the store asynchronously.
-    dispatch({
-      type: ActionType.RegistrySetMember,
-      item: {
-        member: {
-          publicKey: member.publicKey,
-          account: memberAccount,
-        },
-      },
-    });
     dispatch({
       type: ActionType.RegistryUpdateEntity,
       item: {

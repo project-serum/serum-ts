@@ -15,8 +15,8 @@
   },
   "scripts": {
     "build": "yarn build:node",
-		"build:node": "tsc && tsc -p tsconfig.cjs.json",
-		"watch": "tsc --watch",
+    "build:node": "tsc && tsc -p tsconfig.cjs.json",
+    "watch": "tsc --watch",
     "test:unit": "jest test/unit",
     "test:integration": "jest test/integration --detectOpenHandles",
     "coverage": "jest --coverage test/unit",

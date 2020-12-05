@@ -6,7 +6,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Provider } from './provider';
+import { Provider, SendTxRequest } from './provider';
 import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
 import {
   MintInfo,
@@ -22,6 +22,7 @@ export * from './provider';
 export * as token from './token';
 export { networks, Network } from './networks';
 export { simulateTransaction } from './simulate-transaction';
+export * as connection from './connection';
 
 export const SPL_SHARED_MEMORY_ID = new PublicKey(
   'shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL',
@@ -139,15 +140,17 @@ export async function createTokenAccountInstrs(
   newAccountPubkey: PublicKey,
   mint: PublicKey,
   owner: PublicKey,
+  lamports?: number,
 ): Promise<TransactionInstruction[]> {
+  if (lamports === undefined) {
+    lamports = await provider.connection.getMinimumBalanceForRentExemption(165);
+  }
   return [
     SystemProgram.createAccount({
       fromPubkey: provider.wallet.publicKey,
       newAccountPubkey,
       space: 165,
-      lamports: await provider.connection.getMinimumBalanceForRentExemption(
-        165,
-      ),
+      lamports,
       programId: TokenInstructions.TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeAccount({
@@ -191,7 +194,7 @@ export async function getMintInfo(
   return parseMintAccount(depositorAccInfo.data);
 }
 
-function parseMintAccount(data: Buffer): MintInfo {
+export function parseMintAccount(data: Buffer): MintInfo {
   const m = MintLayout.decode(data);
   m.mintAuthority = new PublicKey(m.mintAuthority);
   m.supply = u64.fromBuffer(m.supply);

@@ -20,7 +20,9 @@ export default function Messages() {
   let { metadata, member } = useSelector((state: StoreState) => {
     const member = state.registry.member!;
     const entity = state.registry.entities.filter(
-      e => e.publicKey.toString() === member.account.entity.toString(),
+      e =>
+        e.publicKey.toString() ===
+        member.data!.account.member.entity.toString(),
     )[0];
     return {
       metadata: state.registry.entityMetadata.get(entity.publicKey.toString()),
@@ -57,7 +59,7 @@ export default function Messages() {
       variant: 'info',
     });
     await registryClient.sendMessage({
-      from: member.publicKey,
+      from: member.data!.publicKey,
       ts: new BN(Date.now()),
       content: message,
       mqueue: metadata!.account.chat,
@@ -70,7 +72,9 @@ export default function Messages() {
         await sendMessage();
         setMessage('');
       } catch (err) {
-        console.log(err);
+        enqueueSnackbar(`Error sending message: ${err.toString()}`, {
+          variant: 'error',
+        });
       }
     }
   };

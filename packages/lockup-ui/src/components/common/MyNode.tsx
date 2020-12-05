@@ -68,18 +68,20 @@ function MyNodeBanner(props: MyNodeBannerProps) {
     const member = state.registry.member;
     return {
       registrar: state.registry.registrar,
-      member: state.registry.member,
+      member,
+      pendingWithdrawals: member.data
+        ? state.registry.pendingWithdrawals.get(
+            member.data.publicKey.toString(),
+          )
+        : [],
       entity: state.registry.entities
         .filter(
           e =>
-            state.registry.member &&
+            member.data &&
             e.publicKey.toString() ===
-              state.registry.member!.account.entity.toString(),
+              member.data!.account.member.entity.toString(),
         )
         .pop(),
-      pendingWithdrawals: member
-        ? state.registry.pendingWithdrawals.get(member.publicKey.toString())
-        : [],
     };
   });
   const [showDepositDialog, setShowDepositDialog] = useState(false);
@@ -134,15 +136,15 @@ function MyNodeBanner(props: MyNodeBannerProps) {
           >
             <div>
               <Typography>
-                {member
-                  ? member?.account.entity.toString()
+                {member.data !== undefined
+                  ? member.data.account.member.entity.toString()
                   : 'Account not found. Please create a stake account.'}
               </Typography>
             </div>
             <div>
               <div>
                 <Button
-                  disabled={member === undefined}
+                  disabled={member.data === undefined}
                   onClick={() => setShowDepositDialog(true)}
                   variant="outlined"
                   color="primary"
@@ -154,7 +156,7 @@ function MyNodeBanner(props: MyNodeBannerProps) {
                   </Typography>
                 </Button>
                 <Button
-                  disabled={member === undefined}
+                  disabled={member.data === undefined}
                   variant="outlined"
                   color="primary"
                   onClick={() => setShowWithdrawDialog(true)}
@@ -250,8 +252,9 @@ function DepositDialog(props: DepositDialogProps) {
         const tx = await (async () => {
           let vault =
             coin === 'srm' || coin === 'lsrm'
-              ? registrar.account.vault
-              : registrar.account.megaVault;
+              ? member.data!.account.member.balances[isLocked ? 1 : 0].vault
+              : member.data!.account.member.balances[isLocked ? 1 : 0]
+                  .vaultMega;
           if (isLocked) {
             const { tx } = await registryClient.depositLocked({
               amount: new BN(amount),
@@ -259,17 +262,17 @@ function DepositDialog(props: DepositDialogProps) {
               safe: safe.account,
               lockupClient,
               registrar: registrar.account,
-              entity: member.account.entity,
-              member: member.publicKey,
+              entity: member.data!.account.member.entity,
+              member: member.data!.publicKey,
               vault,
             });
             return tx;
           } else {
             const { tx } = await registryClient.deposit({
-              member: member.publicKey,
+              member: member.data!.publicKey,
               depositor: from,
               amount: new BN(amount),
-              entity: member.account.entity,
+              entity: member.data!.account.member.entity,
               vault,
               vaultOwner: await registryClient.accounts.vaultAuthority(
                 registryClient.programId,
@@ -280,26 +283,14 @@ function DepositDialog(props: DepositDialogProps) {
             return tx;
           }
         })();
-        const newMember = await registryClient.accounts.member(
-          member.publicKey,
-        );
         const newEntity = await registryClient.accounts.entity(
-          member.account.entity,
+          member.data!.account.member.entity,
         );
-        dispatch({
-          type: ActionType.RegistrySetMember,
-          item: {
-            member: {
-              publicKey: member.publicKey,
-              account: newMember,
-            },
-          },
-        });
         dispatch({
           type: ActionType.RegistryUpdateEntity,
           item: {
             entity: {
-              publicKey: member.account.entity,
+              publicKey: member.data!.account.member.entity,
               account: newEntity,
             },
           },
@@ -347,8 +338,9 @@ function WithdrawDialog(props: WithdrawDialogProps) {
         const tx = await (async () => {
           let vault =
             coin === 'srm' || coin === 'lsrm'
-              ? registrar.account.vault
-              : registrar.account.megaVault;
+              ? member.data!.account.member.balances[isLocked ? 1 : 0].vault
+              : member.data!.account.member.balances[isLocked ? 1 : 0]
+                  .vaultMega;
           if (isLocked) {
             const { tx } = await registryClient.withdrawLocked({
               amount: new BN(amount),
@@ -356,17 +348,17 @@ function WithdrawDialog(props: WithdrawDialogProps) {
               safe: safe.account,
               lockupClient,
               registrar: registrar.account,
-              entity: member.account.entity,
-              member: member.publicKey,
+              entity: member.data!.account.member.entity,
+              member: member.data!.publicKey,
               vault,
             });
             return tx;
           } else {
             const { tx } = await registryClient.withdraw({
-              member: member.publicKey,
+              member: member.data!.publicKey,
               depositor: from,
               amount: new BN(amount),
-              entity: member.account.entity,
+              entity: member.data!.account.member.entity,
               vault,
               vaultOwner: await registryClient.accounts.vaultAuthority(
                 registryClient.programId,
@@ -377,26 +369,14 @@ function WithdrawDialog(props: WithdrawDialogProps) {
             return tx;
           }
         })();
-        const newMember = await registryClient.accounts.member(
-          member.publicKey,
-        );
         const newEntity = await registryClient.accounts.entity(
-          member.account.entity,
+          member.data!.account.member.entity,
         );
-        dispatch({
-          type: ActionType.RegistrySetMember,
-          item: {
-            member: {
-              publicKey: member.publicKey,
-              account: newMember,
-            },
-          },
-        });
         dispatch({
           type: ActionType.RegistryUpdateEntity,
           item: {
             entity: {
-              publicKey: member.account.entity,
+              publicKey: member.data!.account.member.entity,
               account: newEntity,
             },
           },

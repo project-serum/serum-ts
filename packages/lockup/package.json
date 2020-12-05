@@ -24,8 +24,6 @@
   "dependencies": {
     "@project-serum/borsh": "^0.0.1-alpha.0",
     "@project-serum/common": "^0.0.1-alpha.2",
-    "@project-serum/pool": "0.1.1",
-    "@project-serum/registry": "^0.0.1-alpha.4",
     "@solana/spl-token": "0.0.11",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"

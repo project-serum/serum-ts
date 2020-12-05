@@ -105,21 +105,15 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
   const { onClose, poolTab } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
-  const {
-    network,
-    poolTokenMint,
-    megaPoolTokenMint,
-    poolVault,
-    megaPoolVault,
-  } = useSelector((state: StoreState) => {
-    return {
-      network: state.common.network,
-      poolTokenMint: state.registry.poolTokenMint!,
-      megaPoolTokenMint: state.registry.megaPoolTokenMint!,
-      poolVault: state.registry.poolVault!,
-      megaPoolVault: state.registry.megaPoolVault!,
-    };
-  });
+  const { network, poolMint, megaPoolMint } = useSelector(
+    (state: StoreState) => {
+      return {
+        network: state.common.network,
+        poolMint: state.registry.registrar!.account.poolMint,
+        megaPoolMint: state.registry.registrar!.account.poolMintMega,
+      };
+    },
+  );
 
   const [lockedRewardAmount, setLockedRewardAmount] = useState<null | number>(
     null,
@@ -150,14 +144,8 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
           expiryReceiver: new PublicKey(expiryReceiver as string),
           depositor: depositor as PublicKey,
           depositorMint: mint as PublicKey,
-          pool:
-            poolTab === PoolTabViewModel.Srm
-              ? poolVault.publicKey
-              : megaPoolVault.publicKey,
           poolTokenMint:
-            poolTab === PoolTabViewModel.Srm
-              ? poolTokenMint.publicKey
-              : megaPoolTokenMint.publicKey,
+            poolTab === PoolTabViewModel.Srm ? poolMint : megaPoolMint,
         });
         return tx;
       },
@@ -200,21 +188,15 @@ function DropLockedForm(props: DropLockedFormProps) {
   const { onClose, poolTab } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
-  const {
-    network,
-    poolVault,
-    megaPoolVault,
-    poolTokenMint,
-    megaPoolTokenMint,
-  } = useSelector((state: StoreState) => {
-    return {
-      network: state.common.network,
-      poolTokenMint: state.registry.poolTokenMint!,
-      megaPoolTokenMint: state.registry.megaPoolTokenMint!,
-      poolVault: state.registry.poolVault!,
-      megaPoolVault: state.registry.megaPoolVault!,
-    };
-  });
+  const { network, poolMint, megaPoolMint } = useSelector(
+    (state: StoreState) => {
+      return {
+        network: state.common.network,
+        poolMint: state.registry.registrar!.account.poolMint,
+        megaPoolMint: state.registry.registrar!.account.poolMintMega,
+      };
+    },
+  );
 
   const [lockedRewardAmount, setLockedRewardAmount] = useState<null | number>(
     null,
@@ -248,14 +230,8 @@ function DropLockedForm(props: DropLockedFormProps) {
           expiryReceiver: new PublicKey(expiryReceiver as string),
           depositor: depositor as PublicKey,
           depositorMint: mint as PublicKey,
-          pool:
-            poolTab === PoolTabViewModel.Srm
-              ? poolVault.publicKey
-              : megaPoolVault.publicKey,
           poolTokenMint:
-            poolTab === PoolTabViewModel.Srm
-              ? poolTokenMint.publicKey
-              : megaPoolTokenMint.publicKey,
+            poolTab === PoolTabViewModel.Srm ? poolMint : megaPoolMint,
           periodCount: new BN(periodCount),
         });
         return tx;
