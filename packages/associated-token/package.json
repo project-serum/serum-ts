@@ -1,0 +1,35 @@
+{
+  "name": "@project-serum/associated-token",
+  "version": "0.1.0",
+  "description": "Library for interacting with SPL Associated Token Accounts",
+  "repository": "project-serum/serum-ts",
+  "main": "dist/lib/index.js",
+  "types": "dist/lib/index.d.ts",
+  "exports": {
+    ".": "./dist/lib/index.js"
+  },
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "",
+    "clean": "rm -rf dist",
+    "prepare": "run-s clean build"
+  },
+  "dependencies": {
+  },
+  "peerDependencies": {
+    "@solana/web3.js": "^0.86.1"
+  },
+  "devDependencies": {
+    "@solana/web3.js": "^0.86.1"
+  },
+  "files": [
+    "dist"
+  ]
+}
