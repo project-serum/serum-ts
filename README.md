@@ -36,7 +36,7 @@
 | [`@project-serum/lockup`](/packages/lockup) | [![npm](https://img.shields.io/npm/v/@project-serum/lockup.svg)](https://www.npmjs.com/package/@project-serum/lockup) | Client for interacting with the Lockup Program |
 | [`@project-serum/pool`](/packages/pool)             | [![npm](https://img.shields.io/npm/v/@project-serum/pool.svg)](https://www.npmjs.com/package/@project-serum/pool)             | Client for interacting with Pools |
 | [`@project-serum/registry`](/packages/registry)                 | [![npm](https://img.shields.io/npm/v/@project-serum/registry.svg)](https://www.npmjs.com/package/@project-serum/registry)                 | Client for interacting with the Registry Program |
-| [`@project-serum/swap`](/packages/swap)                 | [![npm](https://img.shields.io/npm/v/@project-serum/swap.svg)](https://www.npmjs.com/package/@project-serum/swap)                 | Client for interacting witht the Swap Program |
+| [`@project-serum/swap`](/packages/swap)                 | [![npm](https://img.shields.io/npm/v/@project-serum/swap.svg)](https://www.npmjs.com/package/@project-serum/swap)                 | Client for interacting with the Swap Program |
 | [`@project-serum/tokens`](/packages/tokens)                 | [![npm](https://img.shields.io/npm/v/@project-serum/tokens.svg)](https://www.npmjs.com/package/@project-serum/tokens)                 | Solana token addresses |
 
 ## Contributing
