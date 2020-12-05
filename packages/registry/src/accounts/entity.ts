@@ -22,8 +22,6 @@ export interface Entity {
 export interface Balances {
   sptAmount: BN;
   sptMegaAmount: BN;
-  currentDeposit: BN;
-  currentMegaDeposit: BN;
 }
 
 export type EntityState = {
@@ -41,8 +39,6 @@ export type Active = {};
 const BALANCES_LAYOUT: Layout<Balances> = struct([
   borshU64('sptAmount'),
   borshU64('sptMegaAmount'),
-  borshU64('currentDeposit'),
-  borshU64('currentMegaDeposit'),
 ]);
 
 const ENTITY_STATE_LAYOUT: Layout<EntityState> = rustEnum([
@@ -78,8 +74,6 @@ export function defaultEntity(): Entity {
     balances: {
       sptAmount: new u64(0),
       sptMegaAmount: new u64(0),
-      currentDeposit: new u64(0),
-      currentMegaDeposit: new u64(0),
     },
     state: {
       pendingDeactivation: {

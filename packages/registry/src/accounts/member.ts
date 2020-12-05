@@ -1,12 +1,7 @@
 import { struct, u8, u32, Layout } from 'buffer-layout';
-import {
-  bool,
-  publicKey,
-  u64 as borshU64,
-  i64 as borshI64,
-} from '@project-serum/borsh';
-import { u64 } from '@solana/spl-token';
+import { vec, bool, publicKey, i64 as borshI64 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
+import { AccountInfo as TokenAccount } from '@solana/spl-token';
 import BN from 'bn.js';
 
 export interface Member {
@@ -14,42 +9,51 @@ export interface Member {
   registrar: PublicKey;
   beneficiary: PublicKey;
   entity: PublicKey;
-  balances: MemberBalances;
+  balances: Array<BalanceSandbox>;
   metadata: PublicKey;
-  spt: PublicKey;
-  sptMega: PublicKey;
   rewardsCursor: number;
   lastStakeTs: BN;
 }
 
-interface MemberBalances {
-  sptAmount: BN;
-  sptMegaAmount: BN;
-  currentDeposit: BN;
-  currentMegaDeposit: BN;
-  main: OriginalDeposit;
-  delegate: OriginalDeposit;
+export interface MemberDeref {
+  member: Member;
+  balances: BalanceSandboxDeref[];
 }
 
-interface OriginalDeposit {
+export interface BalanceSandbox {
   owner: PublicKey;
-  deposit: BN;
-  megaDeposit: BN;
+  spt: PublicKey;
+  sptMega: PublicKey;
+  vault: PublicKey;
+  vaultMega: PublicKey;
+  vaultStake: PublicKey;
+  vaultStakeMega: PublicKey;
+  vaultPendingWithdrawal: PublicKey;
+  vaultPendingWithdrawalMega: PublicKey;
 }
 
-const ORIGINAL_DEPOSIT_LAYOUT: Layout<OriginalDeposit> = struct([
-  publicKey('owner'),
-  borshU64('deposit'),
-  borshU64('megaDeposit'),
-]);
+export interface BalanceSandboxDeref {
+  owner: PublicKey;
+  spt: TokenAccount;
+  sptMega: TokenAccount;
+  vault: TokenAccount;
+  vaultMega: TokenAccount;
+  vaultStake: TokenAccount;
+  vaultStakeMega: TokenAccount;
+  vaultPendingWithdrawal: TokenAccount;
+  vaultPendingWithdrawalMega: TokenAccount;
+}
 
-const MEMBER_BALANCES_LAYOUT: Layout<MemberBalances> = struct([
-  borshU64('sptAmount'),
-  borshU64('sptMegaAmount'),
-  borshU64('currentDeposit'),
-  borshU64('currentMegaDeposit'),
-  ORIGINAL_DEPOSIT_LAYOUT.replicate('main'),
-  ORIGINAL_DEPOSIT_LAYOUT.replicate('delegate'),
+const BALANCE_SANDBOX_LAYOUT: Layout<BalanceSandbox> = struct([
+  publicKey('owner'),
+  publicKey('spt'),
+  publicKey('sptMega'),
+  publicKey('vault'),
+  publicKey('vaultMega'),
+  publicKey('vaultStake'),
+  publicKey('vaultStakeMega'),
+  publicKey('vaultPendingWithdrawal'),
+  publicKey('vaultPendingWithdrawalMega'),
 ]);
 
 export const MEMBER_LAYOUT: Layout<Member> = struct([
@@ -57,10 +61,8 @@ export const MEMBER_LAYOUT: Layout<Member> = struct([
   publicKey('registrar'),
   publicKey('beneficiary'),
   publicKey('entity'),
-  MEMBER_BALANCES_LAYOUT.replicate('balances'),
   publicKey('metadata'),
-  publicKey('spt'),
-  publicKey('sptMega'),
+  vec(BALANCE_SANDBOX_LAYOUT.replicate('balancesInner'), 'balances'),
   u32('rewardsCursor'),
   borshI64('lastStakeTs'),
 ]);
@@ -81,27 +83,24 @@ export function defaultMember(): Member {
     registrar: new PublicKey(Buffer.alloc(32)),
     beneficiary: new PublicKey(Buffer.alloc(32)),
     entity: new PublicKey(Buffer.alloc(32)),
-    balances: {
-      sptAmount: new u64(0),
-      sptMegaAmount: new u64(0),
-      currentDeposit: new u64(0),
-      currentMegaDeposit: new u64(0),
-      main: {
-        owner: new PublicKey(Buffer.alloc(32)),
-        deposit: new u64(0),
-        megaDeposit: new u64(0),
-      },
-      delegate: {
-        owner: new PublicKey(Buffer.alloc(32)),
-        deposit: new u64(0),
-        megaDeposit: new u64(0),
-      },
-    },
     metadata: new PublicKey(Buffer.alloc(32)),
-    spt: new PublicKey(Buffer.alloc(32)),
-    sptMega: new PublicKey(Buffer.alloc(32)),
+    balances: [defaultBalanceSandbox(), defaultBalanceSandbox()],
     rewardsCursor: 0,
     lastStakeTs: new BN(0),
+  };
+}
+
+function defaultBalanceSandbox(): BalanceSandbox {
+  return {
+    owner: new PublicKey(Buffer.alloc(32)),
+    spt: new PublicKey(Buffer.alloc(32)),
+    sptMega: new PublicKey(Buffer.alloc(32)),
+    vault: new PublicKey(Buffer.alloc(32)),
+    vaultMega: new PublicKey(Buffer.alloc(32)),
+    vaultStake: new PublicKey(Buffer.alloc(32)),
+    vaultStakeMega: new PublicKey(Buffer.alloc(32)),
+    vaultPendingWithdrawal: new PublicKey(Buffer.alloc(32)),
+    vaultPendingWithdrawalMega: new PublicKey(Buffer.alloc(32)),
   };
 }
 

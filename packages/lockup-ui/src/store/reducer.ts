@@ -96,13 +96,16 @@ export default function reducer(
       });
       return newState;
     case ActionType.RegistrySetMember:
-      newState.registry.member = action.item.member;
+      newState.registry.member = {
+        isReady: true,
+        data: action.item.member,
+      };
       return newState;
-    case ActionType.RegistrySetPools:
-      newState.registry.poolTokenMint = action.item.poolTokenMint;
-      newState.registry.poolVault = action.item.poolVault;
-      newState.registry.megaPoolTokenMint = action.item.megaPoolTokenMint;
-      newState.registry.megaPoolVault = action.item.megaPoolVault;
+    case ActionType.RegistrySetPoolMint:
+      newState.registry.poolTokenMint = action.item.poolMint;
+      return newState;
+    case ActionType.RegistrySetPoolMintMega:
+      newState.registry.megaPoolTokenMint = action.item.poolMintMega;
       return newState;
     case ActionType.RegistrySetRegistrar:
       newState.registry.registrar = action.item.registrar;
@@ -210,11 +213,9 @@ export type RegistryState = {
     string,
     ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>
   >;
-  member?: ProgramAccount<registry.accounts.Member>;
+  member: AsyncData<ProgramAccount<registry.accounts.MemberDeref>>;
   poolTokenMint?: ProgramAccount<MintInfo>;
-  poolVault?: ProgramAccount<TokenAccount>;
   megaPoolTokenMint?: ProgramAccount<MintInfo>;
-  megaPoolVault?: ProgramAccount<TokenAccount>;
   registrar?: ProgramAccount<registry.accounts.Registrar>;
   pendingWithdrawals: Map<
     string,
@@ -230,6 +231,18 @@ export type RegistryState = {
   >;
 };
 
+export type AsyncData<T> = {
+  isReady: boolean;
+  data?: T;
+};
+
+function defaultAsyncData<T>(): AsyncData<T> {
+  return { isReady: false };
+}
+
+// Re-export.
+export type ProgramAccount<T> = CommonProgramAccount<T>;
+
 export const initialState: State = {
   common: {
     bootstrapTrigger: false,
@@ -244,12 +257,10 @@ export const initialState: State = {
     vestings: [],
   },
   registry: {
+    member: defaultAsyncData(),
     entities: [],
     entityMetadata: new Map(),
     pendingWithdrawals: new Map(),
     vendors: new Map(),
   },
 };
-
-// Re-export.
-export type ProgramAccount<T> = CommonProgramAccount<T>;

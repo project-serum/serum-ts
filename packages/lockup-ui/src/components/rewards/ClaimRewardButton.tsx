@@ -10,7 +10,7 @@ import { RewardListItemViewModel } from './RewardsList';
 
 type ClaimButtonProps = {
   rli: RewardListItemViewModel;
-  member: ProgramAccount<registry.accounts.Member>;
+  member: ProgramAccount<registry.accounts.MemberDeref>;
   network: Network;
   registryClient: registry.Client;
 };
@@ -37,7 +37,10 @@ export default function ClaimButton(props: ClaimButtonProps) {
           );
           const { tx } = await registryClient.claimLockedReward({
             cursor: rli!.cursor,
-            member: member.publicKey,
+            member: {
+              publicKey: member.publicKey,
+              account: member.account.member,
+            },
             vendor: vendor.publicKey,
             vendorVault: vendor.account.vault,
             vendorSigner,

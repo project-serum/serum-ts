@@ -6,7 +6,12 @@ export * as lockedRewardVendor from './locked-vendor';
 export * as unlockedRewardVendor from './unlocked-vendor';
 
 export { Entity } from './entity';
-export { Member } from './member';
+export {
+  Member,
+  MemberDeref,
+  BalanceSandbox,
+  BalanceSandboxDeref,
+} from './member';
 export { PendingWithdrawal } from './pending-withdrawal';
 export { Registrar } from './registrar';
 export {

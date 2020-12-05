@@ -4,9 +4,11 @@ import React, {
   useEffect,
   useCallback,
 } from 'react';
+import { MintInfo } from '@solana/spl-token';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
-import { sleep, token, ProgramAccount } from '@project-serum/common';
+import { PublicKey } from '@solana/web3.js';
+import { token, ProgramAccount, parseMintAccount } from '@project-serum/common';
 import * as registry from '@project-serum/registry';
 import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
@@ -30,38 +32,152 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
   // Entry point for bootstrapping all the data for the app.
   const bootstrap = useCallback(async () => {
     // Websocket subscriptions.
-    const startSubscriptions = () => {
-      // Reward event queue subscription.
-      const conn = registryClient.accounts.rewardEventQueueConnect(
-        registryClient.rewardEventQueue,
-      );
-      conn.on(
-        'connected',
-        (
-          rewardEventQueue: ProgramAccount<registry.accounts.RewardEventQueue>,
-        ) => {
+    const startSubscriptions = async (
+      registrar: registry.accounts.Registrar,
+    ) => {
+      // Reward event queue sub.
+      const rewardQueueSubscribe = async () => {
+        const conn = registryClient.accounts.rewardEventQueueConnect(
+          registryClient.rewardEventQueue,
+        );
+        conn.on(
+          'connected',
+          (
+            rewardEventQueue: ProgramAccount<
+              registry.accounts.RewardEventQueue
+            >,
+          ) => {
+            dispatch({
+              type: ActionType.RegistrySetRewardEventQueue,
+              item: {
+                rewardEventQueue,
+              },
+            });
+          },
+        );
+        conn.on(
+          'change',
+          (
+            rewardEventQueue: ProgramAccount<
+              registry.accounts.RewardEventQueue
+            >,
+          ) => {
+            dispatch({
+              type: ActionType.RegistrySetRewardEventQueue,
+              item: {
+                rewardEventQueue,
+              },
+            });
+          },
+        );
+      };
+      // Member sub.
+      const memberSubscribe = async () => {
+        const members = await registryClient.accounts.membersWithBeneficiary(
+          wallet.publicKey,
+        );
+        // TODO: Probably want a UI to handle multiple member accounts and
+        //       choosing between them.
+        //
+        //      Alternatively, use a deterministic address.
+        if (members.length === 0) {
           dispatch({
-            type: ActionType.RegistrySetRewardEventQueue,
+            type: ActionType.RegistrySetMember,
             item: {
-              rewardEventQueue,
+              member: undefined,
             },
           });
-        },
-      );
-      conn.on(
-        'change',
-        (
-          rewardEventQueue: ProgramAccount<registry.accounts.RewardEventQueue>,
-        ) => {
-          dispatch({
-            type: ActionType.RegistrySetRewardEventQueue,
-            item: {
-              rewardEventQueue,
+          return;
+        }
+
+        await subscribeMember(members[0].publicKey, registryClient, dispatch);
+      };
+
+      // Staking pool token sub.
+      const poolTokenSubscribe = async () => {
+        const poolMint = await registryClient.accounts.poolTokenMint(registrar);
+        const poolMintMega = await registryClient.accounts.megaPoolTokenMint(
+          registrar,
+        );
+        dispatch({
+          type: ActionType.RegistrySetPoolMint,
+          item: {
+            poolMint: {
+              publicKey: registrar.poolMint,
+              account: poolMint,
             },
+          },
+        });
+        dispatch({
+          type: ActionType.RegistrySetPoolMintMega,
+          item: {
+            poolMintMega: {
+              publicKey: registrar.poolMintMega,
+              account: poolMintMega,
+            },
+          },
+        });
+
+        registryClient.accounts
+          .accountConnect(registrar.poolMint, parseMintAccount)
+          .on('change', (poolMint: MintInfo) => {
+            dispatch({
+              type: ActionType.RegistrySetPoolMint,
+              item: {
+                poolMint: {
+                  publicKey: registrar.poolMint,
+                  account: poolMint,
+                },
+              },
+            });
           });
+        registryClient.accounts
+          .accountConnect(registrar.poolMintMega, parseMintAccount)
+          .on('change', (poolMintMega: MintInfo) => {
+            dispatch({
+              type: ActionType.RegistrySetPoolMintMega,
+              item: {
+                poolMintMega: {
+                  publicKey: registrar.poolMintMega,
+                  account: poolMintMega,
+                },
+              },
+            });
+          });
+      };
+
+      await rewardQueueSubscribe();
+      await memberSubscribe();
+      await poolTokenSubscribe();
+    }; // End websocket subscriptions.
+
+    const fetchRegistrar = async () => {
+      const registrar = await registryClient.accounts.registrar();
+      dispatch({
+        type: ActionType.RegistrySetRegistrar,
+        item: {
+          registrar: {
+            publicKey: registryClient.registrar,
+            account: registrar,
+          },
         },
-      );
+      });
+      return registrar;
     };
+
+    const fetchSafe = async () => {
+      const lockup = await lockupClient.accounts.safe();
+      dispatch({
+        type: ActionType.LockupSetSafe,
+        item: {
+          safe: {
+            publicKey: lockupClient.safe,
+            account: lockup,
+          },
+        },
+      });
+    };
+
     const fetchEntityAccounts = async () => {
       const entityAccounts = await registryClient.accounts.allEntities();
       dispatch({
@@ -96,73 +212,6 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       });
     };
 
-    // Getting rate limited so break up RPC requests and sleep.
-    const fetchPoolData = async () => {
-      const registrar = await registryClient.accounts.registrar();
-      await sleep(1000 * 2);
-      const poolVault = await registryClient.accounts.poolVault(registrar);
-      await sleep(1000 * 2);
-      const megaPoolVault = await registryClient.accounts.megaPoolVault(
-        registrar,
-      );
-      await sleep(1000 * 2);
-      const poolTokenMint = await registryClient.accounts.poolTokenMint(
-        registrar,
-      );
-      await sleep(1000 * 2);
-      const megaPoolTokenMint = await registryClient.accounts.megaPoolTokenMint(
-        registrar,
-      );
-
-      dispatch({
-        type: ActionType.RegistrySetPools,
-        item: {
-          poolTokenMint: {
-            publicKey: registrar.poolMint,
-            account: poolTokenMint,
-          },
-          poolVault: {
-            publicKey: registrar.poolVault,
-            account: poolVault,
-          },
-          megaPoolTokenMint: {
-            publicKey: registrar.poolMintMega,
-            account: megaPoolTokenMint,
-          },
-          megaPoolVault: {
-            publicKey: registrar.poolVaultMega,
-            account: megaPoolVault,
-          },
-        },
-      });
-    };
-
-    const fetchRegistrar = async () => {
-      const registrar = await registryClient.accounts.registrar();
-      dispatch({
-        type: ActionType.RegistrySetRegistrar,
-        item: {
-          registrar: {
-            publicKey: registryClient.registrar,
-            account: registrar,
-          },
-        },
-      });
-    };
-
-    const fetchSafe = async () => {
-      const lockup = await lockupClient.accounts.safe();
-      dispatch({
-        type: ActionType.LockupSetSafe,
-        item: {
-          safe: {
-            publicKey: lockupClient.safe,
-            account: lockup,
-          },
-        },
-      });
-    };
-
     // Connections.
 
     const fetchOwnedTokenAccounts = async () => {
@@ -190,34 +239,6 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       });
     };
 
-    const fetchMemberAccount = async () => {
-      const members = await registryClient.accounts.membersWithBeneficiary(
-        wallet.publicKey,
-      );
-
-      if (members.length > 0) {
-        const member = members[0];
-        const pendingWithdrawals = await registryClient.accounts.pendingWithdrawalsForMember(
-          member.publicKey,
-        );
-        // TODO: probably want a UI to handle multiple member accounts and
-        //       choosing between them.
-        dispatch({
-          type: ActionType.RegistrySetMember,
-          item: {
-            member,
-          },
-        });
-        dispatch({
-          type: ActionType.RegistrySetPendingWithdrawals,
-          item: {
-            memberPublicKey: member.publicKey,
-            pendingWithdrawals,
-          },
-        });
-      }
-    };
-
     enqueueSnackbar(`Connecting to ${network.label}`, {
       variant: 'info',
       autoHideDuration: 2500,
@@ -228,15 +249,12 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       item: {},
     });
 
-    // Break up to avoid rate limits.
-    startSubscriptions();
-    await fetchRegistrar();
+    const registrar = await fetchRegistrar();
+    await startSubscriptions(registrar);
     await fetchSafe();
     await fetchEntityAccounts();
-    await fetchPoolData();
     await fetchOwnedTokenAccounts();
     await fetchVestingAccounts();
-    await fetchMemberAccount();
 
     dispatch({
       type: ActionType.CommonAppDidBootstrap,
@@ -253,9 +271,7 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
     dispatch,
     enqueueSnackbar,
     network.label,
-    registryClient.accounts,
-    registryClient.registrar,
-    registryClient.rewardEventQueue,
+    registryClient,
     wallet.publicKey,
     network.defaultEntity,
     lockupClient.provider.connection,
@@ -292,4 +308,36 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
   }, [bootstrapTrigger, bootstrap, shutdownTrigger, shutdown, enqueueSnackbar]);
 
   return <>{props.children}</>;
+}
+
+export async function subscribeMember(
+  m: PublicKey,
+  registryClient: registry.Client,
+  dispatch: any,
+) {
+  const [member, conn] = await registryClient.accounts.memberConnect(m);
+  conn.on('change', (member: ProgramAccount<registry.accounts.MemberDeref>) => {
+    dispatch({
+      type: ActionType.RegistrySetMember,
+      item: {
+        member,
+      },
+    });
+  });
+  dispatch({
+    type: ActionType.RegistrySetMember,
+    item: {
+      member,
+    },
+  });
+  const pendingWithdrawals = await registryClient.accounts.pendingWithdrawalsForMember(
+    m,
+  );
+  dispatch({
+    type: ActionType.RegistrySetPendingWithdrawals,
+    item: {
+      memberPublicKey: member.publicKey,
+      pendingWithdrawals,
+    },
+  });
 }

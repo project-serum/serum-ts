@@ -9,9 +9,9 @@ import Collapse from '@material-ui/core/Collapse';
 import Typography from '@material-ui/core/Typography';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
-import * as registry from '@project-serum/registry';
-import { AccountInfo as TokenAccount } from '@solana/spl-token';
+import { PublicKey } from '@solana/web3.js';
 import { Network, ProgramAccount } from '@project-serum/common';
+import * as registry from '@project-serum/registry';
 
 type RewardsListProps = {
   rewards: RewardListItemViewModel[];
@@ -154,13 +154,21 @@ export class RewardListItemViewModel {
         : event.unlockedAlloc!;
       vendor = ctx.vendors.get(eventInner.vendor.toString());
       if (vendor !== undefined) {
+        const ownsPool =
+          ctx.member.account.balances.filter(
+            b => b.spt.amount.cmp(new BN(0)) === 1,
+          ).length > 0;
+        const ownsPoolMega =
+          ctx.member.account.balances.filter(
+            b => b.sptMega.amount.cmp(new BN(0)) === 1,
+          ).length > 0;
         // The member must own shares of the reward's target pool.
-        const ownsPoolShares = eventInner.pool.equals(ctx.pool.publicKey)
-          ? ctx.member.account.balances.sptAmount.cmp(new BN(0)) === 1
-          : ctx.member.account.balances.sptMegaAmount.cmp(new BN(0)) === 1;
-        const notYetClaimed = cursor >= ctx.member.account.rewardsCursor;
+        const ownsPoolShares = eventInner.pool.equals(ctx.poolMint)
+          ? ownsPool
+          : ownsPoolMega;
+        const notYetClaimed = cursor >= ctx.member.account.member.rewardsCursor;
         const isEligible =
-          ctx.member.account.lastStakeTs < vendor.account.startTs;
+          ctx.member.account.member.lastStakeTs < vendor.account.startTs;
 
         needsClaim = ownsPoolShares && notYetClaimed && isEligible;
       }
@@ -171,7 +179,7 @@ export class RewardListItemViewModel {
 
 type Context = {
   rewardEventQueue: ProgramAccount<registry.accounts.RewardEventQueue>;
-  member: ProgramAccount<registry.accounts.Member>;
+  member: ProgramAccount<registry.accounts.MemberDeref>;
   network: Network;
   vendors: Map<
     string,
@@ -180,5 +188,5 @@ type Context = {
       | registry.accounts.UnlockedRewardVendor
     >
   >;
-  pool: ProgramAccount<TokenAccount>;
+  poolMint: PublicKey;
 };

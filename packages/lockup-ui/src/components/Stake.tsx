@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import IconButton from '@material-ui/core/IconButton';
@@ -10,7 +12,7 @@ import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import FormControl from '@material-ui/core/FormControl';
 import Typography from '@material-ui/core/Typography';
-import { MintInfo, AccountInfo as TokenAccount, u64 } from '@solana/spl-token';
+import { MintInfo, u64 } from '@solana/spl-token';
 import { PublicKey } from '@solana/web3.js';
 import { accounts } from '@project-serum/registry';
 import { useWallet } from '../components/common/WalletProvider';
@@ -22,71 +24,51 @@ import * as skin from '../skin';
 export default function Stake() {
   const { registryClient } = useWallet();
   const dispatch = useDispatch();
-  const {
-    poolTokenMint,
-    poolVault,
-    megaPoolTokenMint,
-    megaPoolVault,
-    member,
-    registrar,
-    entity,
-  } = useSelector((state: StoreState) => {
-    return {
-      poolTokenMint: state.registry.poolTokenMint,
-      poolVault: state.registry.poolVault,
-      megaPoolTokenMint: state.registry.megaPoolTokenMint,
-      megaPoolVault: state.registry.megaPoolVault,
-      member: state.registry.member,
-      registrar: state.registry.registrar,
-      entity: state.registry.entities
-        .filter(
-          e =>
-            state.registry.member &&
-            e.publicKey.toString() ===
-              state.registry.member!.account.entity.toString(),
-        )
-        .pop(),
-    };
-  });
+  const { poolTokenMint, megaPoolTokenMint, member, registrar } = useSelector(
+    (state: StoreState) => {
+      return {
+        poolTokenMint: state.registry.poolTokenMint,
+        megaPoolTokenMint: state.registry.megaPoolTokenMint,
+        member: state.registry.member.data!,
+        registrar: state.registry.registrar,
+      };
+    },
+  );
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
   const createPoolTokens = async (
     amount: number,
-    spt: PublicKey,
     label: string,
     isMega?: boolean,
+    isLocked?: boolean,
   ) => {
+    const balances = member.account.member.balances[isLocked ? 1 : 0];
+    const balanceId = balances.owner;
+    const spt = isMega ? balances.sptMega : balances.spt;
+
     enqueueSnackbar(`Creating ${spt} ${label} Pool tokens`, {
       variant: 'info',
     });
+
     const { tx } = await registryClient.stake({
-      member: member!.publicKey,
+      member: {
+        publicKey: member.publicKey,
+        account: member.account.member,
+      },
       amount: new u64(amount),
-      entity: entity?.publicKey,
       spt,
       isMega,
-    });
-    const updatedMember = await registryClient.accounts.member(
-      member!.publicKey,
-    );
-    dispatch({
-      type: ActionType.RegistrySetMember,
-      item: {
-        member: {
-          publicKey: member!.publicKey,
-          account: updatedMember,
-        },
-      },
+      balanceId,
     });
     const updatedEntity = await registryClient.accounts.entity(
-      entity!.publicKey,
+      member.account.member.entity,
     );
     dispatch({
       type: ActionType.RegistryUpdateEntity,
       item: {
         entity: {
-          publicKey: entity!.publicKey,
+          publicKey: member.account.member.entity,
           account: updatedEntity,
         },
       },
@@ -100,9 +82,9 @@ export default function Stake() {
 
   const redeemPoolTokens = async (
     amount: number,
-    spt: PublicKey,
     label: string,
     isMega?: boolean,
+    isLocked?: boolean,
   ) => {
     enqueueSnackbar(
       `Initiating redemption for ${amount} ${label} Pool tokens`,
@@ -110,36 +92,30 @@ export default function Stake() {
         variant: 'info',
       },
     );
+    const balances = member.account.member.balances[isLocked ? 1 : 0];
+    const balanceId = balances.owner;
+    const spt = isMega ? balances.sptMega : balances.spt;
     const { tx, pendingWithdrawal } = await registryClient.startStakeWithdrawal(
       {
-        member: member!.publicKey,
+        member: {
+          publicKey: member.publicKey,
+          account: member.account.member,
+        },
         amount: new u64(amount),
-        entity: entity?.publicKey,
         registrar: registrar!.account,
         spt,
         isMega,
+        balanceId,
       },
     );
-    const updatedMember = await registryClient.accounts.member(
-      member!.publicKey,
-    );
-    dispatch({
-      type: ActionType.RegistrySetMember,
-      item: {
-        member: {
-          publicKey: member!.publicKey,
-          account: updatedMember,
-        },
-      },
-    });
     const updatedEntity = await registryClient.accounts.entity(
-      entity!.publicKey,
+      member.account.member.entity,
     );
     dispatch({
       type: ActionType.RegistryUpdateEntity,
       item: {
         entity: {
-          publicKey: entity!.publicKey,
+          publicKey: member.account.member.entity,
           account: updatedEntity,
         },
       },
@@ -164,18 +140,18 @@ export default function Stake() {
     });
   };
 
-  const createSrmPool = async (shares: number) => {
+  const createSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
-      createPoolTokens(shares, member!.account.spt, 'SRM').catch(err => {
+      createPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
         enqueueSnackbar(`Error creating srm pool: ${err.toString()}`, {
           variant: 'error',
         });
       });
     }
   };
-  const redeemSrmPool = async (shares: number) => {
+  const redeemSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
-      redeemPoolTokens(shares, member!.account.spt, 'SRM').catch(err => {
+      redeemPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
         enqueueSnackbar(`Error redeeming srm pool: ${err.toString()}`, {
           variant: 'error',
         });
@@ -183,26 +159,22 @@ export default function Stake() {
     }
   };
 
-  const createMsrmPool = async (shares: number) => {
+  const createMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
-      createPoolTokens(shares, member!.account.sptMega, 'MSRM', true).catch(
-        err => {
-          enqueueSnackbar(`Error creating msrm pool: ${err.toString()}`, {
-            variant: 'error',
-          });
-        },
-      );
+      createPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
+        enqueueSnackbar(`Error creating msrm pool: ${err.toString()}`, {
+          variant: 'error',
+        });
+      });
     }
   };
-  const redeemMsrmPool = async (shares: number) => {
+  const redeemMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
-      redeemPoolTokens(shares, member!.account.sptMega, 'MSRM', true).catch(
-        err => {
-          enqueueSnackbar(`Error redeeming msrm pool: ${err.toString()}`, {
-            variant: 'error',
-          });
-        },
-      );
+      redeemPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
+        enqueueSnackbar(`Error redeeming msrm pool: ${err.toString()}`, {
+          variant: 'error',
+        });
+      });
     }
   };
 
@@ -211,19 +183,21 @@ export default function Stake() {
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
         <PoolCard
           title={'Stake Pool'}
-          pool={poolVault!}
           poolTokenMint={poolTokenMint!}
           disabled={member === undefined}
           create={createSrmPool}
           redeem={redeemSrmPool}
+          isMega={false}
+          registrar={registrar!}
         />
         <PoolCard
           title={'Mega Stake Pool'}
-          pool={megaPoolVault!}
           poolTokenMint={megaPoolTokenMint!}
           disabled={member === undefined}
           create={createMsrmPool}
           redeem={redeemMsrmPool}
+          isMega={true}
+          registrar={registrar!}
         />
       </div>
       <RedemptionList
@@ -237,17 +211,29 @@ export default function Stake() {
 
 type PoolCardProps = {
   title: string;
-  pool: ProgramAccount<TokenAccount>;
   poolTokenMint: ProgramAccount<MintInfo>;
+  registrar: ProgramAccount<accounts.Registrar>;
+  isMega: boolean;
   disabled: boolean;
-  create: (shares: number) => void;
-  redeem: (shares: number) => void;
+  create: (shares: number, isLocked: boolean) => void;
+  redeem: (shares: number, isLocked: boolean) => void;
 };
 
 function PoolCard(props: PoolCardProps) {
-  const { title, create, redeem, pool, poolTokenMint, disabled } = props;
+  const {
+    title,
+    create,
+    redeem,
+    poolTokenMint,
+    disabled,
+    registrar,
+    isMega,
+  } = props;
   const [srmPoolAmount, setSrmPoolAmount] = useState<null | number>(null);
-
+  const [isLocked, setIsLocked] = useState(false);
+  const pricePerShare = isMega
+    ? registrar.account.stakeRateMega
+    : registrar.account.stakeRate;
   return (
     <Card
       style={{
@@ -255,7 +241,10 @@ function PoolCard(props: PoolCardProps) {
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <CardHeader title={title} subheader={pool.publicKey.toString()} />
+        <CardHeader
+          title={title}
+          subheader={poolTokenMint.publicKey.toString()}
+        />
         <div
           style={{
             paddingRight: '16px',
@@ -273,13 +262,14 @@ function PoolCard(props: PoolCardProps) {
             marginBottom: '16px',
           }}
         >
-          <Typography style={{ fontWeight: 'bold' }}>Pool Token</Typography>
-          <Typography>Mint: {poolTokenMint.publicKey.toString()}</Typography>
-          <Typography>
-            Outstanding: {poolTokenMint.account.supply.toString()}
+          <Typography style={{ fontWeight: 'bold' }}>Total shares</Typography>
+          <Typography>{poolTokenMint.account.supply.toString()}</Typography>
+          <Typography style={{ fontWeight: 'bold' }}>
+            Price per share
           </Typography>
+          <Typography>{pricePerShare.toString()}</Typography>
         </div>
-        <div style={{ width: '190px' }}>
+        <div>
           <div style={{ marginBottom: '10px' }}>
             <FormControl>
               <TextField
@@ -291,24 +281,42 @@ function PoolCard(props: PoolCardProps) {
               />
             </FormControl>
           </div>
-          <div>
-            <Button
-              disabled={disabled || srmPoolAmount === null || srmPoolAmount < 1}
-              color="primary"
-              variant="contained"
-              onClick={() => create(srmPoolAmount as number)}
-            >
-              Stake
-            </Button>
-            <Button
-              disabled={disabled || srmPoolAmount === null || srmPoolAmount < 1}
-              color="secondary"
-              variant="contained"
-              style={{ marginLeft: '10px' }}
-              onClick={() => redeem(srmPoolAmount as number)}
-            >
-              Unstake
-            </Button>
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <div>
+              <Button
+                disabled={
+                  disabled || srmPoolAmount === null || srmPoolAmount < 1
+                }
+                color="primary"
+                variant="contained"
+                onClick={() => create(srmPoolAmount as number, isLocked)}
+              >
+                Stake
+              </Button>
+              <Button
+                disabled={
+                  disabled || srmPoolAmount === null || srmPoolAmount < 1
+                }
+                color="secondary"
+                variant="contained"
+                style={{ marginLeft: '10px' }}
+                onClick={() => redeem(srmPoolAmount as number, isLocked)}
+              >
+                Unstake
+              </Button>
+            </div>
+            <div>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={isLocked}
+                    onChange={() => setIsLocked(!isLocked)}
+                  />
+                }
+                labelPlacement={'start'}
+                label="Locked balances"
+              />
+            </div>
           </div>
         </div>
       </CardContent>
@@ -327,19 +335,15 @@ function RedemptionList(props: RedemptionListProps) {
       return {
         member,
         registrar: state.registry.registrar!,
-        pendingWithdrawals: member
-          ? state.registry.pendingWithdrawals.get(member.publicKey.toString())
-          : [],
+        pendingWithdrawals:
+          member.isReady && member.data
+            ? state.registry.pendingWithdrawals.get(
+                member.data!.publicKey.toString(),
+              )
+            : [],
       };
     },
   );
-  const sptLabel = (poolVault: PublicKey): string => {
-    if (poolVault === registrar.account.poolVault) {
-      return 'SRM';
-    } else {
-      return 'MSRM';
-    }
-  };
   return (
     <div style={props.style}>
       <Card
@@ -372,59 +376,13 @@ function RedemptionList(props: RedemptionListProps) {
             {pendingWithdrawals && pendingWithdrawals.length > 0 ? (
               pendingWithdrawals.map((pw, idx) => {
                 return (
-                  <div
-                    style={{
-                      paddingBottom:
-                        idx !== pendingWithdrawals!.length - 1
-                          ? '12px'
-                          : '24px',
-                      paddingTop: '12px',
-                      borderBottom: 'solid 1pt #ccc',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                      }}
-                    >
-                      <div>
-                        <Typography
-                          style={{ fontWeight: 'bold', fontSize: '14px' }}
-                        >
-                          {`${pw.account.sptAmount}`} shares
-                        </Typography>
-                      </div>
-                      <div>
-                        <PendingWithdrawalButton
-                          member={member!}
-                          pendingWithdrawal={pw}
-                        />
-                      </div>
-                    </div>
-                    <Typography style={{ fontSize: '14px' }}>
-                      {`${pw.account.sptAmount} ${sptLabel(pw.account.pool)}`}
-                    </Typography>
-                    <Typography style={{ fontSize: '14px' }}>
-                      {`Start: ${new Date(
-                        pw.account.startTs.toNumber() * 1000,
-                      ).toLocaleString()}`}
-                    </Typography>
-                    <Typography style={{ fontSize: '14px' }}>
-                      {`End:   ${new Date(
-                        pw.account.endTs.toNumber() * 1000,
-                      ).toLocaleString()}`}
-                    </Typography>
-                    <Typography
-                      color="textSecondary"
-                      style={{
-                        fontSize: '14px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      {pw.account.pool.toString()}
-                    </Typography>
-                  </div>
+                  <RedemptionListItem
+                    key={pw.publicKey.toString()}
+                    isLast={idx === pendingWithdrawals.length - 1}
+                    registrar={registrar}
+                    pw={pw}
+                    member={member.data!}
+                  />
                 );
               })
             ) : (
@@ -446,13 +404,84 @@ function RedemptionList(props: RedemptionListProps) {
   );
 }
 
+type RedemptionListItemProps = {
+  isLast?: boolean;
+  registrar: ProgramAccount<accounts.Registrar>;
+  pw: ProgramAccount<accounts.PendingWithdrawal>;
+  member: ProgramAccount<accounts.MemberDeref>;
+};
+
+function RedemptionListItem(props: RedemptionListItemProps) {
+  const { isLast, pw, member, registrar } = props;
+  const sptLabel = (poolMint: PublicKey): string => {
+    const isLocked = !pw.account.balanceId.equals(
+      member.account.member.beneficiary,
+    );
+    const l = isLocked ? '(locked)' : '';
+    if (poolMint.equals(registrar.account.poolMint)) {
+      return `SRM ${l}`;
+    } else {
+      return `MSRM ${l}`;
+    }
+  };
+  return (
+    <div
+      style={{
+        paddingBottom: !isLast ? '12px' : '24px',
+        paddingTop: '12px',
+        borderBottom: 'solid 1pt #ccc',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          <Typography style={{ fontWeight: 'bold', fontSize: '14px' }}>
+            {`${pw.account.amount} ${sptLabel(pw.account.pool)}`}
+          </Typography>
+        </div>
+        <div>
+          <PendingWithdrawalButton
+            registrar={registrar}
+            member={member}
+            pendingWithdrawal={pw}
+          />
+        </div>
+      </div>
+      <Typography style={{ fontSize: '14px' }}>
+        {`Start: ${new Date(
+          pw.account.startTs.toNumber() * 1000,
+        ).toLocaleString()}`}
+      </Typography>
+      <Typography style={{ fontSize: '14px' }}>
+        {`End:   ${new Date(
+          pw.account.endTs.toNumber() * 1000,
+        ).toLocaleString()}`}
+      </Typography>
+      <Typography
+        color="textSecondary"
+        style={{
+          fontSize: '14px',
+          overflow: 'hidden',
+        }}
+      >
+        {pw.account.pool.toString()}
+      </Typography>
+    </div>
+  );
+}
+
 type PendingWithdrawalButtonProps = {
+  registrar: ProgramAccount<accounts.Registrar>;
   pendingWithdrawal: ProgramAccount<accounts.PendingWithdrawal>;
-  member: ProgramAccount<accounts.Member>;
+  member: ProgramAccount<accounts.MemberDeref>;
 };
 
 function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
-  const { pendingWithdrawal, member } = props;
+  const { pendingWithdrawal, member, registrar } = props;
   const { registryClient } = useWallet();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
@@ -462,9 +491,12 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
       variant: 'info',
     });
     const { tx } = await registryClient.endStakeWithdrawal({
-      member: member.publicKey,
-      pendingWithdrawal: pendingWithdrawal.publicKey,
-      entity: member.account.entity,
+      member: {
+        publicKey: member.publicKey,
+        account: member.account.member,
+      },
+      pendingWithdrawal,
+      registrar: registrar.account,
     });
 
     const updatedPendingWithdrawal = {
@@ -474,27 +506,14 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
         burned: true,
       },
     };
-    const updatedMember = await registryClient.accounts.member(
-      member.publicKey,
-    );
     const updatedEntity = await registryClient.accounts.entity(
-      member.account.entity,
+      member.account.member.entity,
     );
-
-    dispatch({
-      type: ActionType.RegistrySetMember,
-      item: {
-        member: {
-          publicKey: member!.publicKey,
-          account: updatedMember,
-        },
-      },
-    });
     dispatch({
       type: ActionType.RegistryUpdateEntity,
       item: {
         entity: {
-          publicKey: member.account.entity,
+          publicKey: member.account.member.entity,
           account: updatedEntity,
         },
       },

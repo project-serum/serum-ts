@@ -196,12 +196,6 @@ function NetworkEnvironment() {
               Deactivation timelock:{' '}
               {registrar.account.deactivationTimelock.toString()}
             </li>
-            <li>Vault: {registrar.account.vault.toString()}</li>
-            <li>Mega vault: {registrar.account.megaVault.toString()}</li>
-            <li>Pool vault: {registrar.account.poolVault.toString()}</li>
-            <li>
-              Mega pool vault: {registrar.account.poolVaultMega.toString()}
-            </li>
             <li>Pool token: {registrar.account.poolMint.toString()}</li>
             <li>
               Mega pool token: {registrar.account.poolMintMega.toString()}

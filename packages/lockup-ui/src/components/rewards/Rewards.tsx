@@ -19,10 +19,10 @@ export default function Rewards() {
   const ctx = useSelector((state: StoreState) => {
     return {
       rewardEventQueue: state.registry.rewardEventQueue!,
-      member: state.registry.member!,
+      member: state.registry.member.data!,
       network: state.common.network,
       vendors: state.registry.vendors,
-      pool: state.registry.poolVault!,
+      poolMint: state.registry.registrar!.account.poolMint!,
     };
   });
   const { rewardEventQueue, network, member, vendors } = ctx;

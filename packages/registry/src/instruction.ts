@@ -33,11 +33,15 @@ export type RegistryInstruction =
 
 type Initialize = {
   authority: PublicKey;
+  mint: PublicKey;
+  mintMega: PublicKey;
   nonce: number;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
   rewardActivationThreshold: BN;
   maxStakePerEntity: BN;
+  stakeRate: BN;
+  stakeRateMega: BN;
 };
 
 type UpdateRegistrar = {
@@ -57,12 +61,10 @@ type UpdateEntity = {
   metadata: PublicKey | null;
 };
 
-type CreateMember = {
-  delegate: PublicKey;
-};
+type CreateMember = {};
 
 type UpdateMember = {
-  delegate: PublicKey | null;
+  metadata: PublicKey | null;
 };
 
 type SwitchEntity = {};
@@ -77,10 +79,12 @@ type Withdraw = {
 
 type Stake = {
   amount: BN;
+  balanceId: PublicKey;
 };
 
 type StartStakeWithdrawal = {
   amount: BN;
+  balanceId: PublicKey;
 };
 
 type EndStakeWithdrawal = {};
@@ -114,11 +118,15 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct(
     [
       publicKey('authority'),
+      publicKey('mint'),
+      publicKey('megaMint'),
       u8('nonce'),
       i64('withdrawalTimelock'),
       i64('deactivationTimelock'),
       u64('rewardActivationThreshold'),
       u64('maxStakePerEntity'),
+      u64('stakeRate'),
+      u64('stakeRateMega'),
     ],
     'initialize',
   ),
@@ -137,13 +145,13 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
     [option(publicKey(), 'leader'), option(publicKey(), 'metadata')],
     'updateEntity',
   ),
-  struct([publicKey('delegate')], 'createMember'),
-  struct([option(publicKey(), 'delegate')], 'updateMember'),
+  struct([], 'createMember'),
+  struct([option(publicKey(), 'metadata')], 'updateMember'),
   struct([], 'switchEntity'),
   struct([u64('amount')], 'deposit'),
   struct([u64('amount')], 'withdraw'),
-  struct([u64('amount')], 'stake'),
-  struct([u64('amount')], 'startStakeWithdrawal'),
+  struct([u64('amount'), publicKey('balanceId')], 'stake'),
+  struct([u64('amount'), publicKey('balanceId')], 'startStakeWithdrawal'),
   struct([], 'endStakeWithdrawal'),
   struct(
     [

@@ -11,20 +11,19 @@ import { Client } from '../../src';
 
 // When running this test, make sure to deploy the programs and plug them
 // into the localhost network config.
-const network = networks.localhost;
+const network = networks.devnet;
 const registryProgramId = network.registryProgramId;
 const metaEntityProgramId = network.metaEntityProgramId;
 const url = network.url;
 
-const i64Zero = new BN(Buffer.alloc(8)).toTwos(64);
 const u64Zero = new BN(Buffer.alloc(8));
-const publicKeyZero = new PublicKey(Buffer.alloc(32));
 
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
     // Setup genesis state.
     const provider = Provider.local(url, {
       preflightCommitment: 'recent',
+      commitment: 'recent',
     });
     const [srmMint, god] = await createMintAndVault(
       provider,
@@ -90,7 +89,10 @@ describe('End-to-end tests', () => {
     });
 
     // Create Member.
-    let { member, spt, sptMega } = await client.createMember({
+    let {
+      member,
+      balances: [mainBalances, lockedBalances],
+    } = await client.createMember({
       entity,
       delegate: new PublicKey(Buffer.alloc(32)),
     });
@@ -99,25 +101,12 @@ describe('End-to-end tests', () => {
     expect(m.registrar).toEqual(registrarAddress);
     expect(m.entity).toEqual(entity);
     expect(m.beneficiary).toEqual(provider.wallet.publicKey);
-    expect(m.balances).toEqual({
-      sptAmount: u64Zero,
-      sptMegaAmount: u64Zero,
-      currentDeposit: u64Zero,
-      currentMegaDeposit: u64Zero,
-      main: {
-        owner: provider.wallet.publicKey,
-        deposit: u64Zero,
-        megaDeposit: u64Zero,
-      },
-      delegate: {
-        owner: publicKeyZero,
-        deposit: u64Zero,
-        megaDeposit: u64Zero,
-      },
-    });
 
     // Deposit SRM.
-    let vaultBefore = await client.accounts.depositVault(registrarAddress);
+    let vaultBefore = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
     let amount = new BN(1);
     await client.deposit({
       member,
@@ -125,12 +114,18 @@ describe('End-to-end tests', () => {
       amount,
     });
 
-    let vaultAfter = await client.accounts.depositVault(registrarAddress);
+    let vaultAfter = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
     let result = vaultAfter.amount.sub(vaultBefore.amount);
     expect(amount).toEqual(result);
 
     // Deposit MSRM.
-    vaultBefore = await client.accounts.depositMegaVault(registrarAddress);
+    vaultBefore = await client.accounts.depositMegaVault(
+      member,
+      provider.wallet.publicKey,
+    );
     amount = new BN(2);
 
     await client.deposit({
@@ -139,54 +134,92 @@ describe('End-to-end tests', () => {
       amount,
     });
 
-    vaultAfter = await client.accounts.depositMegaVault(registrarAddress);
+    vaultAfter = await client.accounts.depositMegaVault(
+      member,
+      provider.wallet.publicKey,
+    );
     result = vaultAfter.amount.sub(vaultBefore.amount);
     expect(amount).toEqual(result);
 
     // Stake SRM.
-    let poolVaultBefore = await client.accounts.poolVault(registrarAddress);
-    vaultBefore = await client.accounts.depositVault(registrarAddress);
+    let poolVaultBefore = await client.accounts.poolVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    vaultBefore = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
     amount = new BN(1);
 
     await client.stake({
       member,
       amount,
-      spt,
+      spt: mainBalances.spt,
       isMega: false,
     });
 
-    let poolVaultAfter = await client.accounts.poolVault(registrarAddress);
-    vaultAfter = await client.accounts.depositVault(registrarAddress);
+    let poolVaultAfter = await client.accounts.poolVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    vaultAfter = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
     let poolVaultResult = poolVaultAfter.amount.sub(poolVaultBefore.amount);
     let vaultResult = vaultBefore.amount.sub(vaultAfter.amount);
-    let stakeTokenAfter = await getTokenAccount(provider, spt);
+    let stakeTokenAfter = await getTokenAccount(provider, mainBalances.spt);
     expect(poolVaultResult).toEqual(amount); // Balance up.
     expect(vaultResult).toEqual(amount); // Balance down.
     expect(stakeTokenAfter.amount.toNumber()).toEqual(amount.toNumber());
+
     m = await client.accounts.member(member);
 
     // StartStakeWithdrawal.
-    poolVaultBefore = await client.accounts.poolVault(registrarAddress);
-    vaultBefore = await client.accounts.depositVault(registrarAddress);
-    let stakeTokenBefore = await getTokenAccount(provider, spt);
+    let pwVaultBefore = await client.accounts.pendingWithdrawalVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    poolVaultBefore = await client.accounts.poolVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    vaultBefore = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
+
+    let stakeTokenBefore = await getTokenAccount(provider, mainBalances.spt);
 
     let { pendingWithdrawal, tx } = await client.startStakeWithdrawal({
       member,
       amount,
-      spt,
+      spt: mainBalances.spt,
       isMega: false,
     });
 
-    poolVaultAfter = await client.accounts.poolVault(registrarAddress);
-    vaultAfter = await client.accounts.depositVault(registrarAddress);
-    stakeTokenAfter = await getTokenAccount(provider, spt);
+    let pwVaultAfter = await client.accounts.pendingWithdrawalVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    poolVaultAfter = await client.accounts.poolVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    vaultAfter = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    stakeTokenAfter = await getTokenAccount(provider, mainBalances.spt);
     expect(stakeTokenBefore.amount.sub(stakeTokenAfter.amount)).toEqual(amount);
     expect(
       poolVaultBefore.amount.sub(poolVaultAfter.amount).toNumber(),
     ).toEqual(amount.toNumber()); // Decrease.
-    expect(vaultAfter.amount.sub(vaultBefore.amount).toNumber()).toEqual(
+    expect(vaultAfter.amount.sub(vaultBefore.amount).toNumber()).toEqual(0); // Untouched.
+    expect(pwVaultAfter.amount.sub(pwVaultBefore.amount).toNumber()).toEqual(
       amount.toNumber(),
-    ); // Increase.
+    );
 
     const pw = await client.accounts.pendingWithdrawal(pendingWithdrawal);
     expect(pw.initialized).toBe(true);
@@ -198,18 +231,22 @@ describe('End-to-end tests', () => {
     await sleep(registrar.withdrawalTimelock.toNumber() * 3 * 1000);
 
     // EndStakeWithdrawal.
-    const memberBefore = await client.accounts.member(member);
+    const mVaultBefore = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
 
     await client.endStakeWithdrawal({
       member,
       pendingWithdrawal,
     });
 
-    const memberAfter = await client.accounts.member(member);
-    expect(
-      memberAfter.balances.currentDeposit.sub(
-        memberBefore.balances.currentDeposit,
-      ),
-    ).toEqual(amount);
+    const mVaultAfter = await client.accounts.depositVault(
+      member,
+      provider.wallet.publicKey,
+    );
+    expect(mVaultAfter.amount.sub(mVaultBefore.amount).toNumber()).toEqual(
+      amount.toNumber(),
+    );
   });
 });

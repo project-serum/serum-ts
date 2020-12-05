@@ -11,7 +11,8 @@ export interface PendingWithdrawal {
   pool: PublicKey;
   startTs: BN;
   endTs: BN;
-  sptAmount: BN;
+  amount: BN;
+  balanceId: PublicKey;
 }
 
 const PENDING_WITHDRAWAL_LAYOUT: Layout<PendingWithdrawal> = struct([
@@ -21,7 +22,8 @@ const PENDING_WITHDRAWAL_LAYOUT: Layout<PendingWithdrawal> = struct([
   publicKey('pool'),
   i64('startTs'),
   i64('endTs'),
-  borshU64('sptAmount'),
+  borshU64('amount'),
+  publicKey('balanceId'),
 ]);
 
 export function decode(data: Buffer): PendingWithdrawal {
@@ -42,7 +44,8 @@ export function defaultPendingWithdrawal(): PendingWithdrawal {
     pool: new PublicKey(Buffer.alloc(32)),
     startTs: new u64(0),
     endTs: new u64(0),
-    sptAmount: new u64(0),
+    amount: new u64(0),
+    balanceId: new PublicKey(Buffer.alloc(32)),
   };
 }
 

@@ -4,23 +4,25 @@ import {
   PublicKey,
   Transaction,
   TransactionSignature,
-  SendOptions,
+  ConfirmOptions,
+  sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
 
 export class Provider {
   constructor(
     readonly connection: Connection,
     readonly wallet: Wallet,
-    readonly opts: SendOptions,
+    readonly opts: ConfirmOptions,
   ) {}
 
-  static defaultOptions(): SendOptions {
+  static defaultOptions(): ConfirmOptions {
     return {
-      preflightCommitment: 'max',
+      preflightCommitment: 'recent',
+      commitment: 'recent',
     };
   }
 
-  static local(url?: string, opts?: SendOptions): Provider {
+  static local(url?: string, opts?: ConfirmOptions): Provider {
     opts = opts || Provider.defaultOptions();
     const connection = new Connection(
       url || 'http://localhost:8899',
@@ -33,7 +35,7 @@ export class Provider {
   async send(
     tx: Transaction,
     signers?: Array<Account | undefined>,
-    opts?: SendOptions,
+    opts?: ConfirmOptions,
   ): Promise<TransactionSignature> {
     if (signers === undefined) {
       signers = [];
@@ -58,14 +60,35 @@ export class Provider {
     });
 
     const rawTx = tx.serialize();
-    const txId = await this.connection.sendRawTransaction(rawTx, opts);
-    await this.connection.confirmTransaction(
-      txId,
-      this.opts.preflightCommitment,
+
+    const txId = await sendAndConfirmRawTransaction(
+      this.connection,
+      rawTx,
+      opts,
     );
+
     return txId;
   }
+
+  // TODO: batch signing to sollet.
+  async sendAll(
+    txs: Array<SendTxRequest>,
+    opts?: ConfirmOptions,
+  ): Promise<Array<TransactionSignature>> {
+    const sigs: Array<TransactionSignature> = [];
+    for (let k = 0; k < txs.length; k += 1) {
+      const t = txs[k];
+      const s = await this.send(t.tx, t.signers, opts);
+      sigs.push(s);
+    }
+    return sigs;
+  }
 }
+
+export type SendTxRequest = {
+  tx: Transaction;
+  signers: Array<Account | undefined>;
+};
 
 export interface Wallet {
   signTransaction(tx: Transaction): Promise<Transaction>;

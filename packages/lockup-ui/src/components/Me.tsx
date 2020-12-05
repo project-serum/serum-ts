@@ -10,8 +10,10 @@ import TableContainer from '@material-ui/core/TableContainer';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import { accounts } from '@project-serum/registry';
-import { State as StoreState, ProgramAccount } from '../store/reducer';
+import { ProgramAccount } from '@project-serum/common';
+import { State as StoreState, AsyncData } from '../store/reducer';
 
 export default function Me() {
   const { member } = useSelector((state: StoreState) => {
@@ -23,58 +25,66 @@ export default function Me() {
   return (
     <div style={{ display: 'flex', width: '100%' }}>
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
-        {member && <MemberBalancesCard member={member} />}
+        {member.isReady && member.data !== undefined && (
+          <MemberBalancesCard member={member} />
+        )}
       </div>
     </div>
   );
 }
 
 type MemberBalancesCardProps = {
-  member: ProgramAccount<accounts.Member>;
+  member: AsyncData<ProgramAccount<accounts.MemberDeref>>;
 };
 
 function MemberBalancesCard(props: MemberBalancesCardProps) {
   const { member } = props;
-  const rows = [
+  const tables = [
     {
-      token: 'SRM',
-      balance: member.account.balances.currentDeposit.toString(),
+      title: 'Main Balances',
+      description: 'Balances transferred directly.',
+      rows:
+        !member.isReady || member.data === undefined
+          ? null
+          : [
+              {
+                token: 'SRM',
+                balance: member.data!.account.balances[0]!.vault.amount.toString(),
+                stake: member.data!.account.balances[0].vaultStake.amount.toString(),
+                spt: member.data!.account.balances[0].spt.amount.toString(),
+                pending: member.data!.account.balances[0].vaultPendingWithdrawal.amount.toString(),
+              },
+              {
+                token: 'MSRM',
+                balance: member.data!.account.balances[0].vaultMega.amount.toString(),
+                stake: member.data!.account.balances[0].vaultStakeMega.amount.toString(),
+                spt: member.data!.account.balances[0].sptMega.amount.toString(),
+                pending: member.data!.account.balances[0].vaultPendingWithdrawalMega.amount.toString(),
+              },
+            ],
     },
     {
-      token: 'MSRM',
-      balance: member.account.balances.currentMegaDeposit.toString(),
-    },
-  ];
-  const lockedRows = [
-    {
-      token: 'SRM',
-      balance: member.account.balances.delegate.deposit.toString(),
-    },
-    {
-      token: 'MSRM',
-      balance: member.account.balances.delegate.megaDeposit.toString(),
-    },
-  ];
-  const unlockedRows = [
-    {
-      token: 'SRM',
-      balance: member.account.balances.main.deposit.toString(),
-    },
-    {
-      token: 'MSRM',
-      balance: member.account.balances.main.megaDeposit.toString(),
-    },
-  ];
-  const poolRows = [
-    {
-      pool: 'Stake Pool',
-      account: member.account.spt.toString(),
-      shares: member.account.balances.sptAmount.toString(),
-    },
-    {
-      pool: 'Mega Stake Pool',
-      account: member.account.sptMega.toString(),
-      shares: member.account.balances.sptMegaAmount.toString(),
+      title: 'Locked Balances',
+      description: 'Total balances transferred from the lockup program.',
+      rows:
+        !member.isReady || member.data === undefined
+          ? null
+          : [
+              {
+                token: 'SRM',
+                balance: member.data!.account.balances[1].vault.amount.toString(),
+                stake: member.data!.account.balances[1].vaultStake.amount.toString(),
+                spt: member.data!.account.balances[1].spt.amount.toString(),
+                pending: member.data!.account.balances[1].vaultPendingWithdrawal.amount.toString(),
+              },
+              {
+                token: 'MSRM',
+                balance: member.data!.account.balances[1].vaultMega.amount.toString(),
+                stake: member.data!.account.balances[1].vaultStakeMega.amount.toString(),
+                spt: member.data!.account.balances[1].sptMega.amount.toString(),
+                pending: member.data!.account.balances[1].vaultPendingWithdrawalMega.amount.toString(),
+              },
+            ],
     },
   ];
   return (
@@ -85,7 +95,13 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
     >
       <CardHeader
         title={'My Membership'}
-        subheader={member.publicKey.toString()}
+        subheader={
+          !member.isReady ? (
+            <CircularProgress />
+          ) : (
+            member.data!.publicKey.toString()
+          )
+        }
       />
       <CardContent
         style={{
@@ -94,125 +110,71 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
           paddingBottom: '16px',
         }}
       >
-        <div>
-          <Typography style={{ fontWeight: 'bold' }}>
-            Stake Pool Shares
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Pool</TableCell>
-                  <TableCell align="left">Account</TableCell>
-                  <TableCell align="right">Shares</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {poolRows.map(row => (
-                  <TableRow key={row.pool}>
-                    <TableCell component="th" scope="row">
-                      {row.pool}
-                    </TableCell>
-                    <TableCell align="left">
-                      <div style={{ width: '180px', overflowX: 'hidden' }}>
-                        {row.account}
-                      </div>
-                    </TableCell>
-                    <TableCell align="right">{row.shares}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-        <div style={{ marginTop: '16px', marginBottom: '40px' }}>
-          <Typography style={{ fontWeight: 'bold' }}>
-            Available Balances
-          </Typography>
-          <Typography color="textSecondary" style={{ fontSize: '14px' }}>
-            Total balances available for staking.
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Token</TableCell>
-                  <TableCell align="right">Balance</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {rows.map(row => (
-                  <TableRow key={row.token}>
-                    <TableCell component="th" scope="row">
-                      {row.token}
-                    </TableCell>
-                    <TableCell align="right">{row.balance}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-        <div style={{ marginTop: '16px', marginBottom: '40px' }}>
-          <Typography style={{ fontWeight: 'bold' }}>
-            Locked Deposits
-          </Typography>
-          <Typography color="textSecondary" style={{ fontSize: '14px' }}>
-            Locked deposits are funds transferred from the lockup program. These
-            funds cannot be withdrawn directly, but instead, must be withdrawn
-            back to a locked account.
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Token</TableCell>
-                  <TableCell align="right">Balance</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {lockedRows.map(row => (
-                  <TableRow key={row.token}>
-                    <TableCell component="th" scope="row">
-                      {row.token}
-                    </TableCell>
-                    <TableCell align="right">{row.balance}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-        <div style={{ marginTop: '16px', marginBottom: '40px' }}>
-          <Typography style={{ fontWeight: 'bold' }}>
-            Unlocked Deposits
-          </Typography>
-          <Typography color="textSecondary" style={{ fontSize: '14px' }}>
-            Unlocked deposits are funds not transferred from the lockup program,
-            and so can be withdrawn freely, if not staked.
-          </Typography>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Token</TableCell>
-                  <TableCell align="right">Balance</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {unlockedRows.map(row => (
-                  <TableRow key={row.token}>
-                    <TableCell component="th" scope="row">
-                      {row.token}
-                    </TableCell>
-                    <TableCell align="right">{row.balance}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+        {tables.map(t => (
+          <BalanceTable
+            key={t.title}
+            title={t.title}
+            description={t.description}
+            rows={t.rows}
+          />
+        ))}
       </CardContent>
     </Card>
+  );
+}
+
+type BalanceTableProps = {
+  title: string;
+  description: string;
+  rows:
+    | null
+    | {
+        token: string;
+        balance: string;
+        stake: string;
+        pending: string;
+        spt: string;
+      }[];
+};
+
+function BalanceTable(props: BalanceTableProps) {
+  const { title, rows, description } = props;
+  return (
+    <div style={{ marginBottom: '16px' }}>
+      <Typography style={{ fontWeight: 'bold' }}>{title}</Typography>
+      <Typography color="textSecondary" style={{ fontSize: '14px' }}>
+        {description}
+      </Typography>
+      <TableContainer>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Token</TableCell>
+              <TableCell align="right">Available</TableCell>
+              <TableCell align="right">Pending</TableCell>
+              <TableCell align="right">Staked</TableCell>
+              <TableCell align="right">Shares</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {rows === null ? (
+              <CircularProgress />
+            ) : (
+              rows.map(row => (
+                <TableRow key={row.token}>
+                  <TableCell component="th" scope="row">
+                    {row.token}
+                  </TableCell>
+                  <TableCell align="right">{row.balance}</TableCell>
+                  <TableCell align="right">{row.pending}</TableCell>
+                  <TableCell align="right">{row.stake}</TableCell>
+                  <TableCell align="right">{row.spt}</TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </div>
   );
 }
