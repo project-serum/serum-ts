@@ -60,6 +60,12 @@
         "programId": "4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn"
     },
     {
+        "address": "8Jzed8Fafu1RU1CQDWdiETSrqAJy1ukZ5JL6Pma3p3a2",
+        "name": "SRM/SOL",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
         "address": "DzFjazak6EKHnaB2w6qSsArnj28CV1TKd2Smcj9fqtHW",
         "name": "SUSHI/USDT",
         "deprecated": true,
