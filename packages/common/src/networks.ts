@@ -34,25 +34,27 @@ export const networks: Networks = {
     label: 'Devnet',
     url: 'https://devnet.solana.com',
     explorerClusterSuffix: 'devnet',
-    srm: new PublicKey('FmFyBrJsMaQKrEu9o3rmuPXEuejaUzfjKrTnADjUyUf1'),
-    msrm: new PublicKey('D1WNLkLvSLKFsdKpwdYgKjHjjGJx1riiAUSYowQ8JG7z'),
-    god: new PublicKey('4UyNBPrLMxbmrRbmKMeGFJDQKvAxdtnxRUBdyKrLNkdt'),
-    megaGod: new PublicKey('D1Gab6oEbg3k9ZZubshfBekUW777ArKTejdycGWfUqmw'),
+    srm: new PublicKey('JsQRYA2cGsn9QZyX7F3nyiQLdzVcFsLJhV58T5UR4e4'),
+    msrm: new PublicKey('5gaMWWCaLgNSp6h77mZzUhhze9QzGj1YC166eSNCruHx'),
+    god: new PublicKey('BZUK8EREmokVsLKucxtrUz4C6ze4wrm5s6oeWJCzbZ7Y'),
+    megaGod: new PublicKey('85vEGKqq3PZ6kcEZYvVRT9ADq2jaToPLhUPgw2MnzJnT'),
     registryProgramId: new PublicKey(
-      'C9vWHs2dbauSzZq6F2cHFPSRprMgJsCpwZ58GoaSH7HM',
+      'AbdZxECBtnqZ4Q5TM8aCcqQEsc6Kjq1dWYAuTSvrmt6G',
     ),
     lockupProgramId: new PublicKey(
-      'DBLQie1sXbXLvLqQ7w4rzQDppEeShxm5JMzkqWnXe12e',
+      'A2xXx2uMPRfwULwJCqSvVx61dJrgS1gnBzaJ1JcCtVh5',
     ),
     metaEntityProgramId: new PublicKey(
-      'GWHVH6zbMWHznQRduiYedFJ2c5Zhf3AT8vpvpc2byamZ',
+      'DAfQ6aNLHir19XqVxkf1GLfeSG6bcR5Tx6WqsrojzCUQ',
     ),
-    registrar: new PublicKey('DumAdaDJGPGTgjX5VT8tc8CNNCEgEuVxK2hFP1Kj2Rf7'),
+    registrar: new PublicKey('7XNUpjDHZUu1q2XuPUPWAkWq7zCz5YopegtX36tEjznk'),
     rewardEventQueue: new PublicKey(
-      '2BxeG7oNADvrvnJC2eT4z3rmdKzdz7T3pR9XSagARAKj',
+      'CfX3BzCmjMEaBrkeTDvHq4D2TFv8u7tkHnkDXrN9J8sk',
     ),
-    safe: new PublicKey('75PELe8FmaTzAhU18Xdt1ELQpMuy5SCeZ6gv49D2zuN9'),
-    defaultEntity: new PublicKey('oymf9QCsFt1aqSkcCGwQ65mnGaELGDCirCKUEJh4vF1'),
+    safe: new PublicKey('C7mz8Yd975tvxqCGuk7GrQwN3pp1zn9gwsbWwWn7t5rA'),
+    defaultEntity: new PublicKey(
+      'AL7HJTDWB1TgvS9YQMXujUHGr4n2xBKH6GgXXGQLsFVe',
+    ),
   },
 
   // Fill in with your local cluster addresses.
@@ -61,26 +63,27 @@ export const networks: Networks = {
     label: 'Localhost',
     url: 'http://localhost:8899',
     explorerClusterSuffix: 'localhost',
-    srm: new PublicKey('Aff4zU3a8mGjP6zfkQihnPYgFi6FxQNzHspG7x8nnJw1'),
-    msrm: new PublicKey('2BAH1MwrmD8dMCWSxgtYXBfsB7kfXUwh7yPvbAYVQNZn'),
-    god: new PublicKey('DzTBoP75bpJ7aiztVzonvZHLzmF7FPhX9pXUCMr7VNso'),
-    megaGod: new PublicKey('9n4U1Au1WNvCnKLUaSxL7xzeMZMxyTSc3RYCDz3YhMoQ'),
+
+    srm: new PublicKey('JsQRYA2cGsn9QZyX7F3nyiQLdzVcFsLJhV58T5UR4e4'),
+    msrm: new PublicKey('5gaMWWCaLgNSp6h77mZzUhhze9QzGj1YC166eSNCruHx'),
+    god: new PublicKey('BZUK8EREmokVsLKucxtrUz4C6ze4wrm5s6oeWJCzbZ7Y'),
+    megaGod: new PublicKey('85vEGKqq3PZ6kcEZYvVRT9ADq2jaToPLhUPgw2MnzJnT'),
     registryProgramId: new PublicKey(
-      '8Puw7KgpNchQbFuzH6ygowrMz2f5bqJgZhFCjBQ8veqL',
+      'AbdZxECBtnqZ4Q5TM8aCcqQEsc6Kjq1dWYAuTSvrmt6G',
     ),
     lockupProgramId: new PublicKey(
-      'qKLucNcq7wzeLaXcVTAZ3CnVEiWYEA61fwQZgmAxVfq',
+      'A2xXx2uMPRfwULwJCqSvVx61dJrgS1gnBzaJ1JcCtVh5',
     ),
     metaEntityProgramId: new PublicKey(
-      '5vvPrPPyS3rFysLBKs3A6spRQAH91jG9GbQhp71r86pc',
+      'DAfQ6aNLHir19XqVxkf1GLfeSG6bcR5Tx6WqsrojzCUQ',
     ),
-    registrar: new PublicKey('5vFgjzCVpo9dJg5TfZFC3t1yhj39tay6tNPy6VMvrA74'),
+    registrar: new PublicKey('7XNUpjDHZUu1q2XuPUPWAkWq7zCz5YopegtX36tEjznk'),
     rewardEventQueue: new PublicKey(
-      'CK1aiSuCYf3zsLfecy1eNt2ruj4z2A8rxH588ZAGTo5t',
+      'CfX3BzCmjMEaBrkeTDvHq4D2TFv8u7tkHnkDXrN9J8sk',
     ),
-    safe: new PublicKey('5Rx2SN84V11QCE2fkTeDekQ3nCANWvSnzs5rsqqrqNu4'),
+    safe: new PublicKey('C7mz8Yd975tvxqCGuk7GrQwN3pp1zn9gwsbWwWn7t5rA'),
     defaultEntity: new PublicKey(
-      '4bm34niiTuW4pu2cSHngc5PwCTBiBxfuznwxuDs7weNo',
+      'AL7HJTDWB1TgvS9YQMXujUHGr4n2xBKH6GgXXGQLsFVe',
     ),
   },
 };
