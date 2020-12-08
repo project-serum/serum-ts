@@ -11,6 +11,10 @@ export {
   TransactionAndSigners,
   SimplePoolParams,
 } from './transactions';
+export {
+  AdminControlledPoolInstructions,
+  isAdminControlledPool,
+} from './admin-controlled-pool';
 
 /**
  * Load and decode pool state.
@@ -72,15 +76,8 @@ export async function getPoolBasket(
     throw new Error('Failed to get pool basket: ' + JSON.stringify(value.err));
   }
   if (value.logs) {
-    for (let i = value.logs.length - 2; i >= 0; --i) {
-      if (
-        (value.logs[i + 1] ===
-          'Call BPF program ' + RETBUF_PROGRAM_ID.toBase58() ||
-          value.logs[i + 1].startsWith(
-            'Program ' + RETBUF_PROGRAM_ID.toBase58() + ' invoke [',
-          )) &&
-        value.logs[i].startsWith('Program log: ')
-      ) {
+    for (let i = value.logs.length - 1; i >= 0; --i) {
+      if (value.logs[i].startsWith('Program log: ')) {
         const data = Buffer.from(
           value.logs[i].slice('Program log: '.length),
           'base64',
