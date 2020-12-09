@@ -33,7 +33,7 @@ export interface UserInfo {
 
 export const RETBUF_PROGRAM_ID = new PublicKey(
   // TODO: switch to shmem4EWT2sPdVGvTZCzXXRAURL9G5vpPxNwSeKhHUL once that exists on mainnet
-  'Fb5VbxAy7Q6HKjWrggEvEtifBfM7T4HukisF1yyVRN4y',
+  'BYVBQ71CYArTNbEpDnsPCjcoWkJL9181xvj52kfyFFHg',
 );
 
 export const SERUM_FEE_OWNER_ADDRESS = new PublicKey(
