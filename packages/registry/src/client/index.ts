@@ -1365,6 +1365,11 @@ export default class Client {
       ...ixs,
       new TransactionInstruction({
         keys: [
+          {
+            pubkey: this.provider.wallet.publicKey,
+            isWritable: false,
+            isSigner: true,
+          },
           { pubkey: member.account.entity, isWritable: false, isSigner: false },
           { pubkey: member.publicKey, isWritable: true, isSigner: false },
           { pubkey: this.registrar, isWritable: false, isSigner: false },
@@ -1429,6 +1434,11 @@ export default class Client {
     tx.add(
       new TransactionInstruction({
         keys: [
+          {
+            pubkey: this.provider.wallet.publicKey,
+            isWritable: false,
+            isSigner: true,
+          },
           { pubkey: member.account.entity, isWritable: false, isSigner: false },
           { pubkey: member.publicKey, isWritable: true, isSigner: false },
           { pubkey: this.registrar, isWritable: false, isSigner: false },

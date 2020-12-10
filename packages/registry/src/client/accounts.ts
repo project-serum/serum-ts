@@ -548,9 +548,11 @@ export default class Accounts {
     });
     vaultPw.on('change', t => {
       memberDeref.account.balances[0].vaultPendingWithdrawal = t;
+      eeMux.emit('change', memberDeref);
     });
     vaultPwMega.on('change', t => {
       memberDeref.account.balances[0].vaultPendingWithdrawalMega = t;
+      eeMux.emit('change', memberDeref);
     });
 
     // Locked.
@@ -584,9 +586,11 @@ export default class Accounts {
     });
     lockedVaultPw.on('change', t => {
       memberDeref.account.balances[1].vaultPendingWithdrawal = t;
+      eeMux.emit('change', memberDeref);
     });
     lockedVaultPwMega.on('change', t => {
       memberDeref.account.balances[1].vaultPendingWithdrawalMega = t;
+      eeMux.emit('change', memberDeref);
     });
 
     return [memberDeref, eeMux];
