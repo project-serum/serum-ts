@@ -153,7 +153,7 @@ export class RewardListItemViewModel {
         ? event.lockedAlloc
         : event.unlockedAlloc!;
       vendor = ctx.vendors.get(eventInner.vendor.toString());
-      if (vendor !== undefined) {
+      if (vendor !== undefined && ctx.member !== undefined) {
         const ownsPool =
           ctx.member.account.balances.filter(
             b => b.spt.amount.cmp(new BN(0)) === 1,
