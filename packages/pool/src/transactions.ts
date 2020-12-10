@@ -16,7 +16,6 @@ import {
 import { TokenInstructions } from '@project-serum/serum';
 import { Basket, PoolAction } from './schema';
 import BN from 'bn.js';
-import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
 import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
@@ -161,7 +160,7 @@ export class PoolTransactions {
         newAccountPubkey: poolTokenMint.publicKey,
         space: mintAccountSpace,
         lamports: mintAccountLamports,
-        programId: TOKEN_PROGRAM_ID,
+        programId: TokenInstructions.TOKEN_PROGRAM_ID,
       }),
       TokenInstructions.initializeMint({
         mint: poolTokenMint.publicKey,
@@ -304,8 +303,33 @@ export class PoolTransactions {
     }
     const transaction = new Transaction();
     const delegate = new Account();
-    if ('create' in action) {
-      expectedBasket.quantities.forEach((amount, index) => {
+    const signers = [delegate];
+    user = { ...user, assetAccounts: user.assetAccounts.slice() };
+    let wrappedSolAccount: Account | null = null;
+
+    function approveDelegate(amount: BN, index: number, approveZero = false) {
+      if (
+        user.assetAccounts[index].equals(user.owner) &&
+        pool.state.assets[index].mint.equals(TokenInstructions.WRAPPED_SOL_MINT)
+      ) {
+        wrappedSolAccount = new Account();
+        signers.push(wrappedSolAccount);
+        transaction.add(
+          SystemProgram.createAccount({
+            fromPubkey: user.owner,
+            newAccountPubkey: wrappedSolAccount.publicKey,
+            lamports: amount.toNumber() + 2.04e6,
+            space: 165,
+            programId: TokenInstructions.TOKEN_PROGRAM_ID,
+          }),
+          TokenInstructions.initializeAccount({
+            account: wrappedSolAccount.publicKey,
+            mint: TokenInstructions.WRAPPED_SOL_MINT,
+            owner: delegate.publicKey,
+          }),
+        );
+        user.assetAccounts[index] = wrappedSolAccount.publicKey;
+      } else if (amount.gtn(0) || approveZero) {
         transaction.add(
           TokenInstructions.approve({
             owner: user.owner,
@@ -314,6 +338,12 @@ export class PoolTransactions {
             amount,
           }),
         );
+      }
+    }
+
+    if ('create' in action) {
+      expectedBasket.quantities.forEach((amount, index) => {
+        approveDelegate(amount, index, true);
       });
     } else if ('redeem' in action) {
       transaction.add(
@@ -326,26 +356,14 @@ export class PoolTransactions {
       );
       expectedBasket.quantities.forEach((amount, index) => {
         if (amount.isNeg()) {
-          transaction.add(
-            TokenInstructions.approve({
-              owner: user.owner,
-              source: user.assetAccounts[index],
-              delegate: delegate.publicKey,
-              amount: amount.abs(),
-            }),
-          );
+          approveDelegate(amount.abs(), index);
+        } else {
+          approveDelegate(new BN(0), index);
         }
       });
     } else if ('swap' in action) {
       action.swap.quantities.forEach((amount, index) => {
-        transaction.add(
-          TokenInstructions.approve({
-            owner: user.owner,
-            source: user.assetAccounts[index],
-            delegate: delegate.publicKey,
-            amount,
-          }),
-        );
+        approveDelegate(amount, index);
       });
     }
     transaction.add(
@@ -354,6 +372,15 @@ export class PoolTransactions {
         owner: delegate.publicKey,
       }),
     );
-    return { transaction, signers: [delegate] };
+    if (wrappedSolAccount) {
+      transaction.add(
+        TokenInstructions.closeAccount({
+          source: wrappedSolAccount!.publicKey,
+          destination: user.owner,
+          owner: delegate.publicKey,
+        }),
+      );
+    }
+    return { transaction, signers };
   }
 }
