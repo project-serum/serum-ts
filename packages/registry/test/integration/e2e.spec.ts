@@ -46,6 +46,8 @@ describe('End-to-end tests', () => {
         deactivationTimelock: new BN(5),
         rewardActivationThreshold: new BN(1),
         maxStakePerEntity: new BN(100000000),
+        stakeRate: new BN(1),
+        stakeRateMega: new BN(1),
       },
     );
     let registrar = await client.accounts.registrar(registrarAddress);
@@ -157,6 +159,7 @@ describe('End-to-end tests', () => {
       amount,
       spt: mainBalances.spt,
       isMega: false,
+      balanceId: provider.wallet.publicKey,
     });
 
     let poolVaultAfter = await client.accounts.poolVault(
@@ -197,6 +200,7 @@ describe('End-to-end tests', () => {
       amount,
       spt: mainBalances.spt,
       isMega: false,
+      balanceId: provider.wallet.publicKey,
     });
 
     let pwVaultAfter = await client.accounts.pendingWithdrawalVault(
@@ -225,7 +229,7 @@ describe('End-to-end tests', () => {
     expect(pw.initialized).toBe(true);
     expect(pw.burned).toBe(false);
     expect(pw.member).toEqual(member);
-    expect(pw.sptAmount.toNumber()).toEqual(amount.toNumber());
+    expect(pw.amount.toNumber()).toEqual(amount.toNumber());
 
     // Wait for withdrawal timelock to pass.
     await sleep(registrar.withdrawalTimelock.toNumber() * 3 * 1000);
