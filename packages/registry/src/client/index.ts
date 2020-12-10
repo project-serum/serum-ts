@@ -1447,6 +1447,7 @@ export default class Client {
           { pubkey: vendorSigner, isWritable: false, isSigner: false },
           { pubkey: token, isWritable: true, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
+          { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
         ],
         programId: this.programId,
         data: instruction.encode({
