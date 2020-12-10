@@ -103,14 +103,19 @@ export class Provider {
       return tx;
     });
 
-    let signedTxs = await this.wallet.signAllTransactions(txs);
+    const signedTxs = await this.wallet.signAllTransactions(txs);
 
-    return await Promise.all(
-      signedTxs.map(tx => {
-        const rawTx = tx.serialize();
-        return sendAndConfirmRawTransaction(this.connection, rawTx, opts);
-      }),
-    );
+    const sigs = [];
+
+    for (let k = 0; k < txs.length; k += 1) {
+      const tx = signedTxs[k];
+      const rawTx = tx.serialize();
+      sigs.push(
+        await sendAndConfirmRawTransaction(this.connection, rawTx, opts),
+      );
+    }
+
+    return sigs;
   }
 }
 
