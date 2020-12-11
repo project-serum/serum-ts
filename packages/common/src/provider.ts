@@ -70,17 +70,51 @@ export class Provider {
     return txId;
   }
 
-  // TODO: batch signing to sollet.
   async sendAll(
-    txs: Array<SendTxRequest>,
+    reqs: Array<SendTxRequest>,
     opts?: ConfirmOptions,
   ): Promise<Array<TransactionSignature>> {
-    const sigs: Array<TransactionSignature> = [];
-    for (let k = 0; k < txs.length; k += 1) {
-      const t = txs[k];
-      const s = await this.send(t.tx, t.signers, opts);
-      sigs.push(s);
+    if (opts === undefined) {
+      opts = this.opts;
     }
+    const blockhash = await this.connection.getRecentBlockhash(
+      opts.preflightCommitment,
+    );
+
+    let txs = reqs.map(r => {
+      let tx = r.tx;
+      let signers = r.signers;
+
+      if (signers === undefined) {
+        signers = [];
+      }
+
+      const signerKps = signers.filter(s => s !== undefined) as Array<Account>;
+      const signerPubkeys = [this.wallet.publicKey].concat(
+        signerKps.map(s => s.publicKey),
+      );
+
+      tx.setSigners(...signerPubkeys);
+      tx.recentBlockhash = blockhash.blockhash;
+      signerKps.forEach(kp => {
+        tx.partialSign(kp);
+      });
+
+      return tx;
+    });
+
+    const signedTxs = await this.wallet.signAllTransactions(txs);
+
+    const sigs = [];
+
+    for (let k = 0; k < txs.length; k += 1) {
+      const tx = signedTxs[k];
+      const rawTx = tx.serialize();
+      sigs.push(
+        await sendAndConfirmRawTransaction(this.connection, rawTx, opts),
+      );
+    }
+
     return sigs;
   }
 }
@@ -92,6 +126,7 @@ export type SendTxRequest = {
 
 export interface Wallet {
   signTransaction(tx: Transaction): Promise<Transaction>;
+  signAllTransactions(txs: Transaction[]): Promise<Transaction[]>;
   publicKey: PublicKey;
 }
 
@@ -117,6 +152,13 @@ export class NodeWallet implements Wallet {
   async signTransaction(tx: Transaction): Promise<Transaction> {
     tx.partialSign(this.payer);
     return tx;
+  }
+
+  async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+    return txs.map(t => {
+      t.partialSign(this.payer);
+      return t;
+    });
   }
 
   get publicKey(): PublicKey {
