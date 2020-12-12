@@ -15,6 +15,7 @@ export interface UnlockedRewardVendor {
   expiryTs: BN;
   expiryReceiver: PublicKey;
   total: BN;
+  expired: boolean;
 }
 
 const LOCKED_REWARD_VENDOR_LAYOUT: Layout<UnlockedRewardVendor> = borsh.struct([
@@ -29,6 +30,7 @@ const LOCKED_REWARD_VENDOR_LAYOUT: Layout<UnlockedRewardVendor> = borsh.struct([
   borsh.i64('expiryTs'),
   borsh.publicKey('expiryReceiver'),
   borsh.u64('total'),
+  borsh.bool('expired'),
 ]);
 
 export function decode(data: Buffer): UnlockedRewardVendor {
@@ -54,6 +56,7 @@ export function defaultUnlockedRewardVendor(): UnlockedRewardVendor {
     expiryTs: new BN(0),
     expiryReceiver: new PublicKey(Buffer.alloc(32)),
     total: new BN(0),
+    expired: false,
   };
 }
 

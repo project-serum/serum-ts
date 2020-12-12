@@ -1158,7 +1158,6 @@ export default class Client {
       total,
       endTs,
       expiryTs,
-      expiryReceiver,
       depositor,
       depositorMint,
       poolTokenMint,
@@ -1219,7 +1218,7 @@ export default class Client {
             total,
             endTs,
             expiryTs,
-            expiryReceiver,
+            expiryReceiver: this.provider.wallet.publicKey,
             periodCount,
             nonce,
           },
@@ -1237,14 +1236,7 @@ export default class Client {
   async dropUnlockedReward(
     req: DropUnlockedRewardRequest,
   ): Promise<DropUnlockedRewardResponse> {
-    let {
-      total,
-      expiryTs,
-      expiryReceiver,
-      depositor,
-      depositorMint,
-      poolTokenMint,
-    } = req;
+    let { total, expiryTs, depositor, depositorMint, poolTokenMint } = req;
     const vendor = new Account();
     const vendorVault = new Account();
 
@@ -1299,7 +1291,7 @@ export default class Client {
           dropUnlockedReward: {
             total,
             expiryTs,
-            expiryReceiver,
+            expiryReceiver: this.provider.wallet.publicKey,
             nonce,
           },
         }),
@@ -1772,7 +1764,6 @@ type DropLockedRewardRequest = {
   total: BN;
   endTs: BN;
   expiryTs: BN;
-  expiryReceiver: PublicKey;
   depositor: PublicKey;
   depositorMint: PublicKey;
   poolTokenMint: PublicKey;
@@ -1786,7 +1777,6 @@ type DropLockedRewardResponse = {
 type DropUnlockedRewardRequest = {
   total: BN;
   expiryTs: BN;
-  expiryReceiver: PublicKey;
   depositor: PublicKey;
   depositorMint: PublicKey;
   poolTokenMint: PublicKey;

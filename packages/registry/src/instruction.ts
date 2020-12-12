@@ -29,7 +29,9 @@ export type RegistryInstruction =
   | DropLockedReward
   | DropUnlockedReward
   | ClaimLockedReward
-  | ClaimUnlockedReward;
+  | ClaimUnlockedReward
+  | ExpireUnlockedReward
+  | ExpireLockedReward;
 
 type Initialize = {
   authority: PublicKey;
@@ -114,6 +116,10 @@ type ClaimUnlockedReward = {
   cursor: number;
 };
 
+type ExpireUnlockedReward = {};
+
+type ExpireLockedReward = {};
+
 const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   struct(
     [
@@ -170,6 +176,8 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
   ),
   struct([u32('cursor'), u8('nonce')], 'claimLockedReward'),
   struct([u32('cursor')], 'claimUnlockedReward'),
+  struct([], 'expireUnlockedReward'),
+  struct([], 'expireLockedReward'),
 ]);
 
 export function decode(data: Buffer): RegistryInstruction {

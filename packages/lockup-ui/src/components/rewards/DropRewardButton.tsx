@@ -119,9 +119,6 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
     null,
   );
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
-  const [expiryReceiver, setExpiryReceiver] = useState(
-    registryClient.provider.wallet.publicKey.toString(),
-  );
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
   const [mintLabel, setMintLabel] = useState('srm');
   const [mint, setMint] = useState<null | PublicKey>(network.srm);
@@ -141,7 +138,6 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
         let { tx } = await registryClient.dropUnlockedReward({
           total: new BN(lockedRewardAmount as number),
           expiryTs: new BN(expiryTs as number),
-          expiryReceiver: new PublicKey(expiryReceiver as string),
           depositor: depositor as PublicKey,
           depositorMint: mint as PublicKey,
           poolTokenMint:
@@ -171,8 +167,6 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
       setMintLabel={setMintLabel}
       setDepositor={setDepositor}
       setLockedRewardAmount={setLockedRewardAmount}
-      expiryReceiver={expiryReceiver}
-      setExpiryReceiver={setExpiryReceiver}
       expiryTs={expiryTs}
       setExpiryTs={setExpiryTs}
       onCancel={onClose}
@@ -203,9 +197,6 @@ function DropLockedForm(props: DropLockedFormProps) {
   );
   const [endTs, setEndTs] = useState<null | number>(null);
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
-  const [expiryReceiver, setExpiryReceiver] = useState(
-    registryClient.provider.wallet.publicKey.toString(),
-  );
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
   const [mintLabel, setMintLabel] = useState('srm');
   const [mint, setMint] = useState<null | PublicKey>(network.srm);
@@ -227,7 +218,6 @@ function DropLockedForm(props: DropLockedFormProps) {
           total: new BN(lockedRewardAmount as number),
           endTs: new BN(endTs as number),
           expiryTs: new BN(expiryTs as number),
-          expiryReceiver: new PublicKey(expiryReceiver as string),
           depositor: depositor as PublicKey,
           depositorMint: mint as PublicKey,
           poolTokenMint:
@@ -260,8 +250,6 @@ function DropLockedForm(props: DropLockedFormProps) {
       setEndTs={setEndTs}
       periodCount={periodCount}
       setPeriodCount={setPeriodCount}
-      expiryReceiver={expiryReceiver}
-      setExpiryReceiver={setExpiryReceiver}
       expiryTs={expiryTs}
       setExpiryTs={setExpiryTs}
       onCancel={onClose}
@@ -282,8 +270,6 @@ type DropVendorFormProps = {
   setEndTs?: (n: number) => void;
   periodCount?: number;
   setPeriodCount?: (p: number) => void;
-  expiryReceiver: string;
-  setExpiryReceiver: (r: string) => void;
   expiryTs: number | null;
   setExpiryTs: (ts: number) => void;
   onCancel: () => void;
@@ -303,8 +289,6 @@ function DropVendorForm(props: DropVendorFormProps) {
     setEndTs,
     periodCount,
     setPeriodCount,
-    expiryReceiver,
-    setExpiryReceiver,
     expiryTs,
     setExpiryTs,
     onCancel,
@@ -403,19 +387,11 @@ function DropVendorForm(props: DropVendorFormProps) {
             </div>
           </div>
         )}
-        <TextField
-          style={{ marginTop: '37px', width: '100%' }}
-          label="Expiry Receiver"
-          variant="outlined"
-          value={expiryReceiver}
-          onChange={e => setExpiryReceiver(e.target.value as string)}
-        />
-        <div style={{ display: 'flex' }}>
+        <div style={{ marginTop: '37px', display: 'flex' }}>
           <div
             style={{
               flex: 1,
               height: '100%',
-              marginTop: '10px',
               marginRight: '10px',
             }}
           >
