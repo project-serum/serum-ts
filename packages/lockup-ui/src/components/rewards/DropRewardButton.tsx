@@ -387,12 +387,11 @@ function DropVendorForm(props: DropVendorFormProps) {
             </div>
           </div>
         )}
-        <div style={{ display: 'flex' }}>
+        <div style={{ marginTop: '37px', display: 'flex' }}>
           <div
             style={{
               flex: 1,
               height: '100%',
-              marginTop: '10px',
               marginRight: '10px',
             }}
           >

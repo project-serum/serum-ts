@@ -1764,7 +1764,6 @@ type DropLockedRewardRequest = {
   total: BN;
   endTs: BN;
   expiryTs: BN;
-  expiryReceiver: PublicKey;
   depositor: PublicKey;
   depositorMint: PublicKey;
   poolTokenMint: PublicKey;
@@ -1778,7 +1777,6 @@ type DropLockedRewardResponse = {
 type DropUnlockedRewardRequest = {
   total: BN;
   expiryTs: BN;
-  expiryReceiver: PublicKey;
   depositor: PublicKey;
   depositorMint: PublicKey;
   poolTokenMint: PublicKey;
