@@ -36,8 +36,8 @@ export const RETBUF_PROGRAM_ID = new PublicKey(
   'BYVBQ71CYArTNbEpDnsPCjcoWkJL9181xvj52kfyFFHg',
 );
 
-export const SERUM_FEE_OWNER_ADDRESS = new PublicKey(
-  'DeqYsmBd9BnrbgUwQjVH4sQWK71dEgE6eoZFw3Rp4ftE',
+export const LQD_FEE_OWNER_ADDRESS = new PublicKey(
+  '3LTvJCPiPSMjX1kBJ6ZfEhn4G2hM46aJ1yEZsk8i12TK',
 );
 
 /**
@@ -59,7 +59,7 @@ export class PoolInstructions {
    * @param vaultSigner Mint authority for `poolTokenMint` and owner of
    * `poolTokenMint`.
    * @param vaultSignerNonce Nonce used to generate `vaultSigner`.
-   * @param serumFeeAccount Pool token spl-token account owned by the serum fee owner.
+   * @param lqdFeeAccount Pool token spl-token account owned by the LQD fee owner.
    * @param initializerFeeAccount Pool token spl-token account owned by the pool initializer.
    * @param feeRate Fee rate for creations/redemptions times 10^6.
    * @param additionalAccounts Any custom pool-specific accounts needed to
@@ -74,7 +74,7 @@ export class PoolInstructions {
     vaults: PublicKey[],
     vaultSigner: PublicKey,
     vaultSignerNonce: number,
-    serumFeeAccount: PublicKey,
+    lqdFeeAccount: PublicKey,
     initializerFeeAccount: PublicKey,
     feeRate: number,
     additionalAccounts?: AccountMeta[],
@@ -90,7 +90,7 @@ export class PoolInstructions {
           isWritable: true,
         })),
         { pubkey: vaultSigner, isSigner: false, isWritable: false },
-        { pubkey: serumFeeAccount, isSigner: false, isWritable: false },
+        { pubkey: lqdFeeAccount, isSigner: false, isWritable: false },
         { pubkey: initializerFeeAccount, isSigner: false, isWritable: false },
         {
           pubkey: SYSVAR_RENT_PUBKEY,
@@ -190,7 +190,7 @@ export class PoolInstructions {
         })),
         { pubkey: user.owner, isSigner: true, isWritable: false },
         {
-          pubkey: pool.state.serumFeeVault,
+          pubkey: pool.state.lqdFeeVault,
           isSigner: false,
           isWritable: true,
         },
@@ -200,7 +200,7 @@ export class PoolInstructions {
           isWritable: true,
         },
         {
-          pubkey: user.referrer ?? pool.state.serumFeeVault,
+          pubkey: user.referrer ?? pool.state.lqdFeeVault,
           isSigner: false,
           isWritable: true,
         },

@@ -1,6 +1,6 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { Basket, decodePoolState, isPoolState, PoolAction } from './schema';
-import { PoolInfo, RETBUF_PROGRAM_ID } from './instructions';
+import { PoolInfo } from './instructions';
 import { simulateTransaction } from './simulate-transaction';
 import { PoolTransactions } from './transactions';
 

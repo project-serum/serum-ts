@@ -36,7 +36,7 @@ describe('PoolState', () => {
         },
       ],
       name: 'Test',
-      serumFeeVault: new PublicKey(
+      lqdFeeVault: new PublicKey(
         '77AkdYcu3DjtzmJYRVnFymfcdaqJjjFhRnKyyDPjQHYF',
       ),
       initializerFeeVault: new PublicKey(

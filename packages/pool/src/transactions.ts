@@ -2,7 +2,7 @@ import {
   PoolInfo,
   PoolInstructions,
   RETBUF_PROGRAM_ID,
-  SERUM_FEE_OWNER_ADDRESS,
+  LQD_FEE_OWNER_ADDRESS,
   UserInfo,
 } from './instructions';
 import {
@@ -131,8 +131,8 @@ export class PoolTransactions {
     const vaultAddresses = await Promise.all(
       assetMints.map(mint => getAssociatedTokenAddress(vaultSigner, mint)),
     );
-    const serumFeeAddress = await getAssociatedTokenAddress(
-      SERUM_FEE_OWNER_ADDRESS,
+    const lqdFeeAddress = await getAssociatedTokenAddress(
+      LQD_FEE_OWNER_ADDRESS,
       poolTokenMint.publicKey,
     );
 
@@ -174,7 +174,7 @@ export class PoolTransactions {
       ),
       await createAssociatedTokenAccount(
         creator,
-        SERUM_FEE_OWNER_ADDRESS,
+        LQD_FEE_OWNER_ADDRESS,
         poolTokenMint.publicKey,
       ),
     );
@@ -230,7 +230,7 @@ export class PoolTransactions {
         vaultAddresses,
         vaultSigner,
         vaultSignerNonce,
-        serumFeeAddress,
+        lqdFeeAddress,
         creatorPoolTokenAddress,
         feeRate,
         additionalAccounts,
@@ -375,6 +375,7 @@ export class PoolTransactions {
     if (wrappedSolAccount) {
       transaction.add(
         TokenInstructions.closeAccount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           source: wrappedSolAccount!.publicKey,
           destination: user.owner,
           owner: delegate.publicKey,

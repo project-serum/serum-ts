@@ -31,8 +31,8 @@ export interface PoolState {
   accountParams: ParamDesc[];
   /** User-friendly name for the pool. */
   name: string;
-  /** Token vault address for fees collected by the pool for Serum. */
-  serumFeeVault: PublicKey;
+  /** Token vault address for fees collected by the pool for LQD. */
+  lqdFeeVault: PublicKey;
   /** Token vault address for fees collected by the pool for the pool initializer. */
   initializerFeeVault: PublicKey;
   /** Fee on creations/redemptions, times 10^6. */
@@ -96,7 +96,7 @@ export const PoolState: Layout<PoolState> = tagged(
     u8('vaultSignerNonce'),
     vec(ParamDesc, 'accountParams'),
     str('name'),
-    publicKey('serumFeeVault'),
+    publicKey('lqdFeeVault'),
     publicKey('initializerFeeVault'),
     u32('feeRate'),
     option(publicKey(), 'adminKey'),
