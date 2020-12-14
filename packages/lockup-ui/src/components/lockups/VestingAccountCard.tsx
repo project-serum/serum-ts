@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChartistGraph from 'react-chartist';
+import { useDispatch } from 'react-redux';
 import BN from 'bn.js';
 import { useSnackbar } from 'notistack';
 import { FixedScaleAxis, IChartOptions, Interpolation } from 'chartist';
@@ -18,6 +19,7 @@ import { ProgramAccount } from '../../store/reducer';
 import { useWallet } from '../common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { withTx } from '../../components/common/Notification';
+import { ActionType } from '../../store/actions';
 
 type VestingAccountCardProps = {
   network: Network;
@@ -28,6 +30,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { vesting, network } = props;
   const { lockupClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
+  const dispatch = useDispatch();
 
   const currencyLabel = vesting.account.mint.equals(network.srm)
     ? 'SRM'
@@ -118,6 +121,18 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
           amount: availableForWithdrawal!,
           vesting: vesting.publicKey,
           tokenAccount: withdrawalAccount!,
+        });
+        const newVesting = await lockupClient.accounts.vesting(
+          vesting.publicKey,
+        );
+        dispatch({
+          type: ActionType.LockupUpdateVesting,
+          item: {
+            vesting: {
+              publicKey: vesting.publicKey,
+              account: newVesting,
+            },
+          },
         });
         return tx;
       },
@@ -218,6 +233,9 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
           </Typography>
           <Typography>Vault: {vesting.account.vault.toString()}</Typography>
           <Typography>
+            Period count: {vesting.account.periodCount.toString()}
+          </Typography>
+          <Typography>
             Start timestamp: {vesting.account.startTs.toString()}
           </Typography>
           <Typography>
@@ -244,7 +262,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
                   })
                 }
               >
-                Withdraw
+                Unlock tokens
               </Button>
             </div>
           </div>

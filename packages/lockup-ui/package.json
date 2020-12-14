@@ -9,7 +9,7 @@
     "@project-serum/common": "^0.0.1-alpha.2",
     "@project-serum/lockup": "^0.0.1-alpha.2",
     "@project-serum/registry": "^0.0.1-alpha.4",
-    "@project-serum/sol-wallet-adapter": "^0.1.3",
+    "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",

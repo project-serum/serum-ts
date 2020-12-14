@@ -221,7 +221,7 @@ type Coin = 'srm' | 'lsrm' | 'msrm' | 'lmsrm';
 function DepositDialog(props: DepositDialogProps) {
   const { open, onClose } = props;
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { registryClient, lockupClient } = useWallet();
+  const { registryClient, lockupClient, wallet } = useWallet();
   const dispatch = useDispatch();
   const { safe, registrar, member } = useSelector((state: StoreState) => {
     return {
@@ -265,6 +265,16 @@ function DepositDialog(props: DepositDialogProps) {
               entity: member.data!.account.member.entity,
               member: member.data!.publicKey,
               vault,
+            });
+            const vesting = await lockupClient.accounts.vesting(from);
+            dispatch({
+              type: ActionType.LockupUpdateVesting,
+              item: {
+                vesting: {
+                  publicKey: from,
+                  account: vesting,
+                },
+              },
             });
             return tx;
           } else {
@@ -310,7 +320,7 @@ type WithdrawDialogProps = DepositDialogProps;
 
 function WithdrawDialog(props: WithdrawDialogProps) {
   const { open, onClose } = props;
-  const { registryClient, lockupClient } = useWallet();
+  const { registryClient, lockupClient, wallet } = useWallet();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const { safe, registrar, member } = useSelector((state: StoreState) => {
@@ -351,6 +361,16 @@ function WithdrawDialog(props: WithdrawDialogProps) {
               entity: member.data!.account.member.entity,
               member: member.data!.publicKey,
               vault,
+            });
+            const vesting = await lockupClient.accounts.vesting(from);
+            dispatch({
+              type: ActionType.LockupUpdateVesting,
+              item: {
+                vesting: {
+                  publicKey: from,
+                  account: vesting,
+                },
+              },
             });
             return tx;
           } else {

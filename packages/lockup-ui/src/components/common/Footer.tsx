@@ -84,7 +84,7 @@ export default function Footer() {
       <div style={{ display: 'flex' }}>
         {hasMember && isAppReady && (
           <div
-            style={{ display: 'flex' }}
+            style={{ display: 'none' /*'flex'*/ }}
             onClick={() => {
               setChatDisplay(!chatDisplay);
             }}

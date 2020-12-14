@@ -21,16 +21,13 @@ import * as skin from '../../skin';
 
 export default function EntityGallery() {
   const [entityAddress, setEntityAddress] = useState<null | PublicKey>(null);
-  let { entities, metadata, isWalletConnected } = useSelector(
-    (state: StoreState) => {
-      return {
-        entities: state.registry.entities,
-        metadata: state.registry.entityMetadata,
-        isWalletConnected: state.common.isWalletConnected,
-        member: state.registry.member,
-      };
-    },
-  );
+  let { entities, metadata } = useSelector((state: StoreState) => {
+    return {
+      entities: state.registry.entities,
+      metadata: state.registry.entityMetadata,
+      member: state.registry.member,
+    };
+  });
   // Sort entities by activation.
   entities = entities
     .filter(e => e.account.state.active !== undefined)
@@ -79,9 +76,9 @@ export default function EntityGallery() {
               </div>
               <NewButton
                 style={{
-                  visibility: !isWalletConnected /* || !member*/
-                    ? 'hidden'
-                    : '',
+                  // For development only. Otherwise, entity creation is done through CLI
+                  // by a node leader.
+                  display: 'none',
                 }}
               />
             </div>
@@ -179,7 +176,16 @@ function EntityCard(props: EntityCardProps) {
               <div style={{ height: '144px', overflow: 'hidden' }}>
                 <Img
                   style={{ width: '100%' }}
-                  src={[`${imageUrl}`, defaultUrl]}
+                  src={[`${imageUrl}`]}
+                  unloader={
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: 'grey',
+                      }}
+                    ></div>
+                  }
                 />
               </div>
               <div

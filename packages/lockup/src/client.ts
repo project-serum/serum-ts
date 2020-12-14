@@ -340,11 +340,11 @@ export default class Client {
       new TransactionInstruction({
         keys: [
           { pubkey: beneficiaryAddress, isWritable: false, isSigner: true },
-          { pubkey: vesting, isWritable: true, isSigner: false },
           { pubkey: this.safe, isWritable: false, isSigner: false },
           { pubkey: safe.whitelist, isWritable: false, isSigner: false },
           { pubkey: whitelistProgram, isWritable: false, isSigner: false },
           // Relay accounts.
+          { pubkey: vesting, isWritable: true, isSigner: false },
           { pubkey: vault, isWritable: true, isSigner: false },
           { pubkey: vaultAuthority, isWritable: false, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
@@ -410,11 +410,11 @@ export default class Client {
       new TransactionInstruction({
         keys: [
           { pubkey: beneficiaryAddress, isWritable: false, isSigner: true },
-          { pubkey: vesting, isWritable: true, isSigner: false },
           { pubkey: this.safe, isWritable: false, isSigner: false },
           { pubkey: safe.whitelist, isWritable: false, isSigner: false },
           { pubkey: whitelistProgram, isWritable: false, isSigner: false },
           // Relay accounts.
+          { pubkey: vesting, isWritable: true, isSigner: false },
           { pubkey: vault, isWritable: true, isSigner: false },
           { pubkey: vaultAuthority, isWritable: false, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
