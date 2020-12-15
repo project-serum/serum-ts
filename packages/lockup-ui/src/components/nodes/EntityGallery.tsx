@@ -21,16 +21,13 @@ import * as skin from '../../skin';
 
 export default function EntityGallery() {
   const [entityAddress, setEntityAddress] = useState<null | PublicKey>(null);
-  let { entities, metadata, isWalletConnected } = useSelector(
-    (state: StoreState) => {
-      return {
-        entities: state.registry.entities,
-        metadata: state.registry.entityMetadata,
-        isWalletConnected: state.common.isWalletConnected,
-        member: state.registry.member,
-      };
-    },
-  );
+  let { entities, metadata } = useSelector((state: StoreState) => {
+    return {
+      entities: state.registry.entities,
+      metadata: state.registry.entityMetadata,
+      member: state.registry.member,
+    };
+  });
   // Sort entities by activation.
   entities = entities
     .filter(e => e.account.state.active !== undefined)
@@ -79,9 +76,9 @@ export default function EntityGallery() {
               </div>
               <NewButton
                 style={{
-                  visibility: !isWalletConnected /* || !member*/
-                    ? 'hidden'
-                    : '',
+                  // For development only. Otherwise, entity creation is done through CLI
+                  // by a node leader.
+                  display: 'none',
                 }}
               />
             </div>
@@ -91,9 +88,8 @@ export default function EntityGallery() {
                 flexWrap: 'wrap',
               }}
             >
-              {entities.map((entity, idx) => (
+              {entities.map((entity) => (
                 <EntityCard
-                  idx={idx}
                   metadata={metadata.get(entity.publicKey.toString())}
                   entity={entity}
                   onClick={() => setEntityAddress(entity.publicKey)}
@@ -131,17 +127,12 @@ type EntityCardProps = {
   entity: ProgramAccount<accounts.Entity>;
   metadata?: ProgramAccount<metaEntity.accounts.metadata.Metadata>;
   onClick: () => void;
-  idx: number; // TODO: Remove once we have a real default url.
 };
 
 function EntityCard(props: EntityCardProps) {
-  const { entity, metadata, onClick, idx } = props;
+  const { entity, metadata, onClick } = props;
   const imageUrl = metadata?.account.imageUrl;
 
-  const height = idx + 361;
-
-  // TODO: use a different default url.
-  const defaultUrl = `https://source.unsplash.com/random/361x${height}`;
   return (
     <>
       <div
@@ -179,7 +170,16 @@ function EntityCard(props: EntityCardProps) {
               <div style={{ height: '144px', overflow: 'hidden' }}>
                 <Img
                   style={{ width: '100%' }}
-                  src={[`${imageUrl}`, defaultUrl]}
+                  src={[`${imageUrl}`]}
+                  unloader={
+                    <div
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        background: 'grey',
+                      }}
+                    ></div>
+                  }
                 />
               </div>
               <div

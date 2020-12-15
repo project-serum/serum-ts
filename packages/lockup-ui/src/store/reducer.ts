@@ -71,6 +71,14 @@ export default function reducer(
     case ActionType.LockupSetVestings:
       newState.lockup.vestings = action.item.vestingAccounts;
       return newState;
+    case ActionType.LockupUpdateVesting:
+      newState.lockup.vestings = newState.lockup.vestings.map(v => {
+        if (v.publicKey.equals(action.item.vesting.publicKey)) {
+          return action.item.vesting;
+        }
+        return v;
+      });
+      return newState;
     case ActionType.LockupCreateVesting:
       newState.lockup.vestings.unshift(action.item.vesting);
       return newState;

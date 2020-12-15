@@ -266,6 +266,16 @@ function DepositDialog(props: DepositDialogProps) {
               member: member.data!.publicKey,
               vault,
             });
+            const vesting = await lockupClient.accounts.vesting(from);
+            dispatch({
+              type: ActionType.LockupUpdateVesting,
+              item: {
+                vesting: {
+                  publicKey: from,
+                  account: vesting,
+                },
+              },
+            });
             return tx;
           } else {
             const { tx } = await registryClient.deposit({
@@ -351,6 +361,16 @@ function WithdrawDialog(props: WithdrawDialogProps) {
               entity: member.data!.account.member.entity,
               member: member.data!.publicKey,
               vault,
+            });
+            const vesting = await lockupClient.accounts.vesting(from);
+            dispatch({
+              type: ActionType.LockupUpdateVesting,
+              item: {
+                vesting: {
+                  publicKey: from,
+                  account: vesting,
+                },
+              },
             });
             return tx;
           } else {

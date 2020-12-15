@@ -32,6 +32,7 @@ import {
 import * as instruction from '../instruction';
 import * as accounts from '../accounts';
 import { LockedRewardVendor } from '../accounts/locked-vendor';
+import { UnlockedRewardVendor } from '../accounts/unlocked-vendor';
 import { Registrar, SIZE as REGISTRAR_SIZE } from '../accounts/registrar';
 import { PendingWithdrawal } from '../accounts/pending-withdrawal';
 import { Member } from '../accounts/member';
@@ -644,11 +645,20 @@ export default class Client {
       vaultOwner = v.vault.owner;
     }
 
+    // Dummy account to pass into the instruction, since it conforms to the
+    // lockup program's whitelist withdraw/deposit interface.
+    const dummyAccountMeta = {
+      pubkey: SYSVAR_CLOCK_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    };
+
     const tx = new Transaction();
     tx.add(
       new TransactionInstruction({
         keys: [
           // Whitelist relay interface.
+          dummyAccountMeta,
           { pubkey: depositor, isWritable: true, isSigner: false },
           {
             pubkey: depositorAuthorityPubkey,
@@ -712,11 +722,20 @@ export default class Client {
       vaultOwner = v.vault.owner;
     }
 
+    // Dummy account to pass into the instruction, since it conforms to the
+    // lockup program's whitelist withdraw/deposit interface.
+    const dummyAccountMeta = {
+      pubkey: SYSVAR_CLOCK_PUBKEY,
+      isWritable: false,
+      isSigner: false,
+    };
+
     const tx = new Transaction();
     tx.add(
       new TransactionInstruction({
         keys: [
           // Whitelist relay interface.
+          dummyAccountMeta,
           { pubkey: depositor, isWritable: true, isSigner: false },
           {
             pubkey: depositorAuthorityPubkey,
@@ -1125,9 +1144,9 @@ export default class Client {
             .map(b => {
               return [
                 { pubkey: b.owner, isWritable: false, isSigner: false },
-                { pubkey: b.vaultStake, isWritable: false, isSigner: false },
+                { pubkey: b.spt, isWritable: false, isSigner: false },
                 {
-                  pubkey: b.vaultStakeMega,
+                  pubkey: b.sptMega,
                   isWritable: false,
                   isSigner: false,
                 },
@@ -1312,13 +1331,11 @@ export default class Client {
       cursor,
       member,
       vendor,
-      vendorVault,
       vendorSigner,
       safe,
       lockupProgramId,
       mint,
       poolMint,
-      poolMintMega,
     } = req;
 
     if (member instanceof PublicKey) {
@@ -1333,10 +1350,9 @@ export default class Client {
       vendor = await this.accounts.lockedRewardVendor(vendor);
     }
 
-    if (!poolMint || !poolMintMega) {
+    if (!poolMint) {
       const r = await this.accounts.registrar();
       poolMint = r.poolMint;
-      poolMintMega = r.poolMintMega;
     }
 
     const vesting = new Account();
@@ -1366,7 +1382,7 @@ export default class Client {
           { pubkey: member.publicKey, isWritable: true, isSigner: false },
           { pubkey: this.registrar, isWritable: false, isSigner: false },
           { pubkey: vendor.publicKey, isWritable: false, isSigner: false },
-          { pubkey: vendorVault, isWritable: true, isSigner: false },
+          { pubkey: vendor.account.vault, isWritable: true, isSigner: false },
           { pubkey: vendorSigner, isWritable: false, isSigner: false },
           { pubkey: safe, isWritable: false, isSigner: false },
           { pubkey: lockupProgramId, isWritable: false, isSigner: false },
@@ -1412,7 +1428,7 @@ export default class Client {
   async claimUnlockedReward(
     req: ClaimUnlockedRewardRequest,
   ): Promise<ClaimUnlockedRewardResponse> {
-    let { cursor, member, vendor, vendorVault, vendorSigner, token } = req;
+    let { cursor, member, vendor, vendorSigner, token, poolMint } = req;
 
     if (member instanceof PublicKey) {
       const account = await this.accounts.member(member);
@@ -1420,6 +1436,15 @@ export default class Client {
         publicKey: member,
         account,
       };
+    }
+
+    if (vendor instanceof PublicKey) {
+      vendor = await this.accounts.lockedRewardVendor(vendor);
+    }
+
+    if (!poolMint) {
+      const r = await this.accounts.registrar();
+      poolMint = r.poolMint;
     }
 
     const tx = new Transaction();
@@ -1434,13 +1459,29 @@ export default class Client {
           { pubkey: member.account.entity, isWritable: false, isSigner: false },
           { pubkey: member.publicKey, isWritable: true, isSigner: false },
           { pubkey: this.registrar, isWritable: false, isSigner: false },
-          { pubkey: vendor, isWritable: false, isSigner: false },
-          { pubkey: vendorVault, isWritable: true, isSigner: false },
+          { pubkey: vendor.publicKey, isWritable: false, isSigner: false },
+          { pubkey: vendor.account.vault, isWritable: true, isSigner: false },
           { pubkey: vendorSigner, isWritable: false, isSigner: false },
           { pubkey: token, isWritable: true, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
-        ],
+        ].concat(
+          member.account.balances.map(b => {
+            return (vendor as ProgramAccount<
+              UnlockedRewardVendor
+            >).account.pool.equals(poolMint!)
+              ? {
+                  pubkey: b.spt,
+                  isWritable: false,
+                  isSigner: false,
+                }
+              : {
+                  pubkey: b.sptMega,
+                  isWritable: false,
+                  isSigner: false,
+                };
+          }),
+        ),
         programId: this.programId,
         data: instruction.encode({
           claimUnlockedReward: {
@@ -1790,13 +1831,11 @@ type ClaimLockedRewardRequest = {
   cursor: number;
   member: PublicKey | ProgramAccount<Member>;
   vendor: PublicKey | ProgramAccount<LockedRewardVendor>;
-  vendorVault: PublicKey;
   vendorSigner: PublicKey;
   safe: PublicKey;
   lockupProgramId: PublicKey;
   mint: PublicKey;
   poolMint?: PublicKey;
-  poolMintMega?: PublicKey;
 };
 
 type ClaimLockedRewardResponse = {
@@ -1806,10 +1845,10 @@ type ClaimLockedRewardResponse = {
 type ClaimUnlockedRewardRequest = {
   cursor: number;
   member: PublicKey | ProgramAccount<Member>;
-  vendor: PublicKey;
-  vendorVault: PublicKey;
+  vendor: PublicKey | ProgramAccount<UnlockedRewardVendor>;
   vendorSigner: PublicKey;
   token: PublicKey;
+  poolMint?: PublicKey;
 };
 
 type ClaimUnlockedRewardResponse = {

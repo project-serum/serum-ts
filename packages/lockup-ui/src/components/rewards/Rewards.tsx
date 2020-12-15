@@ -68,7 +68,6 @@ export default function Rewards() {
         <div style={{ display: 'flex' }}>
           {nextReward !== undefined && (
             <ClaimRewardButton
-              registryClient={registryClient}
               rli={nextReward}
               member={member}
               network={network}

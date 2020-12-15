@@ -26,15 +26,12 @@ import EventEmitter from 'eventemitter3';
 let REWARD_Q_LISTENER = -1;
 
 export default class Accounts {
-  private accountSubscriptions: Map<string, number>;
   constructor(
     readonly provider: Provider,
     readonly registrarAddress: PublicKey,
     readonly programId: PublicKey,
     readonly metaEntityProgramId: PublicKey,
-  ) {
-    this.accountSubscriptions = new Map();
-  }
+  ) {}
 
   async registrar(address?: PublicKey): Promise<Registrar> {
     if (address === undefined) {
@@ -454,10 +451,6 @@ export default class Accounts {
   async memberConnect(
     address: PublicKey,
   ): Promise<[ProgramAccount<MemberDeref>, EventEmitter]> {
-    if (this.accountSubscriptions.get(address.toString())) {
-      throw new Error('already connected');
-    }
-
     const memberDeref = await this.memberDeref(address);
 
     // Single event emitter to mux all the websocket connections.
@@ -596,11 +589,6 @@ export default class Accounts {
     return [memberDeref, eeMux];
   }
 
-  // TODO: disconnect all subscriptions associated with the member.
-  memberDisconnect(address: PublicKey) {
-    this.accountDisconnect(address);
-  }
-
   accountConnect(address: PublicKey, decoder: Function): EventEmitter {
     const ee = new EventEmitter();
 
@@ -610,16 +598,7 @@ export default class Accounts {
       'recent',
     );
 
-    this.accountSubscriptions.set(address.toString(), sub);
-
     return ee;
-  }
-
-  accountDisconnect(address: PublicKey) {
-    const sub = this.accountSubscriptions.get(address.toString());
-    if (sub) {
-      this.provider.connection.removeAccountChangeListener(sub);
-    }
   }
 
   rewardEventQueueConnect(address: PublicKey): EventEmitter {

@@ -32,16 +32,19 @@ export function encode(e: Metadata): Buffer {
   return buffer.slice(0, len);
 }
 
-export const SIZE = 280 * 2 + 32;
+const maxName =
+  'ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff';
 
 export function defaultMetadata(): Metadata {
   return {
     initialized: true,
     entity: new PublicKey(Buffer.alloc(32)),
     authority: new PublicKey(Buffer.alloc(32)),
-    name: '',
-    about: '',
-    imageUrl: '',
+    name: maxName,
+    about: maxName,
+    imageUrl: maxName,
     chat: new PublicKey(Buffer.alloc(32)),
   };
 }
+
+export const SIZE = encode(defaultMetadata()).length;

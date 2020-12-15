@@ -20,6 +20,7 @@ export enum ActionType {
   // Lockup.
   LockupSetSafe,
   LockupSetVestings,
+  LockupUpdateVesting,
   LockupCreateVesting,
 
   // Registry.

@@ -64,7 +64,7 @@ function RiskBar() {
           height: '100%',
         }}
       >
-        <Typography style={{ fontSize: '14px', fontWeight: 'bold' }}>
+        <Typography style={{ fontSize: '14px' }}>
           This is unaudited software. Use at your own risk.
         </Typography>
       </div>

@@ -1,22 +1,26 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import Button from '@material-ui/core/Button';
 import { PublicKey } from '@solana/web3.js';
 import * as registry from '@project-serum/registry';
 import { Network, ProgramAccount } from '@project-serum/common';
+import { useWallet } from '../../components/common/WalletProvider';
 import * as notification from '../common/Notification';
 import OwnedTokenAccountsSelect from '../common/OwnedTokenAccountsSelect';
 import { RewardListItemViewModel } from './RewardsList';
+import { ActionType } from '../../store/actions';
 
-type ClaimButtonProps = {
+type ClaimRewardButtonProps = {
   rli: RewardListItemViewModel;
   member: ProgramAccount<registry.accounts.MemberDeref>;
   network: Network;
-  registryClient: registry.Client;
 };
 
-export default function ClaimButton(props: ClaimButtonProps) {
-  const { registryClient, rli, member, network } = props;
+export default function ClaimRewardButton(props: ClaimRewardButtonProps) {
+  const { registryClient, lockupClient, wallet } = useWallet();
+  const { rli, member, network } = props;
+  const dispatch = useDispatch();
   const snack = useSnackbar();
   const [token, setToken] = useState<null | PublicKey>(null);
 
@@ -41,12 +45,21 @@ export default function ClaimButton(props: ClaimButtonProps) {
               publicKey: member.publicKey,
               account: member.account.member,
             },
-            vendor: vendor.publicKey,
-            vendorVault: vendor.account.vault,
+            vendor,
             vendorSigner,
             safe: network.safe,
             lockupProgramId: network.lockupProgramId,
             mint: rli!.reward.lockedAlloc!.mint,
+          });
+          // Refetch the vesting accounts to update the UI with the new reward.
+          const vestingAccounts = await lockupClient.accounts.allVestings(
+            wallet.publicKey,
+          );
+          dispatch({
+            type: ActionType.LockupSetVestings,
+            item: {
+              vestingAccounts,
+            },
           });
           return tx;
         } else {
@@ -60,8 +73,7 @@ export default function ClaimButton(props: ClaimButtonProps) {
           const { tx } = await registryClient.claimUnlockedReward({
             cursor: rli!.cursor,
             member: member.publicKey,
-            vendor: vendor.publicKey,
-            vendorVault: vendor.account.vault,
+            vendor,
             vendorSigner,
             token: token!,
           });

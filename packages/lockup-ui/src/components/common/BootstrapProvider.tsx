@@ -191,11 +191,8 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       //       demand, or denormalize and throw all the metadata into the Entity
       //       struct.
       const entityMetadata = await registryClient.accounts.allMetadata();
-      // TODO: don't special case this.
       const defaultEntity = entityAccounts
-        .filter(
-          e => e.publicKey.toString() === network.defaultEntity.toString(),
-        )
+        .filter(e => e.publicKey.equals(network.defaultEntity))
         .pop();
       const defaultMetadata = {
         publicKey: defaultEntity!.account.metadata,
@@ -211,8 +208,6 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
         },
       });
     };
-
-    // Connections.
 
     const fetchOwnedTokenAccounts = async () => {
       const ownedTokenAccounts = await token.getOwnedTokenAccounts(
