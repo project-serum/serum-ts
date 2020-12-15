@@ -221,7 +221,7 @@ type Coin = 'srm' | 'lsrm' | 'msrm' | 'lmsrm';
 function DepositDialog(props: DepositDialogProps) {
   const { open, onClose } = props;
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { registryClient, lockupClient, wallet } = useWallet();
+  const { registryClient, lockupClient } = useWallet();
   const dispatch = useDispatch();
   const { safe, registrar, member } = useSelector((state: StoreState) => {
     return {
@@ -320,7 +320,7 @@ type WithdrawDialogProps = DepositDialogProps;
 
 function WithdrawDialog(props: WithdrawDialogProps) {
   const { open, onClose } = props;
-  const { registryClient, lockupClient, wallet } = useWallet();
+  const { registryClient, lockupClient } = useWallet();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
   const { safe, registrar, member } = useSelector((state: StoreState) => {

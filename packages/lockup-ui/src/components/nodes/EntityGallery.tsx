@@ -137,8 +137,6 @@ function EntityCard(props: EntityCardProps) {
 
   const height = idx + 361;
 
-  // TODO: use a different default url.
-  const defaultUrl = `https://source.unsplash.com/random/361x${height}`;
   return (
     <>
       <div
