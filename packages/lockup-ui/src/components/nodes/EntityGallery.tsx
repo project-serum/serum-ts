@@ -135,8 +135,6 @@ function EntityCard(props: EntityCardProps) {
   const { entity, metadata, onClick, idx } = props;
   const imageUrl = metadata?.account.imageUrl;
 
-  const height = idx + 361;
-
   return (
     <>
       <div
