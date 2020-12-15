@@ -120,13 +120,13 @@ export default class Client {
       megaMint,
       withdrawalTimelock,
       deactivationTimelock,
-      rewardActivationThreshold,
       maxStakePerEntity,
       authority,
       registrar,
       stakeRate,
       stakeRateMega,
     } = req;
+
     if (authority === undefined) {
       authority = provider.wallet.publicKey;
     }
@@ -192,7 +192,6 @@ export default class Client {
             nonce: vaultNonce,
             withdrawalTimelock,
             deactivationTimelock,
-            rewardActivationThreshold,
             maxStakePerEntity,
             stakeRate,
             stakeRateMega,
@@ -232,7 +231,6 @@ export default class Client {
       newAuthority,
       withdrawalTimelock,
       deactivationTimelock,
-      rewardActivationThreshold,
       maxStakePerEntity,
     } = req;
     let authorityPubkey =
@@ -253,7 +251,6 @@ export default class Client {
             newAuthority,
             withdrawalTimelock,
             deactivationTimelock,
-            rewardActivationThreshold,
             maxStakePerEntity,
           },
         }),
@@ -1017,7 +1014,6 @@ export default class Client {
     req: EndStakeWithdrawalRequest,
   ): Promise<EndStakeWithdrawalResponse> {
     let { member, beneficiary, pendingWithdrawal, registrar } = req;
-    //		console.log('member', member.toString());
     const beneficiaryPubkey =
       beneficiary === undefined
         ? this.provider.wallet.publicKey
@@ -1632,7 +1628,6 @@ type InitializeRequest = {
   megaMint: PublicKey;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
-  rewardActivationThreshold: BN;
   maxStakePerEntity: BN;
   stakeRate: BN;
   stakeRateMega: BN;
@@ -1652,7 +1647,6 @@ type UpdateRegistrarRequest = {
   newAuthority: PublicKey | null;
   withdrawalTimelock: BN | null;
   deactivationTimelock: BN | null;
-  rewardActivationThreshold: BN | null;
   maxStakePerEntity: BN | null;
 };
 

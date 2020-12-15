@@ -11,7 +11,7 @@ import { Client } from '../../src';
 
 // When running this test, make sure to deploy the programs and plug them
 // into the localhost network config.
-const network = networks.devnet;
+const network = networks.localhost;
 const registryProgramId = network.registryProgramId;
 const metaEntityProgramId = network.metaEntityProgramId;
 const url = network.url;
@@ -44,25 +44,23 @@ describe('End-to-end tests', () => {
         megaMint: msrmMint,
         withdrawalTimelock: new BN(60),
         deactivationTimelock: new BN(5),
-        rewardActivationThreshold: new BN(1),
-        maxStakePerEntity: new BN(100000000),
+        maxStakePerEntity: new BN(100000000000000),
         stakeRate: new BN(1),
         stakeRateMega: new BN(1),
       },
     );
+
     let registrar = await client.accounts.registrar(registrarAddress);
     expect(registrar.withdrawalTimelock.toNumber()).toEqual(60);
     expect(registrar.deactivationTimelock.toNumber()).toEqual(5);
-    expect(registrar.rewardActivationThreshold.toNumber()).toEqual(1);
     expect(registrar.authority).toEqual(provider.wallet.publicKey);
-    expect(registrar.maxStakePerEntity.toNumber()).toEqual(100000000);
+    expect(registrar.maxStakePerEntity.toNumber()).toEqual(100000000000000);
 
     // Update registrar.
     await client.updateRegistrar({
       newAuthority: null,
       withdrawalTimelock: new BN(2),
       deactivationTimelock: null,
-      rewardActivationThreshold: null,
       maxStakePerEntity: null,
     });
 
@@ -83,8 +81,6 @@ describe('End-to-end tests', () => {
     expect(e.balances).toEqual({
       sptAmount: u64Zero,
       sptMegaAmount: u64Zero,
-      currentDeposit: u64Zero,
-      currentMegaDeposit: u64Zero,
     });
     expect(e.state).toEqual({
       inactive: {},
@@ -142,6 +138,15 @@ describe('End-to-end tests', () => {
     );
     result = vaultAfter.amount.sub(vaultBefore.amount);
     expect(amount).toEqual(result);
+
+    // Stake MSRM.
+    await client.stake({
+      member,
+      amount,
+      spt: mainBalances.sptMega,
+      isMega: true,
+      balanceId: provider.wallet.publicKey,
+    });
 
     // Stake SRM.
     let poolVaultBefore = await client.accounts.poolVault(

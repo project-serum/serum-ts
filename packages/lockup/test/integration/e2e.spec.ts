@@ -21,9 +21,9 @@ const u64Zero = new BN(Buffer.alloc(8));
 describe('End-to-end tests', () => {
   it('Runs against a localnetwork', async () => {
     // Genesis state.
-    const commitment = 'recent';
     const provider = Provider.local(url, {
-      preflightCommitment: commitment,
+      preflightCommitment: 'recent',
+      commitment: 'recent',
     });
     const [srmMint, god] = await createMintAndVault(
       provider,

@@ -40,7 +40,6 @@ type Initialize = {
   nonce: number;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
-  rewardActivationThreshold: BN;
   maxStakePerEntity: BN;
   stakeRate: BN;
   stakeRateMega: BN;
@@ -50,7 +49,6 @@ type UpdateRegistrar = {
   newAuthority: PublicKey | null;
   withdrawalTimelock: BN | null;
   deactivationTimelock: BN | null;
-  rewardActivationThreshold: BN | null;
   maxStakePerEntity: BN | null;
 };
 
@@ -129,7 +127,6 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
       u8('nonce'),
       i64('withdrawalTimelock'),
       i64('deactivationTimelock'),
-      u64('rewardActivationThreshold'),
       u64('maxStakePerEntity'),
       u64('stakeRate'),
       u64('stakeRateMega'),
@@ -141,7 +138,6 @@ const REGISTRY_INSTRUCTION_LAYOUT: Layout<RegistryInstruction> = rustEnum([
       option(publicKey(), 'newAuthority'),
       option(i64(), 'withdrawalTimelock'),
       option(i64(), 'deactivationTimelock'),
-      option(u64(), 'rewardActivationThreshold'),
       option(u64(), 'maxStakePerEntity'),
     ],
     'updateRegistrar',

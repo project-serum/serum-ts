@@ -7,6 +7,7 @@ import {
   ConfirmOptions,
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
+import { simulateTransaction } from './simulate-transaction';
 
 export class Provider {
   constructor(
@@ -61,13 +62,24 @@ export class Provider {
 
     const rawTx = tx.serialize();
 
-    const txId = await sendAndConfirmRawTransaction(
-      this.connection,
-      rawTx,
-      opts,
-    );
+    try {
+      const txId = await sendAndConfirmRawTransaction(
+        this.connection,
+        rawTx,
+        opts,
+      );
 
-    return txId;
+      return txId;
+    } catch (err) {
+      console.error('Transaction failed. Simulating for logs...');
+      const r = await simulateTransaction(
+        this.connection,
+        tx,
+        opts.commitment ?? 'recent',
+      );
+      console.error(r);
+      throw err;
+    }
   }
 
   async sendAll(
@@ -110,9 +122,20 @@ export class Provider {
     for (let k = 0; k < txs.length; k += 1) {
       const tx = signedTxs[k];
       const rawTx = tx.serialize();
-      sigs.push(
-        await sendAndConfirmRawTransaction(this.connection, rawTx, opts),
-      );
+      try {
+        sigs.push(
+          await sendAndConfirmRawTransaction(this.connection, rawTx, opts),
+        );
+      } catch (err) {
+        console.error('Transaction failed. Simulating for logs...');
+        const r = await simulateTransaction(
+          this.connection,
+          tx,
+          opts.commitment ?? 'recent',
+        );
+        console.error(r);
+        throw err;
+      }
     }
 
     return sigs;
