@@ -88,9 +88,8 @@ export default function EntityGallery() {
                 flexWrap: 'wrap',
               }}
             >
-              {entities.map((entity, idx) => (
+              {entities.map((entity) => (
                 <EntityCard
-                  idx={idx}
                   metadata={metadata.get(entity.publicKey.toString())}
                   entity={entity}
                   onClick={() => setEntityAddress(entity.publicKey)}
@@ -128,11 +127,10 @@ type EntityCardProps = {
   entity: ProgramAccount<accounts.Entity>;
   metadata?: ProgramAccount<metaEntity.accounts.metadata.Metadata>;
   onClick: () => void;
-  idx: number; // TODO: Remove once we have a real default url.
 };
 
 function EntityCard(props: EntityCardProps) {
-  const { entity, metadata, onClick, idx } = props;
+  const { entity, metadata, onClick } = props;
   const imageUrl = metadata?.account.imageUrl;
 
   return (
