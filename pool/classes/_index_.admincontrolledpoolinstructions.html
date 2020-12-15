@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>PoolTransactions | @project-serum/pool</title>
+	<title>AdminControlledPoolInstructions | @project-serum/pool</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -59,10 +59,10 @@
 					<a href="../modules/_index_.html">&quot;index&quot;</a>
 				</li>
 				<li>
-					<a href="_index_.pooltransactions.html">PoolTransactions</a>
+					<a href="_index_.admincontrolledpoolinstructions.html">AdminControlledPoolInstructions</a>
 				</li>
 			</ul>
-			<h1>Class PoolTransactions</h1>
+			<h1>Class AdminControlledPoolInstructions</h1>
 		</div>
 	</div>
 </header>
@@ -72,16 +72,15 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>High-level API for constructing transactions to interact with pools.</p>
+						<p>Instructions for interacting with the example admin-controlled pool.</p>
 					</div>
-					<p>For a lower-level API, see <a href="_index_.poolinstructions.html">PoolInstructions</a>.</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">PoolTransactions</span>
+						<span class="target">AdminControlledPoolInstructions</span>
 					</li>
 				</ul>
 			</section>
@@ -92,9 +91,13 @@
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.pooltransactions.html#execute" class="tsd-kind-icon">execute</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.pooltransactions.html#getbasket" class="tsd-kind-icon">get<wbr>Basket</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.pooltransactions.html#initializesimplepool" class="tsd-kind-icon">initialize<wbr>Simple<wbr>Pool</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#addasset" class="tsd-kind-icon">add<wbr>Asset</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#approvedelegate" class="tsd-kind-icon">approve<wbr>Delegate</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#pause" class="tsd-kind-icon">pause</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#removeasset" class="tsd-kind-icon">remove<wbr>Asset</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#unpause" class="tsd-kind-icon">unpause</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#updateadmin" class="tsd-kind-icon">update<wbr>Admin</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_index_.admincontrolledpoolinstructions.html#updatefee" class="tsd-kind-icon">update<wbr>Fee</a></li>
 							</ul>
 						</section>
 					</div>
@@ -103,139 +106,221 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="execute" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> execute</h3>
+					<a name="addasset" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> add<wbr>Asset</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">execute<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, action<span class="tsd-signature-symbol">: </span><a href="../modules/_index_.html#poolaction" class="tsd-signature-type">PoolAction</a>, user<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.userinfo.html" class="tsd-signature-type">UserInfo</a>, expectedBasket<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.basket.html" class="tsd-signature-type">Basket</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.transactionandsigners.html" class="tsd-signature-type">TransactionAndSigners</a></li>
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Asset<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, vault<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/transactions.ts#L293">transactions.ts:293</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L100">admin-controlled-pool.ts:100</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Transaction to execute a creation, redemption, or swap.</p>
+									<p>Adds a new asset to the pool.</p>
 								</div>
-								<p>This is a wrapper around <a href="_index_.poolinstructions.html#execute">PoolInstructions.execute</a> that handles
-								token delegation.</p>
-								<p>The transaction will create a temporary account, delegate tokens to it,
-									and use it in place of the actual owner, to limit the quantity of tokens
-								that the pool can pull from the user&#39;s accounts.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Pool to interact with.</p>
-									</div>
 								</li>
 								<li>
-									<h5>action: <a href="../modules/_index_.html#poolaction" class="tsd-signature-type">PoolAction</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Creation, redemption, or swap.</p>
-									</div>
-								</li>
-								<li>
-									<h5>user: <a href="../interfaces/_index_.userinfo.html" class="tsd-signature-type">UserInfo</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Token accounts to pull funds from or send funds to.</p>
-									</div>
-								</li>
-								<li>
-									<h5>expectedBasket: <a href="../interfaces/_index_.basket.html" class="tsd-signature-type">Basket</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Expected basket. Used to determine the quantity of
-										tokens to approve.</p>
-									</div>
+									<h5>vault: <span class="tsd-signature-type">PublicKey</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.transactionandsigners.html" class="tsd-signature-type">TransactionAndSigners</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="getbasket" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> get<wbr>Basket</h3>
+					<a name="approvedelegate" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> approve<wbr>Delegate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">get<wbr>Basket<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, action<span class="tsd-signature-symbol">: </span><a href="../modules/_index_.html#poolaction" class="tsd-signature-type">PoolAction</a>, payer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.transactionandsigners.html" class="tsd-signature-type">TransactionAndSigners</a></li>
+						<li class="tsd-signature tsd-kind-icon">approve<wbr>Delegate<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, vault<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, delegate<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, amount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/transactions.ts#L254">transactions.ts:254</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L85">admin-controlled-pool.ts:85</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Transaction to get a pool basket, for use with simulateTransaction.</p>
+									<p>Approves an account to spend tokens on behalf of the pool.</p>
 								</div>
-								<p>This is a wrapper around <a href="_index_.poolinstructions.html#getbasket">PoolInstructions.getBasket</a> that handles
-								initializing the retbuf account.</p>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
 									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Pool to interact with.</p>
-									</div>
 								</li>
 								<li>
-									<h5>action: <a href="../modules/_index_.html#poolaction" class="tsd-signature-type">PoolAction</a></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Creation, redemption, or swap.</p>
-									</div>
+									<h5>vault: <span class="tsd-signature-type">PublicKey</span></h5>
 								</li>
 								<li>
-									<h5>payer: <span class="tsd-signature-type">PublicKey</span></h5>
-									<div class="tsd-comment tsd-typography">
-										<p>Payer for fees. Must have nonzero SOL but will not be charged
-										if the transaction is only simulated.</p>
-									</div>
+									<h5>delegate: <span class="tsd-signature-type">PublicKey</span></h5>
+								</li>
+								<li>
+									<h5>amount: <span class="tsd-signature-type">BN</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.transactionandsigners.html" class="tsd-signature-type">TransactionAndSigners</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
-					<a name="initializesimplepool" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> initialize<wbr>Simple<wbr>Pool</h3>
+					<a name="pause" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> pause</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">initialize<wbr>Simple<wbr>Pool<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.simplepoolparams.html" class="tsd-signature-type">SimplePoolParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">pause<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/transactions.ts#L95">transactions.ts:95</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L64">admin-controlled-pool.ts:64</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Transaction to initialize a simple pool.</p>
+									<p>Pauses creations and redemptions for the pool.</p>
 								</div>
-								<p>This will:</p>
-								<ul>
-									<li>initialize a new pool token mint</li>
-									<li>initialize a pool token account for the creator and mint some tokens to it</li>
-									<li>initialize vault accounts for each of the pool assets</li>
-									<li>transfer assets from the pool creator to the vault accounts</li>
-									<li>initialize the pool</li>
-								</ul>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>params: <a href="../interfaces/_index_.simplepoolparams.html" class="tsd-signature-type">SimplePoolParams</a></h5>
+									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-symbol">[</span><span class="tsd-signature-symbol">]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="removeasset" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> remove<wbr>Asset</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">remove<wbr>Asset<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, vault<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L111">admin-controlled-pool.ts:111</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Removes an asset from the pool.</p>
+								</div>
+								<p>The pool must not currently own any tokens of the asset to be removed.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
+								</li>
+								<li>
+									<h5>vault: <span class="tsd-signature-type">PublicKey</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="unpause" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> unpause</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">unpause<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L72">admin-controlled-pool.ts:72</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Resumes creations and redemptions for the pool.</p>
+								</div>
+								<p>Pool assets must not have any outstanding delegates.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="updateadmin" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> update<wbr>Admin</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">update<wbr>Admin<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, newAdmin<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L123">admin-controlled-pool.ts:123</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Transfers admin permission for the pool to a new account.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
+								</li>
+								<li>
+									<h5>newAdmin: <span class="tsd-signature-type">PublicKey</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="updatefee" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> update<wbr>Fee</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">update<wbr>Fee<span class="tsd-signature-symbol">(</span>pool<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a>, feeRate<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/admin-controlled-pool.ts#L118">admin-controlled-pool.ts:118</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Modifies the fee rate for the pool.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>pool: <a href="../interfaces/_index_.poolinfo.html" class="tsd-signature-type">PoolInfo</a></h5>
+								</li>
+								<li>
+									<h5>feeRate: <span class="tsd-signature-type">number</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">TransactionInstruction</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -254,30 +339,42 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_index_.admincontrolledpoolinstructions.html" class="tsd-kind-icon">Admin<wbr>Controlled<wbr>Pool<wbr>Instructions</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-module">
-						<a href="_index_.poolinstructions.html" class="tsd-kind-icon">Pool<wbr>Instructions</a>
-					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-module">
-						<a href="_index_.pooltransactions.html" class="tsd-kind-icon">Pool<wbr>Transactions</a>
+						<a href="_index_.admincontrolledpoolinstructions.html" class="tsd-kind-icon">Admin<wbr>Controlled<wbr>Pool<wbr>Instructions</a>
 						<ul>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_index_.pooltransactions.html#execute" class="tsd-kind-icon">execute</a>
+								<a href="_index_.admincontrolledpoolinstructions.html#addasset" class="tsd-kind-icon">add<wbr>Asset</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_index_.pooltransactions.html#getbasket" class="tsd-kind-icon">get<wbr>Basket</a>
+								<a href="_index_.admincontrolledpoolinstructions.html#approvedelegate" class="tsd-kind-icon">approve<wbr>Delegate</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
-								<a href="_index_.pooltransactions.html#initializesimplepool" class="tsd-kind-icon">initialize<wbr>Simple<wbr>Pool</a>
+								<a href="_index_.admincontrolledpoolinstructions.html#pause" class="tsd-kind-icon">pause</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_index_.admincontrolledpoolinstructions.html#removeasset" class="tsd-kind-icon">remove<wbr>Asset</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_index_.admincontrolledpoolinstructions.html#unpause" class="tsd-kind-icon">unpause</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_index_.admincontrolledpoolinstructions.html#updateadmin" class="tsd-kind-icon">update<wbr>Admin</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_index_.admincontrolledpoolinstructions.html#updatefee" class="tsd-kind-icon">update<wbr>Fee</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_index_.poolinstructions.html" class="tsd-kind-icon">Pool<wbr>Instructions</a>
+					</li>
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_index_.pooltransactions.html" class="tsd-kind-icon">Pool<wbr>Transactions</a>
+					</li>
 					<li class=" tsd-kind-interface tsd-parent-kind-module">
 						<a href="../interfaces/_index_.assetinfo.html" class="tsd-kind-icon">Asset<wbr>Info</a>
 					</li>

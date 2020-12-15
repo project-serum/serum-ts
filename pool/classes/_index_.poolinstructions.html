@@ -113,7 +113,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2e21aaa/packages/pool/src/instructions.ts#L170">instructions.ts:170</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/instructions.ts#L170">instructions.ts:170</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -153,7 +153,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2e21aaa/packages/pool/src/instructions.ts#L131">instructions.ts:131</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/instructions.ts#L131">instructions.ts:131</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -194,13 +194,13 @@
 					<a name="initialize" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagStatic">Static</span> initialize</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
-						<li class="tsd-signature tsd-kind-icon">initialize<span class="tsd-signature-symbol">(</span>poolProgram<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolTokenMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, vaults<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span>, vaultSigner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, vaultSignerNonce<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, serumFeeAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, initializerFeeAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, feeRate<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, additionalAccounts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">AccountMeta</span><span class="tsd-signature-symbol">[]</span>, customData<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
+						<li class="tsd-signature tsd-kind-icon">initialize<span class="tsd-signature-symbol">(</span>poolProgram<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolTokenMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, poolName<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, vaults<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span>, vaultSigner<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, vaultSignerNonce<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, lqdFeeAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, initializerFeeAccount<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, feeRate<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, additionalAccounts<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">AccountMeta</span><span class="tsd-signature-symbol">[]</span>, customData<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Buffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">TransactionInstruction</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/2e21aaa/packages/pool/src/instructions.ts#L69">instructions.ts:69</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/7c9ca3c/packages/pool/src/instructions.ts#L69">instructions.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -255,9 +255,9 @@
 									</div>
 								</li>
 								<li>
-									<h5>serumFeeAccount: <span class="tsd-signature-type">PublicKey</span></h5>
+									<h5>lqdFeeAccount: <span class="tsd-signature-type">PublicKey</span></h5>
 									<div class="tsd-comment tsd-typography">
-										<p>Pool token spl-token account owned by the serum fee owner.</p>
+										<p>Pool token spl-token account owned by the LQD fee owner.</p>
 									</div>
 								</li>
 								<li>
@@ -305,6 +305,9 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-module">
+						<a href="_index_.admincontrolledpoolinstructions.html" class="tsd-kind-icon">Admin<wbr>Controlled<wbr>Pool<wbr>Instructions</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-module">
@@ -400,6 +403,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_index_.html#getpoolbasket" class="tsd-kind-icon">get<wbr>Pool<wbr>Basket</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="../modules/_index_.html#isadmincontrolledpool" class="tsd-kind-icon">is<wbr>Admin<wbr>Controlled<wbr>Pool</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="../modules/_index_.html#ispoolstate" class="tsd-kind-icon">is<wbr>Pool<wbr>State</a>
