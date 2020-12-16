@@ -8,9 +8,15 @@ export type Network = {
   url: string;
   explorerClusterSuffix: string;
 
-  // Mints and god accounts.
+  // Mints.
   srm: PublicKey;
   msrm: PublicKey;
+
+  // Faucets.
+  srmFaucet: PublicKey | null;
+  msrmFaucet: PublicKey | null;
+
+  // God accounts (used for integration tests).
   god: PublicKey;
   megaGod: PublicKey;
 
@@ -34,26 +40,29 @@ export const networks: Networks = {
     label: 'Devnet',
     url: 'https://devnet.solana.com',
     explorerClusterSuffix: 'devnet',
-    srm: new PublicKey('FS6Cnw4QmivAhubRQTR3APd2cooXDTbRUUmm2wnySJ6Y'),
-    msrm: new PublicKey('CVt4v9TYQ7Ttm6pHScfBEa9Qr5qbadv6CXZwod619tXJ'),
-    god: new PublicKey('4gHmYYrmjP2Fa1D8gfGvjGngnkGfr16wejoA12hF7xms'),
-    megaGod: new PublicKey('4QD6HXwh3vUTgqdWWx7HpgfrfPUS9vtUfQMydQNWC4Lm'),
+
+    srmFaucet: new PublicKey('9q8NhG9U95S1M3NZGunKnXRpZ81LW65tAzzHgyknNj2r'),
+    msrmFaucet: new PublicKey('6oAY2zRqF6dfGNCQSVGF6PB2dFgrtsajQCssvFCpC3Cm'),
+    srm: new PublicKey('4Ghge2MMPmWXeD2FR541akGhjjgUi7RUtk7DBP5bTwGB'),
+    msrm: new PublicKey('5PsAVQLCrgtKqZpLdg7HsTXHMcvVCQ1c4bFHHej8Axxn'),
+    god: new PublicKey('7YbS8znK1eY3p6z1Xo6eCyx7XFyZPBs1mTdVCLsFGCqc'),
+    megaGod: new PublicKey('GDhZrqcjUMJokqm6cjhyMXheBxxvUkfq3Q8YUtZ6BdCm'),
     registryProgramId: new PublicKey(
-      '3KMpAgSG3r36gJ3ggrNTpyc93n8Xmdh8E6p1nLPcpY92',
+      'FigXetJcXogqm94qfmyKWy6U5KJAwtxSgJMjUHercVQp',
     ),
     lockupProgramId: new PublicKey(
-      'CQ1Ygr7kSfRduSG1i5BpgcrktXhCXH99UCfx2SaDuHdj',
+      'CiNaYvdnQ42BNdbKvvAapHxiP18pvc3Vk5WuZ59ia64x',
     ),
     metaEntityProgramId: new PublicKey(
-      'GyY2CVRa2J4bQAhqZumBneqpzC8WQiQCtoyf746VkxQ',
+      '8wfM5sd5Yivn4WWkcSp4pNua7ytDvjeyLVLaU3QWiLAT',
     ),
-    registrar: new PublicKey('gk3k89AfGmp8sJMwTevBQTbzjvMzHvv1YK9t2vu5Ahp'),
+    registrar: new PublicKey('BB8JRs7FUTawxV6QELRGoNus2TNaMg1egG9rKosxCiAW'),
     rewardEventQueue: new PublicKey(
-      'DFV7TTGAA2JcRRVaKLTimtrKDund4kxJZqLPLafSMBWJ',
+      '5Ch6eHTC9rXHk5pLe9EfdYxWYUdtBpN9FY5xuH8BLawg',
     ),
-    safe: new PublicKey('5BiCAiMDfQnxf6d2uycn2ip94QE599AHm4GvPoUF7DSo'),
+    safe: new PublicKey('3CuTNekgrJykh6ukB8Ty7Y6V5gTX4DD3p38HLYAtqV6c'),
     defaultEntity: new PublicKey(
-      '7rLxVcbxPN1ZAwiuBLUD4qrDXPPsMF8Qy7BhJmLJwEDj',
+      'BUvnMzShmicx2uiw2sJSRSHp19DLSfDijnYbwezAncwG',
     ),
   },
 
@@ -64,26 +73,28 @@ export const networks: Networks = {
     url: 'http://localhost:8899',
     explorerClusterSuffix: 'localhost',
 
-    srm: new PublicKey('5ETSHKC2orBZzBKEechFBLBSfDhBf3ByVKQWyRAEuFLE'),
-    msrm: new PublicKey('AirSq4vsX3XvaazWoQD5TMskonf2w8EX2cjkavQ3ybQF'),
-    god: new PublicKey('5erwgD4Lyoz1TjNein913f4QYdNobAgGt31GCW72tiV1'),
-    megaGod: new PublicKey('C4GJwGsu2T4AEzyn6F1D3HpVD7TuoSEnGF82wZp4k5gA'),
+    srmFaucet: null,
+    msrmFaucet: null,
+    srm: new PublicKey('2kU9eab4BbXZx4k7FhJdwe4gzc1bSEqASiohzq3BKsaY'),
+    msrm: new PublicKey('8e4kjAnCZkMUx2XVdRSZg8JQ2nXXfy8GWQWCXrNKrQad'),
+    god: new PublicKey('DNcaasMboG4AdfW2T81A6YiB6vo26zU38aXmaddgL1c'),
+    megaGod: new PublicKey('Gj6XnPBYEvKQWtejiVqBnbUfaLXZ5WuozU39nnMhMyMN'),
     registryProgramId: new PublicKey(
-      '8jyaHb7bZhTqc37xU1UND5JgPdLsj7YYenjSAgVLG1Pp',
+      'DUuGKXGUeQhN9bsDJ3bhN8XQPaNiivNnqYRyREP6mL79',
     ),
     lockupProgramId: new PublicKey(
-      '9SD4kDxKLJtqY5XFWrzE8FeqpdUxvPr6Avy4JHBHaQww',
+      '2dHazPdUjqRBnF7qh2NeCgKCW5B5fYgYtXRtxkpvjUbf',
     ),
     metaEntityProgramId: new PublicKey(
-      '2xMwpwPWGERhbAx2De7ekmeupFvyVLsM94ft69hNR8Pm',
+      'CbBi6FvvuNwkwjzULY2giDrcMrE8RCYh1LXpvsYiDMsJ',
     ),
-    registrar: new PublicKey('Gk99MPXPhgoGEJ4bJ6eAfWB6nCbRZXpS8MjDTdcv14cR'),
+    registrar: new PublicKey('HCCd9pShhv158orEyA2BGRsvEQ8zEg2aqHHACNCwn3MR'),
     rewardEventQueue: new PublicKey(
-      'Bv8UqLzUkAEdgYxDe7WXNCMPApC8eMT7vUS4CLYS4qhD',
+      'GzYK3YuHgGRoZ57ByKQUbTBbXkXaMAEo7KXNgFe6bxoN',
     ),
-    safe: new PublicKey('Gwy3Wx7xnd6xLQE37iDfdJKnFAXBzds7YkjFQBWQAGPq'),
+    safe: new PublicKey('3PA8hDnUjyooFnc2f6WUDwnNBrVNN1CmCC5GC6fM6HY2'),
     defaultEntity: new PublicKey(
-      '8NKFqZp2uoAeVpeyxi7aZRKUNwPkzoc9JnV5rsLozWyy',
+      '791GDmb4RMZk7PJfczahw5fTubbSxgonWjtmsWmmUoAn',
     ),
   },
 };

@@ -88,7 +88,7 @@ export default function EntityGallery() {
                 flexWrap: 'wrap',
               }}
             >
-              {entities.map((entity) => (
+              {entities.map(entity => (
                 <EntityCard
                   metadata={metadata.get(entity.publicKey.toString())}
                   entity={entity}

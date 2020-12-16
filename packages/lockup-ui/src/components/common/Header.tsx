@@ -6,6 +6,7 @@ import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import Select from '@material-ui/core/Select';
 import Menu from '@material-ui/core/Menu';
+import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
@@ -28,6 +29,11 @@ type HeaderProps = {
 
 export default function Header(props: HeaderProps) {
   const { isAppReady } = props;
+  const { network } = useSelector((state: StoreState) => {
+    return {
+      network: state.common.network,
+    };
+  });
   return (
     <AppBar
       position="static"
@@ -53,6 +59,12 @@ export default function Header(props: HeaderProps) {
               label="Learn"
               href="https://serum-academy.com/en/serum-dex/"
             />
+            {network.srmFaucet && (
+              <BarButton
+                label="Faucet"
+                href="https://www.spl-token-ui.com/#/token-faucets"
+              />
+            )}
           </div>
           <div
             style={{
@@ -110,20 +122,30 @@ function BarButton(props: BarButtonProps) {
   const { label, href, hrefClient } = props;
   return (
     <div
-      style={{ display: 'flex' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+      }}
       onClick={() => hrefClient && history.push(hrefClient)}
     >
-      <Button color="inherit" href={href}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexDirection: 'column',
-          }}
-        >
-          <Typography style={{ fontSize: '15px' }}>{label}</Typography>
-        </div>
-      </Button>
+      <Link
+        style={{ color: 'inherit', textDecoration: 'none' }}
+        href={href}
+        target="_blank"
+      >
+        <Button color="inherit">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              flexDirection: 'column',
+            }}
+          >
+            <Typography style={{ fontSize: '15px' }}>{label}</Typography>
+          </div>
+        </Button>
+      </Link>
     </div>
   );
 }
