@@ -13,7 +13,11 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { TokenInstructions } from '@project-serum/serum';
+import {
+  TokenInstructions,
+  TOKEN_PROGRAM_ID,
+  WRAPPED_SOL_MINT,
+} from '@project-serum/token';
 import { Basket, PoolAction } from './schema';
 import BN from 'bn.js';
 import {
@@ -160,7 +164,7 @@ export class PoolTransactions {
         newAccountPubkey: poolTokenMint.publicKey,
         space: mintAccountSpace,
         lamports: mintAccountLamports,
-        programId: TokenInstructions.TOKEN_PROGRAM_ID,
+        programId: TOKEN_PROGRAM_ID,
       }),
       TokenInstructions.initializeMint({
         mint: poolTokenMint.publicKey,
@@ -310,7 +314,7 @@ export class PoolTransactions {
     function approveDelegate(amount: BN, index: number, approveZero = false) {
       if (
         user.assetAccounts[index].equals(user.owner) &&
-        pool.state.assets[index].mint.equals(TokenInstructions.WRAPPED_SOL_MINT)
+        pool.state.assets[index].mint.equals(WRAPPED_SOL_MINT)
       ) {
         wrappedSolAccount = new Account();
         signers.push(wrappedSolAccount);
@@ -320,11 +324,11 @@ export class PoolTransactions {
             newAccountPubkey: wrappedSolAccount.publicKey,
             lamports: amount.toNumber() + 2.04e6,
             space: 165,
-            programId: TokenInstructions.TOKEN_PROGRAM_ID,
+            programId: TOKEN_PROGRAM_ID,
           }),
           TokenInstructions.initializeAccount({
             account: wrappedSolAccount.publicKey,
-            mint: TokenInstructions.WRAPPED_SOL_MINT,
+            mint: WRAPPED_SOL_MINT,
             owner: delegate.publicKey,
           }),
         );

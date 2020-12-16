@@ -5,7 +5,7 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { TokenInstructions } from '@project-serum/serum';
+import { TOKEN_PROGRAM_ID, TokenInstructions } from '@project-serum/token';
 import { promisify } from 'util';
 import { homedir } from 'os';
 import { readFile } from 'fs';
@@ -166,7 +166,7 @@ async function createMint(connection: Connection, payer: Account) {
       newAccountPubkey: mint.publicKey,
       space: 82,
       lamports: await connection.getMinimumBalanceForRentExemption(82),
-      programId: TokenInstructions.TOKEN_PROGRAM_ID,
+      programId: TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeMint({
       mint: mint.publicKey,
@@ -178,7 +178,7 @@ async function createMint(connection: Connection, payer: Account) {
       newAccountPubkey: vault.publicKey,
       space: 165,
       lamports: await connection.getMinimumBalanceForRentExemption(165),
-      programId: TokenInstructions.TOKEN_PROGRAM_ID,
+      programId: TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeAccount({
       account: vault.publicKey,
@@ -212,7 +212,7 @@ async function createUserAccounts(
       newAccountPubkey: poolTokenAccount.publicKey,
       space: 165,
       lamports,
-      programId: TokenInstructions.TOKEN_PROGRAM_ID,
+      programId: TOKEN_PROGRAM_ID,
     }),
     TokenInstructions.initializeAccount({
       account: poolTokenAccount.publicKey,
@@ -229,7 +229,7 @@ async function createUserAccounts(
         newAccountPubkey: account.publicKey,
         space: 165,
         lamports,
-        programId: TokenInstructions.TOKEN_PROGRAM_ID,
+        programId: TOKEN_PROGRAM_ID,
       }),
       TokenInstructions.initializeAccount({
         account: account.publicKey,

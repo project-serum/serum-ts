@@ -5,7 +5,7 @@ import {
   TransactionInstruction,
 } from '@solana/web3.js';
 import { encodePoolRequest, PoolAction, PoolState } from './schema';
-import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import { TOKEN_PROGRAM_ID } from '@project-serum/token';
 
 export interface PoolInfo {
   address: PublicKey;

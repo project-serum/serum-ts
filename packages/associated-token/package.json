@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "docs": "typedoc --out ../../docs/associated-token --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"

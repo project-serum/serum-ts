@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { PoolInfo } from './instructions';
-import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import { TOKEN_PROGRAM_ID } from '@project-serum/token';
 
 export type AdminRequest =
   | { pause: any }

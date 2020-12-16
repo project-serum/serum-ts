@@ -1,7 +1,8 @@
 {
-  "name": "@project-serum/borsh",
+  "name": "@project-serum/token",
   "version": "0.0.1-alpha.1",
-  "description": "Serum Borsh",
+  "description": "Utilities for interacting with SPL Tokens",
+  "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "exports": {
@@ -16,16 +17,20 @@
   },
   "scripts": {
     "build": "tsc",
-    "docs": "typedoc --out ../../docs/borsh --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
+    "docs": "typedoc --out ../../docs/token --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
+    "start": "tsc --watch",
     "test": "",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"
   },
   "dependencies": {
-    "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0"
+    "@project-serum/borsh": "^0.0.1-alpha.1",
+    "bn.js": "^5.1.3"
   },
   "peerDependencies": {
+    "@solana/web3.js": "^0.86.1"
+  },
+  "devDependencies": {
     "@solana/web3.js": "^0.86.1"
   },
   "files": [
