@@ -163,13 +163,21 @@ function NetworkEnvironment() {
         Programs and Global Accounts
       </Typography>
       <ul>
+        <li>
+          SRM Faucet:{' '}
+          {network.srmFaucet ? network.srmFaucet.toString() : 'None'}
+        </li>
+        <li>
+          MSRM Faucet:{' '}
+          {network.msrmFaucet ? network.msrmFaucet.toString() : 'None'}
+        </li>
+        <li>SRM Mint: {network.srm.toString()}</li>
+        <li>MSRM Mint: {network.msrm.toString()}</li>
         <li>Registry Program: {network.registryProgramId.toString()}</li>
         <li>Lockup Program: {network.lockupProgramId.toString()}</li>
         <li>Meta Entity Program: {network.lockupProgramId.toString()}</li>
         <li>Registrar Account: {network.registrar.toString()}</li>
         <li>Safe Account: {network.safe.toString()}</li>
-        <li>SRM Mint: {network.srm.toString()}</li>
-        <li>MSRM Mint: {network.msrm.toString()}</li>
       </ul>
       {registrar && safe && (
         <>
