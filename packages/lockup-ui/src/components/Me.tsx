@@ -14,6 +14,7 @@ import CircularProgress from '@material-ui/core/CircularProgress';
 import { accounts } from '@project-serum/registry';
 import { ProgramAccount } from '@project-serum/common';
 import { State as StoreState, AsyncData } from '../store/reducer';
+import { displaySrm, displayMsrm } from '../utils/tokens';
 
 export default function Me() {
   const { member } = useSelector((state: StoreState) => {
@@ -49,17 +50,31 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
           : [
               {
                 token: 'SRM',
-                balance: member.data!.account.balances[0]!.vault.amount.toString(),
-                stake: member.data!.account.balances[0].vaultStake.amount.toString(),
+                balance: displaySrm(
+                  member.data!.account.balances[0]!.vault.amount,
+                ),
+                stake: displaySrm(
+                  member.data!.account.balances[0].vaultStake.amount,
+                ),
                 spt: member.data!.account.balances[0].spt.amount.toString(),
-                pending: member.data!.account.balances[0].vaultPendingWithdrawal.amount.toString(),
+                pending: displaySrm(
+                  member.data!.account.balances[0].vaultPendingWithdrawal
+                    .amount,
+                ),
               },
               {
                 token: 'MSRM',
-                balance: member.data!.account.balances[0].vaultMega.amount.toString(),
-                stake: member.data!.account.balances[0].vaultStakeMega.amount.toString(),
+                balance: displayMsrm(
+                  member.data!.account.balances[0].vaultMega.amount,
+                ),
+                stake: displayMsrm(
+                  member.data!.account.balances[0].vaultStakeMega.amount,
+                ),
                 spt: member.data!.account.balances[0].sptMega.amount.toString(),
-                pending: member.data!.account.balances[0].vaultPendingWithdrawalMega.amount.toString(),
+                pending: displayMsrm(
+                  member.data!.account.balances[0].vaultPendingWithdrawalMega
+                    .amount,
+                ),
               },
             ],
     },
@@ -72,17 +87,31 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
           : [
               {
                 token: 'SRM',
-                balance: member.data!.account.balances[1].vault.amount.toString(),
-                stake: member.data!.account.balances[1].vaultStake.amount.toString(),
+                balance: displaySrm(
+                  member.data!.account.balances[1].vault.amount,
+                ),
+                stake: displaySrm(
+                  member.data!.account.balances[1].vaultStake.amount,
+                ),
                 spt: member.data!.account.balances[1].spt.amount.toString(),
-                pending: member.data!.account.balances[1].vaultPendingWithdrawal.amount.toString(),
+                pending: displaySrm(
+                  member.data!.account.balances[1].vaultPendingWithdrawal
+                    .amount,
+                ),
               },
               {
                 token: 'MSRM',
-                balance: member.data!.account.balances[1].vaultMega.amount.toString(),
-                stake: member.data!.account.balances[1].vaultStakeMega.amount.toString(),
+                balance: displayMsrm(
+                  member.data!.account.balances[1].vaultMega.amount,
+                ),
+                stake: displayMsrm(
+                  member.data!.account.balances[1].vaultStakeMega.amount,
+                ),
                 spt: member.data!.account.balances[1].sptMega.amount.toString(),
-                pending: member.data!.account.balances[1].vaultPendingWithdrawalMega.amount.toString(),
+                pending: displayMsrm(
+                  member.data!.account.balances[1].vaultPendingWithdrawalMega
+                    .amount,
+                ),
               },
             ],
     },

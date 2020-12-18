@@ -33,6 +33,7 @@ import Stake from '../Stake';
 import Rewards from '../rewards/Rewards';
 import Vestings from '../lockups/Vestings';
 import VestingAccountsSelect from './VestingAccountsSelect';
+import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
 
 enum TabModel {
   Me,
@@ -239,10 +240,14 @@ function DepositDialog(props: DepositDialogProps) {
       onClose={onClose}
       onTransfer={async (
         from: PublicKey,
-        amount: number,
+        displayAmount: number,
         coin: Coin,
         isLocked: boolean,
       ) => {
+        const amount =
+          coin === 'srm' || coin === 'lsrm'
+            ? fromDisplaySrm(displayAmount)
+            : fromDisplayMsrm(displayAmount);
         enqueueSnackbar(
           `Depositing ${amount} ${coin} from ${from.toString()}`,
           {
@@ -338,10 +343,14 @@ function WithdrawDialog(props: WithdrawDialogProps) {
       onClose={onClose}
       onTransfer={async (
         from: PublicKey,
-        amount: number,
+        displayAmount: number,
         coin: Coin,
         isLocked: boolean,
       ) => {
+        const amount =
+          coin === 'srm' || coin === 'lsrm'
+            ? fromDisplaySrm(displayAmount)
+            : fromDisplayMsrm(displayAmount);
         enqueueSnackbar(`Withdrawing ${amount} ${coin} to ${from.toString()}`, {
           variant: 'info',
         });
@@ -436,11 +445,11 @@ function TransferDialog(props: TransferDialogProps) {
   });
   const { enqueueSnackbar } = useSnackbar();
   const { open, onClose, onTransfer, title, contextText, deposit } = props;
-  const [amount, setAmount] = useState<null | number>(null);
+  const [displayAmount, setDisplayAmount] = useState<null | number>(null);
   const [coin, setCoin] = useState<null | Coin>(null);
   const [from, setFrom] = useState<null | PublicKey>(null);
   const [vesting, setVesting] = useState<null | PublicKey>(null);
-  const [maxAmount, setMaxAmount] = useState<null | number>(null);
+  const [maxDisplayAmount, setMaxDisplayAmount] = useState<null | number>(null);
   const mint = !coin
     ? undefined
     : coin === 'srm' || coin === 'lsrm'
@@ -449,10 +458,10 @@ function TransferDialog(props: TransferDialogProps) {
   const isLocked = coin === 'lsrm' || coin === 'lmsrm';
   const submitBtnDisabled =
     (isLocked ? !vesting : !from) ||
-    !amount ||
+    !displayAmount ||
     !coin ||
-    !maxAmount ||
-    amount > maxAmount;
+    !maxDisplayAmount ||
+    displayAmount > maxDisplayAmount;
 
   return (
     <div>
@@ -476,8 +485,12 @@ function TransferDialog(props: TransferDialogProps) {
                   shrink: true,
                 }}
                 variant="outlined"
-                onChange={e => setAmount(parseInt(e.target.value) as number)}
-                InputProps={{ inputProps: { min: 0, max: maxAmount ?? 0 } }}
+                onChange={e =>
+                  setDisplayAmount(parseFloat(e.target.value) as number)
+                }
+                InputProps={{
+                  inputProps: { min: 0, max: maxDisplayAmount ?? 0 },
+                }}
               />
               <FormHelperText>{contextText}</FormHelperText>
             </div>
@@ -506,9 +519,10 @@ function TransferDialog(props: TransferDialogProps) {
                 <OwnedTokenAccountsSelect
                   variant="outlined"
                   mint={mint}
-                  onChange={(f: PublicKey, maxAmount: BN) => {
+                  decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
+                  onChange={(f: PublicKey, maxDisplayAmount: BN) => {
                     setFrom(f);
-                    setMaxAmount(maxAmount.toNumber());
+                    setMaxDisplayAmount(maxDisplayAmount.toNumber());
                   }}
                 />
                 <FormHelperText>
@@ -520,10 +534,11 @@ function TransferDialog(props: TransferDialogProps) {
                 <VestingAccountsSelect
                   variant="outlined"
                   mint={mint}
+                  decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
                   deposit={deposit}
-                  onChange={(v: PublicKey, maxAmount: BN) => {
+                  onChange={(v: PublicKey, maxDisplayAmount: BN) => {
                     setVesting(v);
-                    setMaxAmount(maxAmount.toNumber());
+                    setMaxDisplayAmount(maxDisplayAmount.toNumber());
                   }}
                 />
                 <FormHelperText>
@@ -539,18 +554,18 @@ function TransferDialog(props: TransferDialogProps) {
           </Button>
           <Button
             //@ts-ignore
-            onClick={() =>
+            onClick={() => {
               onTransfer(
                 isLocked ? vesting! : from!,
-                amount!,
+                displayAmount!,
                 coin!,
                 isLocked,
               ).catch(err => {
                 enqueueSnackbar(`Error transferring funds: ${err.toString()}`, {
                   variant: 'error',
                 });
-              })
-            }
+              });
+            }}
             color="primary"
             disabled={submitBtnDisabled}
           >

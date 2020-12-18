@@ -7,17 +7,19 @@ import { PublicKey } from '@solana/web3.js';
 import * as lockup from '@project-serum/lockup';
 import { ProgramAccount } from '@project-serum/common';
 import { State as StoreState } from '../../store/reducer';
+import { toDisplay } from '../../utils/tokens';
 
 type Props = {
   style?: any;
   mint?: PublicKey | null;
+  decimals?: number;
   variant?: 'outlined' | 'standard';
   onChange: (from: PublicKey, maxAmount: BN) => void;
   deposit?: boolean;
 };
 
 export default function VestingAccountsSelect(p: Props) {
-  const { mint, variant, onChange, style, deposit } = p;
+  const { mint, decimals, variant, onChange, style, deposit } = p;
   const vestings = useSelector((state: StoreState) => {
     if (!mint) {
       return [];
@@ -53,9 +55,10 @@ export default function VestingAccountsSelect(p: Props) {
                 }}
               >
                 <div>{`${v.publicKey.toString()}`}</div>
-                <div
-                  style={{ float: 'right', color: '#ccc' }}
-                >{`${availableAmount(v, deposit).toString()}`}</div>
+                <div style={{ float: 'right', color: '#ccc' }}>{`${toDisplay(
+                  availableAmount(v, deposit),
+                  decimals!,
+                )}`}</div>
               </div>
             </MenuItem>
           );

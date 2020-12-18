@@ -20,6 +20,7 @@ import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
 import { useWallet } from '../../components/common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
+import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
 
 export default function NewVestingButton() {
   const [open, setOpen] = useState(false);
@@ -65,14 +66,10 @@ function NewVestingDialog(props: NewVestingDialogProps) {
   const [fromAccount, setFromAccount] = useState<null | PublicKey>(null);
   const [timestamp, setTimestamp] = useState(defaultEndTs);
   const [periodCount, setPeriodCount] = useState(7);
-  const [amountStr, setAmountStr] = useState('');
-  // @ts-ignore
-  const isValidAmountStr = !isNaN(amountStr) && amountStr !== '';
-  const displayAmountError = !isValidAmountStr && amountStr !== '';
-  const amount = parseInt(amountStr);
+  const [displayAmount, setDisplayAmount] = useState<null | number>(null);
 
   const submitBtnEnabled =
-    fromAccount !== null && isValidBeneficiary && isValidAmountStr;
+    fromAccount !== null && isValidBeneficiary && displayAmount !== null;
 
   const { lockupClient } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
@@ -88,11 +85,14 @@ function NewVestingDialog(props: NewVestingDialogProps) {
       variant: 'info',
     });
     try {
+      let amount = mint!.equals(network.srm)
+        ? fromDisplaySrm(displayAmount!)
+        : fromDisplayMsrm(displayAmount!);
       let { vesting } = await lockupClient.createVesting({
         beneficiary: new PublicKey(beneficiary),
         endTs: new BN(timestamp),
         periodCount: new BN(periodCount),
-        depositAmount: new BN(amount),
+        depositAmount: amount,
         depositor: fromAccount as PublicKey,
       });
       const vestingAccount = await lockupClient.accounts.vesting(vesting);
@@ -196,12 +196,12 @@ function NewVestingDialog(props: NewVestingDialogProps) {
             }}
           >
             <TextField
-              error={displayAmountError}
-              helperText={displayAmountError && 'Invalid amount'}
               fullWidth
               label="Amount"
-              value={amountStr}
-              onChange={e => setAmountStr(e.target.value)}
+              type="number"
+              value={displayAmount}
+              InputProps={{ inputProps: { min: 0 } }}
+              onChange={e => setDisplayAmount(parseFloat(e.target.value))}
             />
             <FormHelperText>
               Amount to deposit into the vesting account

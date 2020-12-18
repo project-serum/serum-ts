@@ -51,7 +51,7 @@ function RiskBar() {
     <div
       style={{
         color: '#fff',
-        backgroundColor: '#f50057',
+        backgroundColor: 'rgb(39, 39, 39)',
         height: '30px',
         textAlign: 'center',
       }}
