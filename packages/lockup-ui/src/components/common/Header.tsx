@@ -38,8 +38,10 @@ export default function Header(props: HeaderProps) {
     <AppBar
       position="static"
       style={{
-        background: '#172026',
-        color: 'white',
+        background: '#ffffff',
+        color: '#272727',
+        boxShadow: 'none',
+        borderBottom: 'solid 1pt #ccc',
       }}
     >
       <Toolbar>
@@ -261,7 +263,6 @@ function UserSelector() {
       style={{
         marginLeft: '12px',
         width: '150px',
-        color: 'white',
       }}
       onChange={e => {
         if (e.target.value === 'disconnect') {

@@ -20,6 +20,7 @@ import { useWallet } from '../common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { withTx } from '../../components/common/Notification';
 import { ActionType } from '../../store/actions';
+import { displaySrm, displayMsrm } from '../../utils/tokens';
 
 type VestingAccountCardProps = {
   network: Network;
@@ -32,10 +33,16 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
-  const currencyLabel = vesting.account.mint.equals(network.srm)
-    ? 'SRM'
+  const displayFn = vesting.account.mint.equals(network.srm)
+    ? displaySrm
     : vesting.account.mint.equals(network.msrm)
-    ? 'MSRM'
+    ? displayMsrm
+    : (k: BN) => k.toString();
+
+  const outstandingLabel = vesting.account.mint.equals(network.srm)
+    ? `${displaySrm(vesting.account.outstanding)} SRM`
+    : vesting.account.mint.equals(network.msrm)
+    ? `${displayMsrm(vesting.account.outstanding)} MSRM`
     : vesting.account.mint.toString();
 
   const startTs = vesting.account.startTs;
@@ -179,9 +186,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
                 flexDirection: 'column',
               }}
             >
-              <Typography variant="body1">
-                {`${vesting.account.outstanding.toNumber()} ${currencyLabel}`}
-              </Typography>
+              <Typography variant="body1">{outstandingLabel}</Typography>
             </div>
           </div>
         </ListItem>
@@ -213,23 +218,23 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             {availableForWithdrawal === null ? (
               <CircularProgress />
             ) : (
-              availableForWithdrawal.toString()
+              displayFn(availableForWithdrawal)
             )}
           </Typography>
           <Typography>
-            Locked outstanding: {vesting.account.outstanding.toString()}
+            Locked outstanding: {displayFn(vesting.account.outstanding)}
           </Typography>
           <Typography>
             Current balance:{' '}
-            {vesting.account.outstanding
-              .sub(vesting.account.whitelistOwned)
-              .toString()}
+            {displayFn(
+              vesting.account.outstanding.sub(vesting.account.whitelistOwned),
+            )}
           </Typography>
           <Typography>
-            Initial lockup: {vesting.account.startBalance.toString()}
+            Initial lockup: {displayFn(vesting.account.startBalance)}
           </Typography>
           <Typography>
-            Whitelist owned: {vesting.account.whitelistOwned.toString()}
+            Whitelist owned: {displayFn(vesting.account.whitelistOwned)}
           </Typography>
           <Typography>Vault: {vesting.account.vault.toString()}</Typography>
           <Typography>

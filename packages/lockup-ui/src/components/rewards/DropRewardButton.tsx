@@ -22,6 +22,7 @@ import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import OwnedTokenAccountsSelect from '../common/OwnedTokenAccountsSelect';
 import * as notification from '../common/Notification';
+import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
 
 export default function DropRewardButton() {
   const [showDialog, setShowDialog] = useState(false);
@@ -115,9 +116,9 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
     },
   );
 
-  const [lockedRewardAmount, setLockedRewardAmount] = useState<null | number>(
-    null,
-  );
+  const [lockedRewardDisplayAmount, setLockedRewardDisplayAmount] = useState<
+    null | number
+  >(null);
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
   const [mintLabel, setMintLabel] = useState('srm');
@@ -126,7 +127,7 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
   const isSendEnabled =
     mint !== null &&
     depositor !== null &&
-    lockedRewardAmount !== null &&
+    lockedRewardDisplayAmount !== null &&
     expiryTs !== null;
 
   const sendUnlockedReward = async () => {
@@ -135,8 +136,11 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
       'Dropping unllocked reward...',
       'Unlocked reward dropped',
       async () => {
+        const lockedRewardAmount = mint!.equals(network.srm)
+          ? fromDisplaySrm(lockedRewardDisplayAmount!)
+          : fromDisplayMsrm(lockedRewardDisplayAmount!);
         let { tx } = await registryClient.dropUnlockedReward({
-          total: new BN(lockedRewardAmount as number),
+          total: lockedRewardAmount,
           expiryTs: new BN(expiryTs as number),
           depositor: depositor as PublicKey,
           depositorMint: mint as PublicKey,
@@ -166,7 +170,7 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
       mintLabel={mintLabel}
       setMintLabel={setMintLabel}
       setDepositor={setDepositor}
-      setLockedRewardAmount={setLockedRewardAmount}
+      setLockedRewardDisplayAmount={setLockedRewardDisplayAmount}
       expiryTs={expiryTs}
       setExpiryTs={setExpiryTs}
       onCancel={onClose}
@@ -192,9 +196,9 @@ function DropLockedForm(props: DropLockedFormProps) {
     },
   );
 
-  const [lockedRewardAmount, setLockedRewardAmount] = useState<null | number>(
-    null,
-  );
+  const [lockedRewardDisplayAmount, setLockedRewardDisplayAmount] = useState<
+    null | number
+  >(null);
   const [endTs, setEndTs] = useState<null | number>(null);
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
@@ -205,7 +209,7 @@ function DropLockedForm(props: DropLockedFormProps) {
   const isSendEnabled =
     mint !== null &&
     depositor !== null &&
-    lockedRewardAmount !== null &&
+    lockedRewardDisplayAmount !== null &&
     expiryTs !== null;
 
   const sendLockedRewards = async () => {
@@ -214,8 +218,11 @@ function DropLockedForm(props: DropLockedFormProps) {
       'Dropping locked reward...',
       'Locked reward dropped',
       async () => {
+        const lockedRewardAmount = mint!.equals(network.srm)
+          ? fromDisplaySrm(lockedRewardDisplayAmount!)
+          : fromDisplayMsrm(lockedRewardDisplayAmount!);
         let { tx } = await registryClient.dropLockedReward({
-          total: new BN(lockedRewardAmount as number),
+          total: lockedRewardAmount,
           endTs: new BN(endTs as number),
           expiryTs: new BN(expiryTs as number),
           depositor: depositor as PublicKey,
@@ -246,7 +253,7 @@ function DropLockedForm(props: DropLockedFormProps) {
       mintLabel={mintLabel}
       setMintLabel={setMintLabel}
       setDepositor={setDepositor}
-      setLockedRewardAmount={setLockedRewardAmount}
+      setLockedRewardDisplayAmount={setLockedRewardDisplayAmount}
       setEndTs={setEndTs}
       periodCount={periodCount}
       setPeriodCount={setPeriodCount}
@@ -266,7 +273,7 @@ type DropVendorFormProps = {
   setMintLabel: (s: string) => void;
   setMint: (m: PublicKey) => void;
   setDepositor: (pk: PublicKey) => void;
-  setLockedRewardAmount: (n: number) => void;
+  setLockedRewardDisplayAmount: (n: number) => void;
   setEndTs?: (n: number) => void;
   periodCount?: number;
   setPeriodCount?: (p: number) => void;
@@ -285,7 +292,7 @@ function DropVendorForm(props: DropVendorFormProps) {
     mintLabel,
     setMintLabel,
     setMint,
-    setLockedRewardAmount,
+    setLockedRewardDisplayAmount,
     setEndTs,
     periodCount,
     setPeriodCount,
@@ -343,7 +350,9 @@ function DropVendorForm(props: DropVendorFormProps) {
               }}
               variant="outlined"
               onChange={e =>
-                setLockedRewardAmount(parseInt(e.target.value) as number)
+                setLockedRewardDisplayAmount(
+                  parseFloat(e.target.value) as number,
+                )
               }
               InputProps={{ inputProps: { min: 0 } }}
             />

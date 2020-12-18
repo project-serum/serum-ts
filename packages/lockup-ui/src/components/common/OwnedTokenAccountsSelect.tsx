@@ -5,16 +5,18 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import { PublicKey } from '@solana/web3.js';
 import { State as StoreState } from '../../store/reducer';
+import { toDisplay } from '../../utils/tokens';
 
 type Props = {
   style?: any;
   mint?: PublicKey | null;
+  decimals?: number;
   variant?: 'outlined' | 'standard';
   onChange: (from: PublicKey, maxAmount: BN) => void;
 };
 
 export default function OwnedTokenAccountsSelect(p: Props) {
-  const { mint, variant, onChange, style } = p;
+  const { mint, decimals, variant, onChange, style } = p;
   const ownedTokenAccounts = useSelector((state: StoreState) => {
     if (!mint) {
       return [];
@@ -55,9 +57,10 @@ export default function OwnedTokenAccountsSelect(p: Props) {
                 }}
               >
                 <div>{`${ownedTokenAccount.publicKey}`}</div>
-                <div
-                  style={{ float: 'right', color: '#ccc' }}
-                >{`${ownedTokenAccount.account.amount}`}</div>
+                <div style={{ float: 'right', color: '#ccc' }}>{`${toDisplay(
+                  ownedTokenAccount.account.amount,
+                  decimals!,
+                )}`}</div>
               </div>
             </MenuItem>
           );

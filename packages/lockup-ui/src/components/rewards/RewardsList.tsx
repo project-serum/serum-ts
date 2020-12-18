@@ -12,6 +12,7 @@ import ExpandMore from '@material-ui/icons/ExpandMore';
 import { PublicKey } from '@solana/web3.js';
 import { Network, ProgramAccount } from '@project-serum/common';
 import * as registry from '@project-serum/registry';
+import { displaySrm, displayMsrm } from '../../utils/tokens';
 
 type RewardsListProps = {
   rewards: RewardListItemViewModel[];
@@ -44,14 +45,15 @@ function RewardListItem(props: RewardListItemProps) {
   const rewardEvent = rli.reward.lockedAlloc ?? rli.reward.unlockedAlloc!;
 
   const [open, setOpen] = useState(false);
-  let amountLabel = `${rewardEvent.total.toString()}`;
-  if (rewardEvent.mint.equals(network.srm)) {
-    amountLabel += ' SRM';
-  } else if (rewardEvent.mint.equals(network.msrm)) {
-    amountLabel += ' MSRM';
-  } else {
-    amountLabel += ` ${rewardEvent.mint}`;
-  }
+  let amountLabel = (() => {
+    if (rewardEvent.mint.equals(network.srm)) {
+      return `${displaySrm(rewardEvent.total)} SRM`;
+    } else if (rewardEvent.mint.equals(network.msrm)) {
+      return `${displayMsrm(rewardEvent.total)} MSRM`;
+    } else {
+      amountLabel += `${rewardEvent.mint}`;
+    }
+  })();
   let lockedLabel = 'vendored';
   let fromLabel = `${rewardEvent.pool.toString()} | ${rewardEvent.from.toString()} | ${
     rli.cursor

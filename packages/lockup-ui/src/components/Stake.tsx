@@ -13,13 +13,13 @@ import CardHeader from '@material-ui/core/CardHeader';
 import FormControl from '@material-ui/core/FormControl';
 import Typography from '@material-ui/core/Typography';
 import { MintInfo, u64 } from '@solana/spl-token';
-import { PublicKey } from '@solana/web3.js';
 import { accounts } from '@project-serum/registry';
 import { useWallet } from '../components/common/WalletProvider';
 import { ViewTransactionOnExplorerButton } from '../components/common/Notification';
 import { State as StoreState, ProgramAccount } from '../store/reducer';
 import { ActionType } from '../store/actions';
 import * as skin from '../skin';
+import { displaySrm, displayMsrm } from '../utils/tokens';
 
 export default function Stake() {
   const { registryClient } = useWallet();
@@ -232,8 +232,8 @@ function PoolCard(props: PoolCardProps) {
   const [srmPoolAmount, setSrmPoolAmount] = useState<null | number>(null);
   const [isLocked, setIsLocked] = useState(false);
   const pricePerShare = isMega
-    ? registrar.account.stakeRateMega
-    : registrar.account.stakeRate;
+    ? displayMsrm(registrar.account.stakeRateMega) + ' MSRM'
+    : displaySrm(registrar.account.stakeRate) + ' SRM';
   return (
     <Card
       style={{
@@ -262,12 +262,14 @@ function PoolCard(props: PoolCardProps) {
             marginBottom: '16px',
           }}
         >
-          <Typography style={{ fontWeight: 'bold' }}>Total shares</Typography>
+          <Typography style={{ fontWeight: 'bold' }}>
+            Total shares outstanding
+          </Typography>
           <Typography>{poolTokenMint.account.supply.toString()}</Typography>
           <Typography style={{ fontWeight: 'bold' }}>
             Price per share
           </Typography>
-          <Typography>{pricePerShare.toString()}</Typography>
+          <Typography>{pricePerShare}</Typography>
         </div>
         <div>
           <div style={{ marginBottom: '10px' }}>
@@ -370,13 +372,13 @@ function RedemptionList(props: RedemptionListProps) {
               paddingBottom: '12px',
             }}
           >
-            <Typography style={{}}>Redemptions</Typography>
+            <Typography style={{}}>Pending Transfers</Typography>
           </div>
           <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
             {pendingWithdrawals && pendingWithdrawals.length > 0 ? (
               pendingWithdrawals.map((pw, idx) => {
                 return (
-                  <RedemptionListItem
+                  <PendingStakeListItem
                     key={pw.publicKey.toString()}
                     isLast={idx === pendingWithdrawals.length - 1}
                     registrar={registrar}
@@ -404,26 +406,26 @@ function RedemptionList(props: RedemptionListProps) {
   );
 }
 
-type RedemptionListItemProps = {
+type PendingStakeListItemProps = {
   isLast?: boolean;
   registrar: ProgramAccount<accounts.Registrar>;
   pw: ProgramAccount<accounts.PendingWithdrawal>;
   member: ProgramAccount<accounts.MemberDeref>;
 };
 
-function RedemptionListItem(props: RedemptionListItemProps) {
+function PendingStakeListItem(props: PendingStakeListItemProps) {
   const { isLast, pw, member, registrar } = props;
-  const sptLabel = (poolMint: PublicKey): string => {
+  const sptLabel = (() => {
     const isLocked = !pw.account.balanceId.equals(
       member.account.member.beneficiary,
     );
     const l = isLocked ? '(locked)' : '';
-    if (poolMint.equals(registrar.account.poolMint)) {
-      return `SRM ${l}`;
+    if (pw.account.pool.equals(registrar.account.poolMint)) {
+      return `${displaySrm(pw.account.amount)} SRM ${l}`;
     } else {
-      return `MSRM ${l}`;
+      return `${displayMsrm(pw.account.amount)} MSRM ${l}`;
     }
-  };
+  })();
   return (
     <div
       style={{
@@ -440,7 +442,7 @@ function RedemptionListItem(props: RedemptionListItemProps) {
       >
         <div>
           <Typography style={{ fontWeight: 'bold', fontSize: '14px' }}>
-            {`${pw.account.amount} ${sptLabel(pw.account.pool)}`}
+            {`${sptLabel}`}
           </Typography>
         </div>
         <div>
@@ -527,7 +529,7 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
     });
 
     closeSnackbar();
-    enqueueSnackbar(`Redemption completed`, {
+    enqueueSnackbar(`Stake transfer completed`, {
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
