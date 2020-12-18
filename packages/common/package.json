@@ -16,16 +16,18 @@
   },
   "scripts": {
     "build": "tsc",
+    "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.8",
-    "bn.js": "^5.1.2"
+    "bn.js": "^5.1.2",
+    "superstruct": "0.8.3"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.86.1"
+    "@solana/web3.js": "^0.87.1"
   },
   "files": [
     "dist"

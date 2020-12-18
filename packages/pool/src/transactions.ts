@@ -2,6 +2,7 @@ import {
   PoolInfo,
   PoolInstructions,
   RETBUF_PROGRAM_ID,
+  LQD_FEE_OWNER_ADDRESS,
   UserInfo,
 } from './instructions';
 import {
@@ -12,10 +13,17 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { TokenInstructions } from '@project-serum/serum';
+import {
+  TokenInstructions,
+  TOKEN_PROGRAM_ID,
+  WRAPPED_SOL_MINT,
+} from '@project-serum/token';
 import { Basket, PoolAction } from './schema';
 import BN from 'bn.js';
-import { TOKEN_PROGRAM_ID } from '@project-serum/serum/lib/token-instructions';
+import {
+  createAssociatedTokenAccount,
+  getAssociatedTokenAddress,
+} from '@project-serum/associated-token';
 
 export interface TransactionAndSigners {
   transaction: Transaction;
@@ -62,13 +70,21 @@ export interface SimplePoolParams {
    * taken and to which the newly created pool tokens are sent.
    */
   creator: PublicKey;
-  /** Spl-token accounts from which the inital pool assets are taken. */
+  /** Spl-token accounts from which the initial pool assets are taken. */
   creatorAssets: PublicKey[];
+
+  /** Fee rate for creations and redemptions, times 10 ** 6. */
+  feeRate?: number;
 
   /** Any additional accounts needed to initalize the pool. */
   additionalAccounts?: AccountMeta[];
 }
 
+/**
+ * High-level API for constructing transactions to interact with pools.
+ *
+ * For a lower-level API, see {@link PoolInstructions}.
+ */
 export class PoolTransactions {
   /**
    * Transaction to initialize a simple pool.
@@ -94,6 +110,7 @@ export class PoolTransactions {
       initialAssetQuantities,
       creator,
       creatorAssets,
+      feeRate = 2500,
       additionalAccounts = [],
     } = params;
     if (assetMints.length !== initialAssetQuantities.length) {
@@ -111,15 +128,24 @@ export class PoolTransactions {
       programId,
     );
     const poolTokenMint = new Account();
-    const creatorPoolTokenAccount = new Account();
-    const vaultAccounts = assetMints.map(() => new Account());
+    const creatorPoolTokenAddress = await getAssociatedTokenAddress(
+      creator,
+      poolTokenMint.publicKey,
+    );
+    const vaultAddresses = await Promise.all(
+      assetMints.map(mint => getAssociatedTokenAddress(vaultSigner, mint)),
+    );
+    const lqdFeeAddress = await getAssociatedTokenAddress(
+      LQD_FEE_OWNER_ADDRESS,
+      poolTokenMint.publicKey,
+    );
 
     // Split into two transactions to stay under the size limit.
     // Ideally all instructions that transfer tokens happen in the second transaction,
     // so they get reverted if the pool creation fails.
     const setup = {
       transaction: new Transaction(),
-      signers: [poolTokenMint, creatorPoolTokenAccount, ...vaultAccounts],
+      signers: [poolTokenMint],
     };
     const finalize = {
       transaction: new Transaction(),
@@ -129,10 +155,6 @@ export class PoolTransactions {
     const mintAccountSpace = 82;
     const mintAccountLamports = await connection.getMinimumBalanceForRentExemption(
       mintAccountSpace,
-    );
-    const tokenAccountSpace = 165;
-    const tokenAccountLamports = await connection.getMinimumBalanceForRentExemption(
-      tokenAccountSpace,
     );
 
     // Initialize pool token.
@@ -149,23 +171,21 @@ export class PoolTransactions {
         decimals: poolMintDecimals,
         mintAuthority: creator,
       }),
-      SystemProgram.createAccount({
-        fromPubkey: creator,
-        newAccountPubkey: creatorPoolTokenAccount.publicKey,
-        space: tokenAccountSpace,
-        lamports: tokenAccountLamports,
-        programId: TOKEN_PROGRAM_ID,
-      }),
-      TokenInstructions.initializeAccount({
-        account: creatorPoolTokenAccount.publicKey,
-        mint: poolTokenMint.publicKey,
-        owner: creator,
-      }),
+      await createAssociatedTokenAccount(
+        creator,
+        creator,
+        poolTokenMint.publicKey,
+      ),
+      await createAssociatedTokenAccount(
+        creator,
+        LQD_FEE_OWNER_ADDRESS,
+        poolTokenMint.publicKey,
+      ),
     );
     finalize.transaction.add(
       TokenInstructions.mintTo({
         mint: poolTokenMint.publicKey,
-        destination: creatorPoolTokenAccount.publicKey,
+        destination: creatorPoolTokenAddress,
         amount: initialPoolMintSupply,
         mintAuthority: creator,
       }),
@@ -178,31 +198,22 @@ export class PoolTransactions {
     );
 
     // Initialize vault accounts.
-    assetMints.forEach((mint, index) => {
-      const vault = vaultAccounts[index];
-      setup.transaction.add(
-        SystemProgram.createAccount({
-          fromPubkey: creator,
-          newAccountPubkey: vault.publicKey,
-          space: tokenAccountSpace,
-          lamports: tokenAccountLamports,
-          programId: TOKEN_PROGRAM_ID,
-        }),
-        TokenInstructions.initializeAccount({
-          account: vault.publicKey,
-          mint,
-          owner: vaultSigner,
-        }),
-      );
-      finalize.transaction.add(
-        TokenInstructions.transfer({
-          source: creatorAssets[index],
-          destination: vault.publicKey,
-          amount: initialAssetQuantities[index],
-          owner: creator,
-        }),
-      );
-    });
+    await Promise.all(
+      assetMints.map(async (mint, index) => {
+        const vault = vaultAddresses[index];
+        setup.transaction.add(
+          await createAssociatedTokenAccount(creator, vaultSigner, mint),
+        );
+        finalize.transaction.add(
+          TokenInstructions.transfer({
+            source: creatorAssets[index],
+            destination: vault,
+            amount: initialAssetQuantities[index],
+            owner: creator,
+          }),
+        );
+      }),
+    );
 
     // Initialize pool account.
     finalize.transaction.add(
@@ -220,9 +231,12 @@ export class PoolTransactions {
         poolStateAccount.publicKey,
         poolTokenMint.publicKey,
         poolName,
-        vaultAccounts.map(vault => vault.publicKey),
+        vaultAddresses,
         vaultSigner,
         vaultSignerNonce,
+        lqdFeeAddress,
+        creatorPoolTokenAddress,
+        feeRate,
         additionalAccounts,
       ),
     );
@@ -293,8 +307,33 @@ export class PoolTransactions {
     }
     const transaction = new Transaction();
     const delegate = new Account();
-    if ('create' in action) {
-      expectedBasket.quantities.forEach((amount, index) => {
+    const signers = [delegate];
+    user = { ...user, assetAccounts: user.assetAccounts.slice() };
+    let wrappedSolAccount: Account | null = null;
+
+    function approveDelegate(amount: BN, index: number, approveZero = false) {
+      if (
+        user.assetAccounts[index].equals(user.owner) &&
+        pool.state.assets[index].mint.equals(WRAPPED_SOL_MINT)
+      ) {
+        wrappedSolAccount = new Account();
+        signers.push(wrappedSolAccount);
+        transaction.add(
+          SystemProgram.createAccount({
+            fromPubkey: user.owner,
+            newAccountPubkey: wrappedSolAccount.publicKey,
+            lamports: amount.toNumber() + 2.04e6,
+            space: 165,
+            programId: TOKEN_PROGRAM_ID,
+          }),
+          TokenInstructions.initializeAccount({
+            account: wrappedSolAccount.publicKey,
+            mint: WRAPPED_SOL_MINT,
+            owner: delegate.publicKey,
+          }),
+        );
+        user.assetAccounts[index] = wrappedSolAccount.publicKey;
+      } else if (amount.gtn(0) || approveZero) {
         transaction.add(
           TokenInstructions.approve({
             owner: user.owner,
@@ -303,6 +342,12 @@ export class PoolTransactions {
             amount,
           }),
         );
+      }
+    }
+
+    if ('create' in action) {
+      expectedBasket.quantities.forEach((amount, index) => {
+        approveDelegate(amount, index, true);
       });
     } else if ('redeem' in action) {
       transaction.add(
@@ -315,26 +360,14 @@ export class PoolTransactions {
       );
       expectedBasket.quantities.forEach((amount, index) => {
         if (amount.isNeg()) {
-          transaction.add(
-            TokenInstructions.approve({
-              owner: user.owner,
-              source: user.assetAccounts[index],
-              delegate: delegate.publicKey,
-              amount: amount.abs(),
-            }),
-          );
+          approveDelegate(amount.abs(), index);
+        } else {
+          approveDelegate(new BN(0), index);
         }
       });
     } else if ('swap' in action) {
       action.swap.quantities.forEach((amount, index) => {
-        transaction.add(
-          TokenInstructions.approve({
-            owner: user.owner,
-            source: user.assetAccounts[index],
-            delegate: delegate.publicKey,
-            amount,
-          }),
-        );
+        approveDelegate(amount, index);
       });
     }
     transaction.add(
@@ -343,6 +376,16 @@ export class PoolTransactions {
         owner: delegate.publicKey,
       }),
     );
-    return { transaction, signers: [delegate] };
+    if (wrappedSolAccount) {
+      transaction.add(
+        TokenInstructions.closeAccount({
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          source: wrappedSolAccount!.publicKey,
+          destination: user.owner,
+          owner: delegate.publicKey,
+        }),
+      );
+    }
+    return { transaction, signers };
   }
 }

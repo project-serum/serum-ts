@@ -1,68 +1,274 @@
+import { AccountInfo as TokenAccount, MintInfo } from '@solana/spl-token';
+import * as lockup from '@project-serum/lockup';
+import * as registry from '@project-serum/registry';
+import {
+  ProgramAccount as CommonProgramAccount,
+  networks,
+  Network,
+} from '@project-serum/common';
 import { Action, ActionType } from './actions';
-import { PublicKey } from '@solana/web3.js';
-import { AccountInfo as TokenAccount } from '@solana/spl-token';
-import { accounts } from '@project-serum/lockup';
+
+export enum BootstrapState {
+  NeedsBootstrap,
+  IsBootstrapping,
+  Bootstrapped,
+}
 
 export default function reducer(
   state: State = initialState,
   action: Action,
 ): State {
-  const newState = { ...state };
+  let newState = {
+    common: { ...state.common },
+    lockup: { ...state.lockup },
+    registry: { ...state.registry },
+  };
   switch (action.type) {
-    case ActionType.WalletSetProvider:
-      newState.walletProvider = action.item.walletProvider;
+    // Common.
+    case ActionType.CommonAppWillBootstrap:
+      newState.common.bootstrapState = BootstrapState.IsBootstrapping;
+      newState.common.bootstrapTrigger = false;
       return newState;
-    case ActionType.WalletIsConnected:
-      newState.walletIsConnected = action.item.walletIsConnected;
+    case ActionType.CommonAppDidBootstrap:
+      newState.common.bootstrapState = BootstrapState.Bootstrapped;
       return newState;
-    case ActionType.NetworkSetUrl:
-      newState.networkUrl = action.item.networkUrl;
+    case ActionType.CommonWalletSetProvider:
+      newState.common.walletProvider = action.item.walletProvider;
       return newState;
-    case ActionType.OwnedTokenAccountsSet:
-      newState.ownedTokenAccounts = action.item.ownedTokenAccounts;
+    case ActionType.CommonWalletDidConnect:
+      newState.common.isWalletConnected = true;
       return newState;
-    case ActionType.VestingAccountsSet:
-      newState.vestingAccounts = action.item.vestingAccounts;
+    case ActionType.CommonWalletDidDisconnect:
+      newState.common.isWalletConnected = false;
       return newState;
-    case ActionType.VestingAccountCreate:
-      newState.vestingAccounts.unshift(action.item.vesting);
+    case ActionType.CommonSetNetwork:
+      if (newState.common.network.label !== action.item.network.label) {
+        newState.common.network = action.item.network;
+        newState.common.bootstrapState = BootstrapState.NeedsBootstrap;
+        newState.common.shutdownTrigger = true;
+      }
       return newState;
-    case ActionType.ClearStore:
-      return { ...initialState };
+    case ActionType.CommonTriggerBootstrap:
+      newState.common.bootstrapState = BootstrapState.NeedsBootstrap;
+      newState.common.bootstrapTrigger = true;
+      return newState;
+    case ActionType.CommonTriggerShutdown:
+      newState.common.bootstrapState = BootstrapState.NeedsBootstrap;
+      newState.common.shutdownTrigger = true;
+      return newState;
+    case ActionType.CommonDidShutdown:
+      // Reset everything except network.
+      let s = {
+        ...initialState,
+      };
+      s.common.network = newState.common.network;
+      return s;
+    case ActionType.CommonOwnedTokenAccountsSet:
+      newState.common.ownedTokenAccounts = action.item.ownedTokenAccounts;
+      return newState;
+
+    // Lockup.
+    case ActionType.LockupSetVestings:
+      newState.lockup.vestings = action.item.vestingAccounts;
+      return newState;
+    case ActionType.LockupUpdateVesting:
+      newState.lockup.vestings = newState.lockup.vestings.map(v => {
+        if (v.publicKey.equals(action.item.vesting.publicKey)) {
+          return action.item.vesting;
+        }
+        return v;
+      });
+      return newState;
+    case ActionType.LockupCreateVesting:
+      newState.lockup.vestings.unshift(action.item.vesting);
+      return newState;
+    case ActionType.LockupSetSafe:
+      newState.lockup.safe = action.item.safe;
+      return newState;
+
+    // Registry.
+    case ActionType.RegistryCreateEntity:
+      newState.registry.entities.unshift(action.item.entity);
+      return newState;
+    case ActionType.RegistrySetEntities:
+      newState.registry.entities = action.item.entities;
+      return newState;
+    case ActionType.RegistryUpdateEntity:
+      newState.registry.entities = newState.registry.entities.map(e => {
+        if (
+          e.publicKey.toString() === action.item.entity.publicKey.toString()
+        ) {
+          e = action.item.entity;
+        }
+        return { ...e };
+      });
+      return newState;
+    case ActionType.RegistrySetMember:
+      newState.registry.member = {
+        isReady: true,
+        data: action.item.member,
+      };
+      return newState;
+    case ActionType.RegistrySetPoolMint:
+      newState.registry.poolTokenMint = action.item.poolMint;
+      return newState;
+    case ActionType.RegistrySetPoolMintMega:
+      newState.registry.megaPoolTokenMint = action.item.poolMintMega;
+      return newState;
+    case ActionType.RegistrySetRegistrar:
+      newState.registry.registrar = action.item.registrar;
+      return newState;
+    case ActionType.RegistrySetPendingWithdrawals:
+      newState.registry.pendingWithdrawals = new Map(
+        newState.registry.pendingWithdrawals,
+      ).set(
+        action.item.memberPublicKey.toString(),
+        action.item.pendingWithdrawals,
+      );
+      return newState;
+    case ActionType.RegistryCreatePendingWithdrawal:
+      const oldPw = newState.registry.pendingWithdrawals;
+      const memberWithdrawals = oldPw.has(
+        action.item.memberPublicKey.toString(),
+      )
+        ? [
+            ...(oldPw.get(
+              action.item.memberPublicKey.toString(),
+            ) as ProgramAccount<registry.accounts.PendingWithdrawal>[]),
+          ]
+        : [];
+      memberWithdrawals.unshift(action.item.pendingWithdrawal);
+      newState.registry.pendingWithdrawals = new Map(oldPw).set(
+        action.item.memberPublicKey.toString(),
+        memberWithdrawals,
+      );
+      return newState;
+    case ActionType.RegistryUpdatePendingWithdrawal:
+      const allPendingWithdrawals = new Map(
+        newState.registry.pendingWithdrawals,
+      );
+      const memberPendingWithdrawals = allPendingWithdrawals
+        .get(action.item.memberPublicKey.toString())!
+        .map(pw => {
+          if (
+            pw.publicKey.toString() ===
+            action.item.pendingWithdrawal.publicKey.toString()
+          ) {
+            return action.item.pendingWithdrawal;
+          }
+          return pw;
+        });
+
+      newState.registry.pendingWithdrawals.set(
+        action.item.memberPublicKey.toString(),
+        memberPendingWithdrawals,
+      );
+      return newState;
+    case ActionType.RegistrySetMetadata:
+      const entityMetadata = new Map();
+      action.item.entityMetadata.forEach(
+        (
+          emd: ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>,
+        ) => {
+          entityMetadata.set(emd.account.entity.toString(), emd);
+        },
+      );
+      newState.registry.entityMetadata = entityMetadata;
+      return newState;
+    case ActionType.RegistryCreateMetadata:
+      const emd = new Map(newState.registry.entityMetadata);
+      emd.set(action.item.entityPublicKey.toString(), action.item.metadata);
+      newState.registry.entityMetadata = emd;
+      return newState;
+    case ActionType.RegistrySetRewardEventQueue:
+      newState.registry.rewardEventQueue = action.item.rewardEventQueue;
+      return newState;
+    case ActionType.RegistryCreateRewardVendor:
+      const vendors = new Map(newState.registry.vendors);
+      vendors.set(action.item.vendor.publicKey.toString(), action.item.vendor);
+      newState.registry.vendors = vendors;
+      return newState;
+    // Misc.
     default:
       return newState;
   }
 }
 
 export type State = {
-  walletProvider?: string;
-  walletIsConnected: boolean;
-  networkUrl?: string;
-  ownedTokenAccounts: OwnedTokenAccount[];
-  vestingAccounts: VestingAccount[];
+  common: CommonState;
+  lockup: LockupState;
+  registry: RegistryState;
 };
+
+export type CommonState = {
+  walletProvider?: string;
+  isWalletConnected: boolean;
+  bootstrapTrigger: boolean;
+  bootstrapState: BootstrapState;
+  shutdownTrigger: boolean;
+  network: Network;
+  ownedTokenAccounts: ProgramAccount<TokenAccount>[];
+};
+
+export type LockupState = {
+  safe?: ProgramAccount<lockup.accounts.Safe>;
+  vestings: ProgramAccount<lockup.accounts.Vesting>[];
+};
+
+export type RegistryState = {
+  entities: ProgramAccount<registry.accounts.Entity>[];
+  entityMetadata: Map<
+    string,
+    ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>
+  >;
+  member: AsyncData<ProgramAccount<registry.accounts.MemberDeref>>;
+  poolTokenMint?: ProgramAccount<MintInfo>;
+  megaPoolTokenMint?: ProgramAccount<MintInfo>;
+  registrar?: ProgramAccount<registry.accounts.Registrar>;
+  pendingWithdrawals: Map<
+    string,
+    Array<ProgramAccount<registry.accounts.PendingWithdrawal>>
+  >;
+  rewardEventQueue?: ProgramAccount<registry.accounts.RewardEventQueue>;
+  vendors: Map<
+    string,
+    ProgramAccount<
+      | registry.accounts.LockedRewardVendor
+      | registry.accounts.UnlockedRewardVendor
+    >
+  >;
+};
+
+export type AsyncData<T> = {
+  isReady: boolean;
+  data?: T;
+};
+
+function defaultAsyncData<T>(): AsyncData<T> {
+  return { isReady: false };
+}
+
+// Re-export.
+export type ProgramAccount<T> = CommonProgramAccount<T>;
 
 export const initialState: State = {
-  walletProvider: 'https://www.sollet.io',
-  walletIsConnected: false,
-  networkUrl: 'https://devnet.solana.com',
-  ownedTokenAccounts: [],
-  vestingAccounts: [],
-};
-
-export type VestingAccount = {
-  publicKey: PublicKey;
-  vesting: accounts.vesting.Vesting;
-};
-
-type OwnedTokenAccount = {
-  publicKey: PublicKey;
-  accountInfo: AccountInfo;
-};
-
-type AccountInfo = {
-  executable: boolean;
-  owner: PublicKey;
-  lamport: any;
-  tokenAccount: TokenAccount;
+  common: {
+    bootstrapTrigger: false,
+    shutdownTrigger: false,
+    isWalletConnected: false,
+    walletProvider: 'https://www.sollet.io',
+    bootstrapState: BootstrapState.NeedsBootstrap,
+    network: networks.devnet,
+    ownedTokenAccounts: [],
+  },
+  lockup: {
+    vestings: [],
+  },
+  registry: {
+    member: defaultAsyncData(),
+    entities: [],
+    entityMetadata: new Map(),
+    pendingWithdrawals: new Map(),
+    vendors: new Map(),
+  },
 };

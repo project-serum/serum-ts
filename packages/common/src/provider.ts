@@ -4,23 +4,26 @@ import {
   PublicKey,
   Transaction,
   TransactionSignature,
-  SendOptions,
+  ConfirmOptions,
+  sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
+import { simulateTransaction } from './simulate-transaction';
 
 export class Provider {
   constructor(
     readonly connection: Connection,
     readonly wallet: Wallet,
-    readonly opts: SendOptions,
+    readonly opts: ConfirmOptions,
   ) {}
 
-  static defaultOptions(): SendOptions {
+  static defaultOptions(): ConfirmOptions {
     return {
-      preflightCommitment: 'max',
+      preflightCommitment: 'recent',
+      commitment: 'recent',
     };
   }
 
-  static local(url?: string, opts?: SendOptions): Provider {
+  static local(url?: string, opts?: ConfirmOptions): Provider {
     opts = opts || Provider.defaultOptions();
     const connection = new Connection(
       url || 'http://localhost:8899',
@@ -33,7 +36,7 @@ export class Provider {
   async send(
     tx: Transaction,
     signers?: Array<Account | undefined>,
-    opts?: SendOptions,
+    opts?: ConfirmOptions,
   ): Promise<TransactionSignature> {
     if (signers === undefined) {
       signers = [];
@@ -58,17 +61,95 @@ export class Provider {
     });
 
     const rawTx = tx.serialize();
-    const txId = await this.connection.sendRawTransaction(rawTx, opts);
-    await this.connection.confirmTransaction(
-      txId,
-      this.opts.preflightCommitment,
+
+    try {
+      const txId = await sendAndConfirmRawTransaction(
+        this.connection,
+        rawTx,
+        opts,
+      );
+
+      return txId;
+    } catch (err) {
+      console.error('Transaction failed. Simulating for logs...');
+      const r = await simulateTransaction(
+        this.connection,
+        tx,
+        opts.commitment ?? 'recent',
+      );
+      console.error(r);
+      throw err;
+    }
+  }
+
+  async sendAll(
+    reqs: Array<SendTxRequest>,
+    opts?: ConfirmOptions,
+  ): Promise<Array<TransactionSignature>> {
+    if (opts === undefined) {
+      opts = this.opts;
+    }
+    const blockhash = await this.connection.getRecentBlockhash(
+      opts.preflightCommitment,
     );
-    return txId;
+
+    let txs = reqs.map(r => {
+      let tx = r.tx;
+      let signers = r.signers;
+
+      if (signers === undefined) {
+        signers = [];
+      }
+
+      const signerKps = signers.filter(s => s !== undefined) as Array<Account>;
+      const signerPubkeys = [this.wallet.publicKey].concat(
+        signerKps.map(s => s.publicKey),
+      );
+
+      tx.setSigners(...signerPubkeys);
+      tx.recentBlockhash = blockhash.blockhash;
+      signerKps.forEach(kp => {
+        tx.partialSign(kp);
+      });
+
+      return tx;
+    });
+
+    const signedTxs = await this.wallet.signAllTransactions(txs);
+
+    const sigs = [];
+
+    for (let k = 0; k < txs.length; k += 1) {
+      const tx = signedTxs[k];
+      const rawTx = tx.serialize();
+      try {
+        sigs.push(
+          await sendAndConfirmRawTransaction(this.connection, rawTx, opts),
+        );
+      } catch (err) {
+        console.error('Transaction failed. Simulating for logs...');
+        const r = await simulateTransaction(
+          this.connection,
+          tx,
+          opts.commitment ?? 'recent',
+        );
+        console.error(r);
+        throw err;
+      }
+    }
+
+    return sigs;
   }
 }
 
+export type SendTxRequest = {
+  tx: Transaction;
+  signers: Array<Account | undefined>;
+};
+
 export interface Wallet {
   signTransaction(tx: Transaction): Promise<Transaction>;
+  signAllTransactions(txs: Transaction[]): Promise<Transaction[]>;
   publicKey: PublicKey;
 }
 
@@ -94,6 +175,13 @@ export class NodeWallet implements Wallet {
   async signTransaction(tx: Transaction): Promise<Transaction> {
     tx.partialSign(this.payer);
     return tx;
+  }
+
+  async signAllTransactions(txs: Transaction[]): Promise<Transaction[]> {
+    return txs.map(t => {
+      t.partialSign(this.payer);
+      return t;
+    });
   }
 
   get publicKey(): PublicKey {

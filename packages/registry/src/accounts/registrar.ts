@@ -1,36 +1,39 @@
 import { struct, u8, Layout } from 'buffer-layout';
-import { bool, i64, publicKey, u64 } from '@project-serum/borsh';
+import { bool, i64, publicKey, u64 as borshU64 } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
+import { u64 } from '@solana/spl-token';
 import BN from 'bn.js';
 
 export interface Registrar {
   initialized: boolean;
   authority: PublicKey;
   nonce: number;
-  rewardActivationThreshold: BN;
   maxStakePerEntity: BN;
   withdrawalTimelock: BN;
   deactivationTimelock: BN;
-  vault: PublicKey;
-  megaVault: PublicKey;
-  pool: PublicKey;
-  megaPool: PublicKey;
-  poolProgramId: PublicKey;
+  rewardEventQueue: PublicKey;
+  mint: PublicKey;
+  megaMint: PublicKey;
+  poolMint: PublicKey;
+  poolMintMega: PublicKey;
+  stakeRate: BN;
+  stakeRateMega: BN;
 }
 
 const REGISTRAR_LAYOUT: Layout<Registrar> = struct([
   bool('initialized'),
   publicKey('authority'),
   u8('nonce'),
-  u64('rewardActivationThreshold'),
-  u64('maxStakePerEntity'),
+  borshU64('maxStakePerEntity'),
   i64('withdrawalTimelock'),
   i64('deactivationTimelock'),
-  publicKey('vault'),
-  publicKey('megaVault'),
-  publicKey('pool'),
-  publicKey('megaPool'),
-  publicKey('poolProgramId'),
+  publicKey('rewardEventQueue'),
+  publicKey('mint'),
+  publicKey('megaMint'),
+  publicKey('poolMint'),
+  publicKey('poolMintMega'),
+  borshU64('stakeRate'),
+  borshU64('stakeRateMega'),
 ]);
 
 export function decode(data: Buffer): Registrar {
@@ -47,16 +50,14 @@ export const SIZE: number = encode({
   initialized: false,
   authority: new PublicKey(Buffer.alloc(32)),
   nonce: 0,
-  rewardActivationThreshold: new BN(0),
-  maxStakePerEntity: new BN(0),
-  withdrawalTimelock: new BN(0),
-  deactivationTimelock: new BN(0),
-  vault: new PublicKey(Buffer.alloc(32)),
-  megaVault: new PublicKey(Buffer.alloc(32)),
-  pool: new PublicKey(Buffer.alloc(32)),
-  megaPool: new PublicKey(Buffer.alloc(32)),
-  poolProgramId: new PublicKey(Buffer.alloc(32)),
+  maxStakePerEntity: new u64(0),
+  withdrawalTimelock: new u64(0),
+  deactivationTimelock: new u64(0),
+  rewardEventQueue: new PublicKey(Buffer.alloc(32)),
+  mint: new PublicKey(Buffer.alloc(32)),
+  megaMint: new PublicKey(Buffer.alloc(32)),
+  poolMint: new PublicKey(Buffer.alloc(32)),
+  poolMintMega: new PublicKey(Buffer.alloc(32)),
+  stakeRate: new u64(0),
+  stakeRateMega: new u64(0),
 }).length;
-
-export const STAKE_POOL_NAME = '';
-export const MEGA_STAKE_POOL_NAME = '';

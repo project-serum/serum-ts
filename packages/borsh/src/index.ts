@@ -10,6 +10,7 @@ import {
 } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
+export { u8, u32, struct } from 'buffer-layout';
 
 export interface Layout<T> {
   span: number;
@@ -234,10 +235,14 @@ export function str(property?: string): Layout<string> {
   );
 }
 
+export interface EnumLayout<T> extends Layout<T> {
+  registry: Record<string, Layout<any>>;
+}
+
 export function rustEnum<T>(
   variants: Layout<any>[],
   property?: string,
-): Layout<T> {
+): EnumLayout<T> {
   const unionLayout = union(u8(), property);
   variants.forEach((variant, index) =>
     unionLayout.addVariant(index, variant, variant.property),

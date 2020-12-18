@@ -1,6 +1,6 @@
-import { PublicKey } from '@solana/web3.js';
-import Client, { networks } from './client';
+import Client from './client';
 import * as instruction from './instruction';
 import * as accounts from './accounts';
+export * as txIx from './transaction-instruction';
 
-export { Client, networks, instruction, accounts };
+export { Client, instruction, accounts };
