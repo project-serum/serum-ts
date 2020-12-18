@@ -604,5 +604,12 @@
         "name": "SWAG/USDT",
         "deprecated": false,
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "sKnwum4rgGWENgAhfuWdVc5jXT7ymZZojdjJq26NTSb",
+        "name": "USDT/USDC",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
     }
+	
 ]
