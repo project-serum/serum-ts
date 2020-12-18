@@ -2500,13 +2500,13 @@
   dependencies:
     "@sinonjs/commons" "^1.7.0"
 
-"@solana/spl-token-swap@0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@solana/spl-token-swap/-/spl-token-swap-0.0.2.tgz#b7afa943d27fc4c5100ea3ab6fcd518bcc05fed3"
-  integrity sha512-dnOTmLDb+eroVUvJXYJ4qKIpfD2tvsbKIZ5dnx1RUrZng1oGj9nEKqxOKzMCFgCj/qjjuPnFQQRWn0u+hwLvbw==
+"@solana/spl-token-swap@0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@solana/spl-token-swap/-/spl-token-swap-0.0.4.tgz#d27c4eae3e3564ee3a566d488b7b989b7623d5d7"
+  integrity sha512-4KwgcAWmjGyiWpFZ+UQ/hdQ66Yn3RqdkbIPb5y8xQ8S1JCGuGxY5PnGrvqxKTt3TMe+PB9hTMcPynHNUkSS7bA==
   dependencies:
     "@babel/runtime" "^7.11.2"
-    "@solana/web3.js" "^0.78.0"
+    "@solana/web3.js" "^0.86.2"
     bn.js "^5.1.3"
     buffer-layout "^1.2.0"
     dotenv "8.2.0"
@@ -2520,6 +2520,18 @@
   dependencies:
     "@babel/runtime" "^7.10.5"
     "@solana/web3.js" "^0.78.0"
+    bn.js "^5.0.0"
+    buffer-layout "^1.2.0"
+    dotenv "8.2.0"
+    mkdirp "1.0.4"
+
+"@solana/spl-token@^0.0.13":
+  version "0.0.13"
+  resolved "https://registry.yarnpkg.com/@solana/spl-token/-/spl-token-0.0.13.tgz#5e0b235b1f8b34643280401dbfddeb34d13d1acd"
+  integrity sha512-WT8M9V/hxURR5jLbhr3zgwVsgcY6m8UhHtK045w7o+jx8FJ9MKARkj387WBFU7mKiFq0k8jw/8YL7XmnIUuH8Q==
+  dependencies:
+    "@babel/runtime" "^7.10.5"
+    "@solana/web3.js" "^0.86.1"
     bn.js "^5.0.0"
     buffer-layout "^1.2.0"
     dotenv "8.2.0"
@@ -2569,7 +2581,7 @@
     tweetnacl "^1.0.0"
     ws "^7.0.0"
 
-"@solana/web3.js@^0.86.1":
+"@solana/web3.js@^0.86.1", "@solana/web3.js@^0.86.2":
   version "0.86.4"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-0.86.4.tgz#69216d3928ca4727c25a1ea96c405e897156ac3b"
   integrity sha512-FpabDmdyxBN5aHIVUWc9Q6pXJFWiLRm/xeyxFg9O9ICHjiUkd38omds7G0CAmykIccG7zaMziwtkXp+0KvQOhA==
