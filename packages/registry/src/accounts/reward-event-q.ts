@@ -1,11 +1,11 @@
 import BN from 'bn.js';
 import { struct, Layout } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
-import { publicKey, u64, rustEnum, vec } from '@project-serum/borsh';
+import { publicKey, u64, rustEnum, i64 } from '@project-serum/borsh';
 import { Ring, RingItemDecoder } from './ring';
 
-const CAPACITY = 14598;
-const MESSAGE_SIZE = 137;
+const CAPACITY = 13792;
+const MESSAGE_SIZE = 145;
 
 export class RewardEventQueue extends Ring<RewardEvent> {
   constructor(data: Buffer) {
@@ -39,6 +39,7 @@ export type LockedAlloc = {
   pool: PublicKey;
   vendor: PublicKey;
   mint: PublicKey;
+  ts: BN;
 };
 
 export type UnlockedAlloc = {
@@ -47,6 +48,7 @@ export type UnlockedAlloc = {
   pool: PublicKey;
   vendor: PublicKey;
   mint: PublicKey;
+  ts: BN;
 };
 
 const REWARD_EVENT_LAYOUT: Layout<RewardEvent> = rustEnum([
@@ -57,6 +59,7 @@ const REWARD_EVENT_LAYOUT: Layout<RewardEvent> = rustEnum([
       publicKey('pool'),
       publicKey('vendor'),
       publicKey('mint'),
+      i64('ts'),
     ],
     'lockedAlloc',
   ),
@@ -67,6 +70,7 @@ const REWARD_EVENT_LAYOUT: Layout<RewardEvent> = rustEnum([
       publicKey('pool'),
       publicKey('vendor'),
       publicKey('mint'),
+      i64('ts'),
     ],
     'unlockedAlloc',
   ),
