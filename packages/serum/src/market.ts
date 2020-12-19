@@ -514,7 +514,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
-      feeDiscountPubkey = null,
+      feeDiscountPubkey = undefined,
     }: OrderParams<T>,
     cacheDurationMs = 0,
     feeDiscountPubkeyCacheDurationMs = 0,
@@ -530,17 +530,19 @@ export class Market {
     const signers: Account[] = [];
 
     // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
-    feeDiscountPubkey =
-      feeDiscountPubkey ||
-      (this.supportsSrmFeeDiscounts
-        ? (
-            await this.findBestFeeDiscountKey(
-              connection,
-              ownerAddress,
-              feeDiscountPubkeyCacheDurationMs,
-            )
-          ).pubkey
-        : null);
+    let useFeeDiscountPubkey: PublicKey | null;
+    if (feeDiscountPubkey) {
+      useFeeDiscountPubkey = feeDiscountPubkey;
+    } else if (feeDiscountPubkey === undefined && this.supportsSrmFeeDiscounts) {
+      useFeeDiscountPubkey =  (await this.findBestFeeDiscountKey(
+          connection,
+          ownerAddress,
+          feeDiscountPubkeyCacheDurationMs,
+        )
+      ).pubkey
+    } else {
+      useFeeDiscountPubkey = null
+    }
 
     let openOrdersAddress;
     if (openOrdersAccounts.length === 0) {
@@ -615,7 +617,7 @@ export class Market {
       orderType,
       clientId,
       openOrdersAddressKey: openOrdersAddress,
-      feeDiscountPubkey,
+      feeDiscountPubkey: useFeeDiscountPubkey,
     });
     transaction.add(placeOrderInstruction);
 
