@@ -874,10 +874,30 @@ export default class Client {
           { pubkey: vaultStake, isWritable: true, isSigner: false },
           { pubkey: poolMint, isWritable: true, isSigner: false },
           { pubkey: spt, isWritable: true, isSigner: false },
+          {
+            pubkey: registrar.rewardEventQueue,
+            isWritable: false,
+            isSigner: false,
+          },
 
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
-        ],
+        ].concat(
+          member.account.balances
+            .map(b => {
+              return [
+                { pubkey: b.owner, isWritable: false, isSigner: false },
+                { pubkey: b.spt, isWritable: false, isSigner: false },
+                {
+                  pubkey: b.sptMega,
+                  isWritable: false,
+                  isSigner: false,
+                },
+              ];
+            })
+            // @ts-ignore
+            .flat(),
+        ),
         programId: this.programId,
         data: instruction.encode({
           stake: {
@@ -990,7 +1010,27 @@ export default class Client {
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: TOKEN_PROGRAM_ID, isWritable: false, isSigner: false },
           { pubkey: SYSVAR_RENT_PUBKEY, isWritable: false, isSigner: false },
-        ],
+          {
+            pubkey: registrar.rewardEventQueue,
+            isWritable: false,
+            isSigner: false,
+          },
+        ].concat(
+          member.account.balances
+            .map(b => {
+              return [
+                { pubkey: b.owner, isWritable: false, isSigner: false },
+                { pubkey: b.spt, isWritable: false, isSigner: false },
+                {
+                  pubkey: b.sptMega,
+                  isWritable: false,
+                  isSigner: false,
+                },
+              ];
+            })
+            // @ts-ignore
+            .flat(),
+        ),
         programId: this.programId,
         data: instruction.encode({
           startStakeWithdrawal: {
@@ -1118,6 +1158,10 @@ export default class Client {
       };
     }
 
+    if (registrar === undefined) {
+      registrar = await this.accounts.registrar();
+    }
+
     const vaultAuthority = await this.accounts.vaultAuthority(
       this.programId,
       this.registrar,
@@ -1135,6 +1179,11 @@ export default class Client {
           { pubkey: newEntity, isWritable: true, isSigner: false },
           { pubkey: SYSVAR_CLOCK_PUBKEY, isWritable: false, isSigner: false },
           { pubkey: vaultAuthority, isWritable: false, isSigner: false },
+          {
+            pubkey: registrar.rewardEventQueue,
+            isWritable: false,
+            isSigner: false,
+          },
         ].concat(
           member.account.balances
             .map(b => {
