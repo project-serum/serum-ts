@@ -65,7 +65,7 @@ function RiskBar() {
         }}
       >
         <Typography style={{ fontSize: '14px' }}>
-          This is unaudited software. Use at your own risk.
+          Stake is unaudited software. Use at your own risk.
         </Typography>
       </div>
     </div>

@@ -4,7 +4,6 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Brightness1Icon from '@material-ui/icons/Brightness1';
-import * as skin from '../../skin';
 import { State as StoreState, BootstrapState } from '../../store/reducer';
 import Messaging from './Messaging';
 
@@ -55,11 +54,9 @@ export default function Footer() {
         >
           <Brightness1Icon
             style={{
-              color: isAppReady
-                ? skin.instance().active
-                : isDisconnected
-                ? '#ccc'
-                : skin.instance().ready,
+              color: isDisconnected
+									 ? '#ccc'
+									 : 'rgb(60, 195, 215)',
               fontSize: '12px',
             }}
           />

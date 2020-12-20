@@ -436,7 +436,7 @@ type TransferDialogProps = {
 };
 
 function TransferDialog(props: TransferDialogProps) {
-  const { srmMint, msrmMint, member } = useSelector((state: StoreState) => {
+  const { srmMint, msrmMint } = useSelector((state: StoreState) => {
     const network = state.common.network;
     return {
       srmMint: network.srm,

@@ -41,28 +41,28 @@ export const networks: Networks = {
     url: 'https://devnet.solana.com',
     explorerClusterSuffix: 'devnet',
 
-    srmFaucet: new PublicKey('9q8NhG9U95S1M3NZGunKnXRpZ81LW65tAzzHgyknNj2r'),
-    msrmFaucet: new PublicKey('6oAY2zRqF6dfGNCQSVGF6PB2dFgrtsajQCssvFCpC3Cm'),
-    srm: new PublicKey('4Ghge2MMPmWXeD2FR541akGhjjgUi7RUtk7DBP5bTwGB'),
-    msrm: new PublicKey('5PsAVQLCrgtKqZpLdg7HsTXHMcvVCQ1c4bFHHej8Axxn'),
-    god: new PublicKey('7YbS8znK1eY3p6z1Xo6eCyx7XFyZPBs1mTdVCLsFGCqc'),
-    megaGod: new PublicKey('GDhZrqcjUMJokqm6cjhyMXheBxxvUkfq3Q8YUtZ6BdCm'),
+    srm: new PublicKey('GuYiNEona74SWyXUPH6YJiRjsGsXWUKDWxbYGTdfhq9Q'),
+    msrm: new PublicKey('8a14E5uo9KReuGc3g6zy49p7pFSCdD6KCAGswKchQXwf'),
+    srmFaucet: new PublicKey('dCxamz14WkfVspagG2ATKPqYnnnkbi6gbtBStEGJmye'),
+    msrmFaucet: new PublicKey('BAhCxLPhxKH5DV8tKPryncbA5WgAiF6SjhET7u9vGNn2'),
+    god: new PublicKey('9qx4JwgrAjqSDTv2fZh7ZJw5YGSgJrCsrVq7a3WNEnaW'),
+    megaGod: new PublicKey('7BagAJ5fCGkG2SUQs7bsot3rC4mKJ3reqJLA1Yaav1PC'),
     registryProgramId: new PublicKey(
-      'FigXetJcXogqm94qfmyKWy6U5KJAwtxSgJMjUHercVQp',
+      '91A57picJWot5GPS5Dfc7bbqzfBPzHHtJ74bD7oetFnn',
     ),
     lockupProgramId: new PublicKey(
-      'CiNaYvdnQ42BNdbKvvAapHxiP18pvc3Vk5WuZ59ia64x',
+      '4s2YYCY6JxiVBz6hNbFAkDFEvECU3xZWa6QxXdCPZteK',
     ),
     metaEntityProgramId: new PublicKey(
-      '8wfM5sd5Yivn4WWkcSp4pNua7ytDvjeyLVLaU3QWiLAT',
+      'HbuSt513LQ2UiUCNDxV6q3QJAFf1iwyVfgChRoSAyGGA',
     ),
-    registrar: new PublicKey('BB8JRs7FUTawxV6QELRGoNus2TNaMg1egG9rKosxCiAW'),
+    registrar: new PublicKey('39i6gAwhJsYuH7vLiLUmx5LuZxmqHp9FXB9sbRHQeGkF'),
     rewardEventQueue: new PublicKey(
-      '5Ch6eHTC9rXHk5pLe9EfdYxWYUdtBpN9FY5xuH8BLawg',
+      'Bj6BYeBZ5eJW3GtGze49Sf625Cp6jBFdhMdwdYVQaNEc',
     ),
-    safe: new PublicKey('3CuTNekgrJykh6ukB8Ty7Y6V5gTX4DD3p38HLYAtqV6c'),
+    safe: new PublicKey('HhctHe6D4GhWPJykBdga4U35HVMynoaDiwhj24vK3FNG'),
     defaultEntity: new PublicKey(
-      'BUvnMzShmicx2uiw2sJSRSHp19DLSfDijnYbwezAncwG',
+      '7Aob4UzZsNnNZbiHUFS1h5JNUGDRBT4FjnLdAAKpp298',
     ),
   },
 
