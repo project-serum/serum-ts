@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.css": "/serum-ts/stake-ui/static/css/main.6dea0f05.chunk.css",
+    "main.js": "/serum-ts/stake-ui/static/js/main.3289353f.chunk.js",
+    "main.js.map": "/serum-ts/stake-ui/static/js/main.3289353f.chunk.js.map",
+    "runtime-main.js": "/serum-ts/stake-ui/static/js/runtime-main.b6feb771.js",
+    "runtime-main.js.map": "/serum-ts/stake-ui/static/js/runtime-main.b6feb771.js.map",
+    "static/js/2.4b0ac19a.chunk.js": "/serum-ts/stake-ui/static/js/2.4b0ac19a.chunk.js",
+    "static/js/2.4b0ac19a.chunk.js.map": "/serum-ts/stake-ui/static/js/2.4b0ac19a.chunk.js.map",
+    "static/js/3.aa26d569.chunk.js": "/serum-ts/stake-ui/static/js/3.aa26d569.chunk.js",
+    "static/js/3.aa26d569.chunk.js.map": "/serum-ts/stake-ui/static/js/3.aa26d569.chunk.js.map",
+    "index.html": "/serum-ts/stake-ui/index.html",
+    "static/css/main.6dea0f05.chunk.css.map": "/serum-ts/stake-ui/static/css/main.6dea0f05.chunk.css.map",
+    "static/js/2.4b0ac19a.chunk.js.LICENSE.txt": "/serum-ts/stake-ui/static/js/2.4b0ac19a.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.b6feb771.js",
+    "static/js/2.4b0ac19a.chunk.js",
+    "static/css/main.6dea0f05.chunk.css",
+    "static/js/main.3289353f.chunk.js"
+  ]
+}
