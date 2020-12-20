@@ -436,11 +436,12 @@ type TransferDialogProps = {
 };
 
 function TransferDialog(props: TransferDialogProps) {
-  const { srmMint, msrmMint } = useSelector((state: StoreState) => {
+  const { srmMint, msrmMint, member } = useSelector((state: StoreState) => {
     const network = state.common.network;
     return {
       srmMint: network.srm,
       msrmMint: network.msrm,
+			member: state.registry.member,
     };
   });
   const { enqueueSnackbar } = useSnackbar();
@@ -522,7 +523,13 @@ function TransferDialog(props: TransferDialogProps) {
                   decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
                   onChange={(f: PublicKey, maxDisplayAmount: BN) => {
                     setFrom(f);
-                    setMaxDisplayAmount(maxDisplayAmount.toNumber());
+										if (deposit) {
+											setMaxDisplayAmount(maxDisplayAmount.toNumber());
+										} else {
+											// TODO: set an actual limit for the withdrawal UI (i.e.
+											//       what's currently in the vault).
+											setMaxDisplayAmount(2**53);
+										}
                   }}
                 />
                 <FormHelperText>
