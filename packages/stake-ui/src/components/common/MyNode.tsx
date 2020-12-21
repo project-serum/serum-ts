@@ -521,15 +521,15 @@ function TransferDialog(props: TransferDialogProps) {
                   variant="outlined"
                   mint={mint}
                   decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
-                  onChange={(f: PublicKey, maxDisplayAmount: BN) => {
+                  onChange={(f: PublicKey, _maxDisplayAmount: BN) => {
                     setFrom(f);
-                    if (deposit) {
-                      setMaxDisplayAmount(maxDisplayAmount.toNumber());
-                    } else {
-                      // TODO: set an actual limit for the withdrawal UI (i.e.
-                      //       what's currently in the vault).
-                      setMaxDisplayAmount(2 ** 53);
-                    }
+                    // TODO: set an actual limit for the withdrawal UI (i.e.
+                    //       what's currently in the vault). Currently not
+                    //       done since we dont' have websocket connections
+                    //       for each of the users accounts. However we
+                    //       still use the "max" amount for display vesting
+                    //       accounts.
+                    setMaxDisplayAmount(2 ** 53);
                   }}
                 />
                 <FormHelperText>
