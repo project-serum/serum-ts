@@ -26,10 +26,20 @@ export default function Layout(props: PropsWithChildren<Props>) {
         backgroundColor: 'rgb(251, 251, 251)',
       }}
     >
-      <RiskBar />
-      <Header isAppReady={isAppReady} />
       <div
         style={{
+          position: 'fixed',
+          width: '100%',
+          zIndex: 99,
+        }}
+      >
+        <RiskBar />
+        <Header isAppReady={isAppReady} />
+      </div>
+      <div
+        style={{
+          width: '100%',
+          marginTop: '94px',
           flex: 1,
           display: 'flex',
           marginBottom: '30px', // Compensates for the fixed position footer.
@@ -65,7 +75,7 @@ function RiskBar() {
         }}
       >
         <Typography style={{ fontSize: '14px' }}>
-          This is unaudited software. Use at your own risk.
+          Stake is unaudited software. Use at your own risk.
         </Typography>
       </div>
     </div>

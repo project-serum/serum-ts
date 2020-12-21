@@ -4,17 +4,16 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Brightness1Icon from '@material-ui/icons/Brightness1';
-import * as skin from '../../skin';
+import Link from '@material-ui/core/Link';
 import { State as StoreState, BootstrapState } from '../../store/reducer';
 import Messaging from './Messaging';
 
 export default function Footer() {
   const [chatDisplay, setChatDisplay] = useState(false);
   const [envDisplay, setEnvDisplay] = useState(false);
-  const { isAppReady, isDisconnected, network, hasMember } = useSelector(
+  const { isAppReady, isDisconnected, hasMember } = useSelector(
     (state: StoreState) => {
       return {
-        network: state.common.network,
         isAppReady:
           state.common.isWalletConnected &&
           state.common.bootstrapState === BootstrapState.Bootstrapped,
@@ -43,45 +42,75 @@ export default function Footer() {
       <div
         style={{
           display: 'flex',
+          position: 'absolute',
+          bottom: '40px',
+          left: '10px',
+          borderRadius: '4px',
+          background: '#272727',
+        }}
+        onClick={() => {
+          setEnvDisplay(!envDisplay);
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            marginRight: '10px',
-          }}
-        >
-          <Brightness1Icon
-            style={{
-              color: isAppReady
-                ? skin.instance().active
-                : isDisconnected
-                ? '#ccc'
-                : skin.instance().ready,
-              fontSize: '12px',
-            }}
-          />
-        </div>
         <IconButton
           style={{
+            paddingLeft: '10px',
+            paddingRight: '10px',
+            paddingTop: 0,
+            paddingBottom: 0,
             color: 'inherit',
-            padding: 0,
             display: 'flex',
             justifyContent: 'center',
             flexDirection: 'column',
           }}
-          onClick={() => {
-            setEnvDisplay(!envDisplay);
-          }}
         >
-          <Typography style={{ fontSize: '14px', fontWeight: 'bold' }}>
-            {network.label}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              flexDirection: 'column',
+              marginRight: '10px',
+            }}
+          >
+            <Brightness1Icon
+              style={{
+                color: isDisconnected ? '#ccc' : 'rgb(60, 195, 215)',
+                fontSize: '12px',
+              }}
+            />
+          </div>
+          <Typography
+            style={{ color: '#fff', fontSize: '14px', fontWeight: 'bold' }}
+          >
+            {'Environment'}
           </Typography>
         </IconButton>
       </div>
-      <div style={{ display: 'flex' }}>
+      <div style={{ marginLeft: 'auto', marginRight: 'auto', display: 'flex' }}>
+        <FooterButton
+          href={
+            'https://github.com/project-serum/serum-dex/blob/master/docs/staking.md'
+          }
+          label={'Technical Documentation'}
+        />
+        <FooterButton
+          href={'https://github.com/project-serum/awesome-serum'}
+          label={'Developer Resources'}
+        />
+        <FooterButton
+          href={'https://discord.com/channels/739225212658122886'}
+          label={'Discord'}
+        />
+        <FooterButton href={'https://t.me/ProjectSerum'} label={'Telegram'} />
+        <FooterButton
+          href={'https://github.com/project-serum'}
+          label={'GitHub'}
+        />
+        <FooterButton
+          href={'https://solanabeach.io/'}
+          label={'Solana Network'}
+          isEnd={true}
+        />
         {hasMember && isAppReady && (
           <div
             style={{ display: 'none' /*'flex'*/ }}
@@ -111,7 +140,7 @@ export default function Footer() {
             overflowY: 'scroll',
             position: 'fixed',
             bottom: '30px',
-            left: 0,
+            right: 0,
             width: '500px',
             height: '400px',
             borderTopLeftRadius: '4px',
@@ -224,6 +253,30 @@ function NetworkEnvironment() {
           </ul>
         </>
       )}
+    </div>
+  );
+}
+
+type FooterButtonProps = {
+  label: string;
+  href: string;
+  isEnd?: boolean;
+};
+
+function FooterButton(props: FooterButtonProps) {
+  const { label, href, isEnd } = props;
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        marginRight: isEnd ? '' : '15px',
+      }}
+    >
+      <Link href={href} target="_blank" color="inherit">
+        <Typography style={{ fontSize: '14px' }}>{label}</Typography>
+      </Link>
     </div>
   );
 }

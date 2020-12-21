@@ -441,6 +441,7 @@ function TransferDialog(props: TransferDialogProps) {
     return {
       srmMint: network.srm,
       msrmMint: network.msrm,
+      member: state.registry.member,
     };
   });
   const { enqueueSnackbar } = useSnackbar();
@@ -520,9 +521,15 @@ function TransferDialog(props: TransferDialogProps) {
                   variant="outlined"
                   mint={mint}
                   decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
-                  onChange={(f: PublicKey, maxDisplayAmount: BN) => {
+                  onChange={(f: PublicKey, _maxDisplayAmount: BN) => {
                     setFrom(f);
-                    setMaxDisplayAmount(maxDisplayAmount.toNumber());
+                    // TODO: set an actual limit for the withdrawal UI (i.e.
+                    //       what's currently in the vault). Currently not
+                    //       done since we dont' have websocket connections
+                    //       for each of the users accounts. However we
+                    //       still use the "max" amount for display vesting
+                    //       accounts.
+                    setMaxDisplayAmount(2 ** 53);
                   }}
                 />
                 <FormHelperText>
