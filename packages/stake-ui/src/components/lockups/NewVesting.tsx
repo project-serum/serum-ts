@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import BN from 'bn.js';
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey, SystemProgram } from '@solana/web3.js';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
@@ -21,6 +21,7 @@ import { ActionType } from '../../store/actions';
 import { useWallet } from '../../components/common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
+import { ViewTransactionOnExplorerButton } from '../common/Notification';
 
 export default function NewVestingButton() {
   const [open, setOpen] = useState(false);
@@ -81,15 +82,37 @@ function NewVestingDialog(props: NewVestingDialogProps) {
 
   const createVestingClickHandler = async () => {
     setIsLoading(true);
-    enqueueSnackbar('Creating vesting acount...', {
-      variant: 'info',
-    });
     try {
+      const beneficiaryPublicKey = new PublicKey(beneficiary);
+      const beneficiaryAccount = await lockupClient.provider.connection.getAccountInfo(
+        beneficiaryPublicKey,
+      );
+      if (beneficiaryAccount === null) {
+        enqueueSnackbar('Unable to validate given beneficiary.', {
+          variant: 'error',
+        });
+        setIsLoading(false);
+        return;
+      }
+      if (!beneficiaryAccount.owner.equals(SystemProgram.programId)) {
+        enqueueSnackbar(
+          'The beneficiary must be owned by the System Program.',
+          {
+            variant: 'error',
+          },
+        );
+        setIsLoading(false);
+        return;
+      }
+
+      enqueueSnackbar('Creating vesting acount...', {
+        variant: 'info',
+      });
       let amount = mint!.equals(network.srm)
         ? fromDisplaySrm(displayAmount!)
         : fromDisplayMsrm(displayAmount!);
-      let { vesting } = await lockupClient.createVesting({
-        beneficiary: new PublicKey(beneficiary),
+      let { vesting, tx } = await lockupClient.createVesting({
+        beneficiary: beneficiaryPublicKey,
         endTs: new BN(timestamp),
         periodCount: new BN(periodCount),
         depositAmount: amount,
@@ -105,8 +128,9 @@ function NewVestingDialog(props: NewVestingDialogProps) {
           },
         },
       });
-      enqueueSnackbar(`Vesting account created ${vesting}`, {
+      enqueueSnackbar(`Vesting account created`, {
         variant: 'success',
+        action: <ViewTransactionOnExplorerButton signature={tx} />,
       });
       onClose();
     } catch (err) {

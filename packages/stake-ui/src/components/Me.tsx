@@ -43,7 +43,7 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
   const tables = [
     {
       title: 'Main Balances',
-      description: 'Balances transferred directly.',
+      description: 'Balances deposited directly from the connected wallet.',
       rows:
         !member.isReady || member.data === undefined
           ? null
@@ -80,7 +80,8 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
     },
     {
       title: 'Locked Balances',
-      description: 'Total balances transferred from the lockup program.',
+      description:
+        'Balances deposited from the lockup program. These funds are isolated from the Main Balances and may only be withdrawn back to the lockup program. At all times they are program controlled.',
       rows:
         !member.isReady || member.data === undefined
           ? null
@@ -182,7 +183,7 @@ function BalanceTable(props: BalanceTableProps) {
               <TableCell align="right">Available</TableCell>
               <TableCell align="right">Pending</TableCell>
               <TableCell align="right">Staked</TableCell>
-              <TableCell align="right">Shares</TableCell>
+              <TableCell align="right">Pool</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

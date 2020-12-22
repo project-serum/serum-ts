@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import BN from 'bn.js';
 import { useSnackbar } from 'notistack';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
@@ -12,7 +13,7 @@ import CardContent from '@material-ui/core/CardContent';
 import CardHeader from '@material-ui/core/CardHeader';
 import FormControl from '@material-ui/core/FormControl';
 import Typography from '@material-ui/core/Typography';
-import { MintInfo, u64 } from '@solana/spl-token';
+import { u64 } from '@solana/spl-token';
 import { accounts } from '@project-serum/registry';
 import { useWallet } from '../components/common/WalletProvider';
 import { ViewTransactionOnExplorerButton } from '../components/common/Notification';
@@ -24,16 +25,14 @@ import { displaySrm, displayMsrm } from '../utils/tokens';
 export default function Stake() {
   const { registryClient } = useWallet();
   const dispatch = useDispatch();
-  const { poolTokenMint, megaPoolTokenMint, member, registrar } = useSelector(
-    (state: StoreState) => {
-      return {
-        poolTokenMint: state.registry.poolTokenMint,
-        megaPoolTokenMint: state.registry.megaPoolTokenMint,
-        member: state.registry.member.data!,
-        registrar: state.registry.registrar,
-      };
-    },
-  );
+  const { member, registrar } = useSelector((state: StoreState) => {
+    return {
+      poolTokenMint: state.registry.poolTokenMint,
+      megaPoolTokenMint: state.registry.megaPoolTokenMint,
+      member: state.registry.member.data!,
+      registrar: state.registry.registrar,
+    };
+  });
 
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
 
@@ -47,7 +46,7 @@ export default function Stake() {
     const balanceId = balances.owner;
     const spt = isMega ? balances.sptMega : balances.spt;
 
-    enqueueSnackbar(`Creating ${spt} ${label} Pool tokens`, {
+    enqueueSnackbar(`Staking ${label} Pool tokens`, {
       variant: 'info',
     });
 
@@ -74,7 +73,7 @@ export default function Stake() {
       },
     });
     closeSnackbar();
-    enqueueSnackbar(`Creation complete`, {
+    enqueueSnackbar(`Staking complete`, {
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
@@ -86,12 +85,9 @@ export default function Stake() {
     isMega?: boolean,
     isLocked?: boolean,
   ) => {
-    enqueueSnackbar(
-      `Initiating redemption for ${amount} ${label} Pool tokens`,
-      {
-        variant: 'info',
-      },
-    );
+    enqueueSnackbar(`Unstaking ${amount} ${label} Pool tokens`, {
+      variant: 'info',
+    });
     const balances = member.account.member.balances[isLocked ? 1 : 0];
     const balanceId = balances.owner;
     const spt = isMega ? balances.sptMega : balances.spt;
@@ -134,7 +130,7 @@ export default function Stake() {
       },
     });
     closeSnackbar();
-    enqueueSnackbar(`Pending redemption ${pendingWithdrawal.toString()}`, {
+    enqueueSnackbar(`Stake transfer initiated`, {
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
@@ -143,7 +139,7 @@ export default function Stake() {
   const createSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       createPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
-        enqueueSnackbar(`Error creating srm pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error staking srm pool: ${err.toString()}`, {
           variant: 'error',
         });
       });
@@ -152,7 +148,7 @@ export default function Stake() {
   const redeemSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       redeemPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
-        enqueueSnackbar(`Error redeeming srm pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error unstaking SRM pool: ${err.toString()}`, {
           variant: 'error',
         });
       });
@@ -162,7 +158,7 @@ export default function Stake() {
   const createMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       createPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
-        enqueueSnackbar(`Error creating msrm pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error staking MSRM pool: ${err.toString()}`, {
           variant: 'error',
         });
       });
@@ -171,7 +167,7 @@ export default function Stake() {
   const redeemMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       redeemPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
-        enqueueSnackbar(`Error redeeming msrm pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error unstaking MSRM pool: ${err.toString()}`, {
           variant: 'error',
         });
       });
@@ -183,21 +179,15 @@ export default function Stake() {
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
         <PoolCard
           title={'Stake Pool'}
-          poolTokenMint={poolTokenMint!}
-          disabled={member === undefined}
           create={createSrmPool}
           redeem={redeemSrmPool}
           isMega={false}
-          registrar={registrar!}
         />
         <PoolCard
           title={'Mega Stake Pool'}
-          poolTokenMint={megaPoolTokenMint!}
-          disabled={member === undefined}
           create={createMsrmPool}
           redeem={redeemMsrmPool}
           isMega={true}
-          registrar={registrar!}
         />
       </div>
       <RedemptionList
@@ -211,29 +201,39 @@ export default function Stake() {
 
 type PoolCardProps = {
   title: string;
-  poolTokenMint: ProgramAccount<MintInfo>;
-  registrar: ProgramAccount<accounts.Registrar>;
   isMega: boolean;
-  disabled: boolean;
   create: (shares: number, isLocked: boolean) => void;
   redeem: (shares: number, isLocked: boolean) => void;
 };
 
 function PoolCard(props: PoolCardProps) {
-  const {
-    title,
-    create,
-    redeem,
-    poolTokenMint,
-    disabled,
-    registrar,
-    isMega,
-  } = props;
+  const { title, create, redeem, isMega } = props;
   const [srmPoolAmount, setSrmPoolAmount] = useState<null | number>(null);
   const [isLocked, setIsLocked] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const { poolTokenMint, member, entity, registrar } = useSelector(
+    (state: StoreState) => {
+      const member = state.registry.member.data!;
+      return {
+        poolTokenMint: isMega
+          ? state.registry.megaPoolTokenMint!
+          : state.registry.poolTokenMint!,
+        member,
+        registrar: state.registry.registrar!,
+        entity:
+          member === undefined
+            ? undefined
+            : state.registry.entities
+                .filter(e => e.publicKey.equals(member.account.member.entity))
+                .pop(),
+      };
+    },
+  );
+
   const pricePerShare = isMega
     ? displayMsrm(registrar.account.stakeRateMega) + ' MSRM'
     : displaySrm(registrar.account.stakeRate) + ' SRM';
+
   return (
     <Card
       style={{
@@ -263,11 +263,11 @@ function PoolCard(props: PoolCardProps) {
           }}
         >
           <Typography style={{ fontWeight: 'bold' }}>
-            Total shares outstanding
+            Total pool tokens outstanding
           </Typography>
           <Typography>{poolTokenMint.account.supply.toString()}</Typography>
           <Typography style={{ fontWeight: 'bold' }}>
-            Price per share
+            Price per pool token
           </Typography>
           <Typography>{pricePerShare}</Typography>
         </div>
@@ -276,7 +276,7 @@ function PoolCard(props: PoolCardProps) {
             <FormControl>
               <TextField
                 style={{ width: '100%' }}
-                label="Shares"
+                label="Pool tokens"
                 type="number"
                 variant="outlined"
                 onChange={e => setSrmPoolAmount(parseInt(e.target.value))}
@@ -287,22 +287,83 @@ function PoolCard(props: PoolCardProps) {
             <div>
               <Button
                 disabled={
-                  disabled || srmPoolAmount === null || srmPoolAmount < 1
+                  member === undefined ||
+                  srmPoolAmount === null ||
+                  srmPoolAmount < 1
                 }
                 color="primary"
                 variant="contained"
-                onClick={() => create(srmPoolAmount as number, isLocked)}
+                onClick={() => {
+                  let total = isLocked
+                    ? isMega
+                      ? member.account.balances[1].vaultMega.amount
+                      : member.account.balances[1].vault.amount
+                    : isMega
+                    ? member.account.balances[0].vaultMega.amount
+                    : member.account.balances[0].vault.amount;
+                  let stakeRate = isMega
+                    ? registrar.account.stakeRateMega
+                    : registrar.account.stakeRate;
+
+                  if (!isMega) {
+                    if (entity?.account.state.active === undefined) {
+                      // MSRM requirement is currently disabled on mainnet beta.
+                      // Uncomment this once it's enabled.
+                      //
+                      // enqueueSnackbar('Entity not active. Please stake MSRM.', {
+                      //  variant: 'error',
+                      // });
+                      // return;
+                    }
+                  }
+
+                  // Don't send to the cluster if we know it will fail.
+                  if (
+                    total.lt(stakeRate.mul(new BN(srmPoolAmount as number)))
+                  ) {
+                    enqueueSnackbar(
+                      'Insufficient available balance. Please deposit.',
+                      {
+                        variant: 'error',
+                      },
+                    );
+                    return;
+                  }
+
+                  create(srmPoolAmount as number, isLocked);
+                }}
               >
                 Stake
               </Button>
               <Button
                 disabled={
-                  disabled || srmPoolAmount === null || srmPoolAmount < 1
+                  member === undefined ||
+                  srmPoolAmount === null ||
+                  srmPoolAmount < 1
                 }
                 color="secondary"
                 variant="contained"
                 style={{ marginLeft: '10px' }}
-                onClick={() => redeem(srmPoolAmount as number, isLocked)}
+                onClick={() => {
+                  let currentPoolTokens = isLocked
+                    ? isMega
+                      ? member.account.balances[1].sptMega.amount
+                      : member.account.balances[1].spt.amount
+                    : isMega
+                    ? member.account.balances[0].sptMega.amount
+                    : member.account.balances[0].spt.amount;
+
+                  // Don't send to the cluster if we know it will fail.
+                  let amount = new BN(srmPoolAmount as number);
+                  if (currentPoolTokens.lt(amount)) {
+                    enqueueSnackbar('Insufficient pool balance.', {
+                      variant: 'error',
+                    });
+                    return;
+                  }
+
+                  redeem(srmPoolAmount as number, isLocked);
+                }}
               >
                 Unstake
               </Button>
@@ -373,6 +434,10 @@ function RedemptionList(props: RedemptionListProps) {
             }}
           >
             <Typography style={{}}>Pending Transfers</Typography>
+            <Typography style={{ fontSize: '12px' }} color="textSecondary">
+              Click the checkmark to complete a transfer on or after the "end"
+              date.
+            </Typography>
           </div>
           <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
             {pendingWithdrawals && pendingWithdrawals.length > 0 ? (
@@ -539,9 +604,13 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
   let color = skin.instance().ready;
   let onClick = async () =>
     endPendingWithdrawal().catch(err => {
-      enqueueSnackbar(`Error ending pending redemption: ${err.toString()}`, {
-        variant: 'error',
-      });
+      console.error(`Error completing transfer: ${err.toString()}`);
+      enqueueSnackbar(
+        `Error completing transfer. Wait for the transfer's timelock to end and try again.`,
+        {
+          variant: 'error',
+        },
+      );
     });
   if (pendingWithdrawal.account.burned) {
     disabled = true;
