@@ -600,7 +600,8 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
   let color = skin.instance().ready;
   let onClick = async () =>
     endPendingWithdrawal().catch(err => {
-      enqueueSnackbar(`Error ending pending redemption: ${err.toString()}`, {
+			console.error(`Error completing transfer: ${err.toString()}`);
+      enqueueSnackbar(`Error completing transfer. Wait for the transfer's timelock to end and try again.`, {
         variant: 'error',
       });
     });
