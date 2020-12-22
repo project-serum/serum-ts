@@ -416,6 +416,10 @@ function DropVendorForm(props: DropVendorFormProps) {
                 setExpiryTs(d.getTime() / 1000);
               }}
             />
+            <FormHelperText>
+              Date after which the account owner dropping rewards can withdraw
+              all unclaimed rewards.
+            </FormHelperText>
           </div>
           <div style={{ marginTop: '26px' }}>
             <TextField

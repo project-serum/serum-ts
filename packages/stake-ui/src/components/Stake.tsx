@@ -220,9 +220,12 @@ function PoolCard(props: PoolCardProps) {
           : state.registry.poolTokenMint!,
         member,
         registrar: state.registry.registrar!,
-        entity: state.registry.entities
-          .filter(e => e.publicKey.equals(member.account.member.entity))
-          .pop(),
+        entity:
+          member === undefined
+            ? undefined
+            : state.registry.entities
+                .filter(e => e.publicKey.equals(member.account.member.entity))
+                .pop(),
       };
     },
   );
@@ -304,10 +307,12 @@ function PoolCard(props: PoolCardProps) {
 
                   if (!isMega) {
                     if (entity?.account.state.active === undefined) {
-                      enqueueSnackbar('Entity not active. Please stake MSRM.', {
-                        variant: 'error',
-                      });
-                      return;
+                      // MSRM requirement is currently disabled on mainnet beta.
+                      //
+                      // enqueueSnackbar('Entity not active. Please stake MSRM.', {
+                      //  variant: 'error',
+                      // });
+                      // return;
                     }
                   }
 
@@ -428,6 +433,10 @@ function RedemptionList(props: RedemptionListProps) {
             }}
           >
             <Typography style={{}}>Pending Transfers</Typography>
+            <Typography style={{ fontSize: '12px' }} color="textSecondary">
+              Click the checkmark to complete a transfer on or after the "end"
+              date.
+            </Typography>
           </div>
           <div style={{ paddingLeft: '24px', paddingRight: '24px' }}>
             {pendingWithdrawals && pendingWithdrawals.length > 0 ? (
