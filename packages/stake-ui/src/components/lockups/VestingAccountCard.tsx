@@ -12,6 +12,11 @@ import Typography from '@material-ui/core/Typography';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Link from '@material-ui/core/Link';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 import { accounts } from '@project-serum/lockup';
 import { Network } from '@project-serum/common';
 import { PublicKey } from '@solana/web3.js';
@@ -146,6 +151,51 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     );
   };
 
+  const rows = [
+    {
+      field: 'Available for withdrawal',
+      value:
+        availableForWithdrawal === null
+          ? null
+          : displayFn(availableForWithdrawal!),
+    },
+    {
+      field: 'Locked outstanding',
+      value: displayFn(vesting.account.outstanding),
+    },
+    {
+      field: 'Current balance',
+      value: displayFn(
+        vesting.account.outstanding.sub(vesting.account.whitelistOwned),
+      ),
+    },
+    { field: 'Initial lockup', value: displayFn(vesting.account.startBalance) },
+    {
+      field: 'Amount withdrawn',
+      value: displayFn(
+        vesting.account.startBalance.sub(vesting.account.outstanding),
+      ),
+    },
+    {
+      field: 'Whitelist owned',
+      value: displayFn(vesting.account.whitelistOwned),
+    },
+    { field: 'Period count', value: vesting.account.periodCount.toString() },
+    { field: 'Vault', value: vesting.account.vault.toString() },
+    {
+      field: 'Start timestamp',
+      value: `${new Date(
+        vesting.account.startTs.toNumber() * 1000,
+      ).toLocaleString()} (${vesting.account.startTs.toString()})`,
+    },
+    {
+      field: 'End timestamp',
+      value: `${new Date(
+        vesting.account.endTs.toNumber() * 1000,
+      ).toLocaleString()} (${vesting.account.endTs.toString()})`,
+    },
+  ];
+
   return (
     <Card
       key={vesting.publicKey.toString()}
@@ -213,45 +263,32 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
           type={'Line'}
         />
         <div>
-          <Typography>
-            Available for withdrawal:{' '}
-            {availableForWithdrawal === null ? (
-              <CircularProgress />
-            ) : (
-              displayFn(availableForWithdrawal)
-            )}
-          </Typography>
-          <Typography>
-            Locked outstanding: {displayFn(vesting.account.outstanding)}
-          </Typography>
-          <Typography>
-            Current balance:{' '}
-            {displayFn(
-              vesting.account.outstanding.sub(vesting.account.whitelistOwned),
-            )}
-          </Typography>
-          <Typography>
-            Initial lockup: {displayFn(vesting.account.startBalance)}
-          </Typography>
-          <Typography>
-            Whitelist owned: {displayFn(vesting.account.whitelistOwned)}
-          </Typography>
-          <Typography>Vault: {vesting.account.vault.toString()}</Typography>
-          <Typography>
-            Period count: {vesting.account.periodCount.toString()}
-          </Typography>
-          <Typography>
-            Start timestamp: {vesting.account.startTs.toString()}
-          </Typography>
-          <Typography>
-            End timestamp: {vesting.account.endTs.toString()}
-          </Typography>
-          <div style={{ marginTop: '10px' }}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell></TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {rows.map(r => {
+                return (
+                  <TableRow>
+                    <TableCell>{r.field}</TableCell>
+                    <TableCell align="right">
+                      {r.value === null ? <CircularProgress /> : r.value}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          <div style={{ display: 'flex', marginTop: '15px' }}>
             <OwnedTokenAccountsSelect
               mint={vesting.account.mint}
               onChange={(f: PublicKey) => setWithdrawalAccount(f)}
             />
-            <div style={{ marginTop: '10px' }}>
+            <div style={{ marginLeft: '20px', width: '191px' }}>
               <Button
                 color="primary"
                 disabled={!withdrawEnabled}
