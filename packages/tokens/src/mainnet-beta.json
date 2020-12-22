@@ -165,5 +165,11 @@
     "tokenSymbol": "SWAG",
     "mintAddress": "9F9fNTT6qwjsu4X4yWYKZpsbw5qT7o6yR2i57JF2jagy",
     "tokenName": "Wrapped SWAG"
+  },
+  {
+    "tokenSymbol": "FIDA",
+    "mintAddress": "EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp",
+    "tokenName": "Bonfida",
+    "icon": "https://raw.githubusercontent.com/dr497/awesome-serum-markets/02ce7c74fd2e9bd4cb55a15f735fc3ad0e7335f6/icons/fida.svg"
   }
 ]

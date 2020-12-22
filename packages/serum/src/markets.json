@@ -604,5 +604,17 @@
         "name": "SWAG/USDT",
         "deprecated": false,
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "name": "FIDA/USDT",
+        "address": "9TE15E5h61zJ5VmQAAHkGrAuQdFTth33aBbKdcrppZBp",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
+    },
+    {
+        "name": "FIDA/USDC",
+        "address": "FrDavxi4QawYnQY259PVfYUjUvuyPNfqSXbLBqMnbfWJ",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
     }
 ]
