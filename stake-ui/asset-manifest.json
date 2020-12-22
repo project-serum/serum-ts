@@ -1,22 +1,22 @@
 {
   "files": {
     "main.css": "/serum-ts/stake-ui/static/css/main.6dea0f05.chunk.css",
-    "main.js": "/serum-ts/stake-ui/static/js/main.c7d69ccf.chunk.js",
-    "main.js.map": "/serum-ts/stake-ui/static/js/main.c7d69ccf.chunk.js.map",
+    "main.js": "/serum-ts/stake-ui/static/js/main.a7502cc2.chunk.js",
+    "main.js.map": "/serum-ts/stake-ui/static/js/main.a7502cc2.chunk.js.map",
     "runtime-main.js": "/serum-ts/stake-ui/static/js/runtime-main.b6feb771.js",
     "runtime-main.js.map": "/serum-ts/stake-ui/static/js/runtime-main.b6feb771.js.map",
-    "static/js/2.f6dbbc72.chunk.js": "/serum-ts/stake-ui/static/js/2.f6dbbc72.chunk.js",
-    "static/js/2.f6dbbc72.chunk.js.map": "/serum-ts/stake-ui/static/js/2.f6dbbc72.chunk.js.map",
+    "static/js/2.848e495c.chunk.js": "/serum-ts/stake-ui/static/js/2.848e495c.chunk.js",
+    "static/js/2.848e495c.chunk.js.map": "/serum-ts/stake-ui/static/js/2.848e495c.chunk.js.map",
     "static/js/3.aa26d569.chunk.js": "/serum-ts/stake-ui/static/js/3.aa26d569.chunk.js",
     "static/js/3.aa26d569.chunk.js.map": "/serum-ts/stake-ui/static/js/3.aa26d569.chunk.js.map",
     "index.html": "/serum-ts/stake-ui/index.html",
     "static/css/main.6dea0f05.chunk.css.map": "/serum-ts/stake-ui/static/css/main.6dea0f05.chunk.css.map",
-    "static/js/2.f6dbbc72.chunk.js.LICENSE.txt": "/serum-ts/stake-ui/static/js/2.f6dbbc72.chunk.js.LICENSE.txt"
+    "static/js/2.848e495c.chunk.js.LICENSE.txt": "/serum-ts/stake-ui/static/js/2.848e495c.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.b6feb771.js",
-    "static/js/2.f6dbbc72.chunk.js",
+    "static/js/2.848e495c.chunk.js",
     "static/css/main.6dea0f05.chunk.css",
-    "static/js/main.c7d69ccf.chunk.js"
+    "static/js/main.a7502cc2.chunk.js"
   ]
 }
