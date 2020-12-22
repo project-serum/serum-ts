@@ -137,6 +137,7 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
           ).toLocaleDateString()}
         </li>
         <li>Expiry receiver: {vendor.account.expiryReceiver.toString()}</li>
+        <li>Expired: {vendor.account.expired.toString()}</li>
         <li>
           Reward queue cursor:{' '}
           {vendor.account.rewardEventQueueCursor.toString()}
@@ -186,8 +187,9 @@ export class RewardListItemViewModel {
         const notYetClaimed = cursor >= ctx.member.account.member.rewardsCursor;
         const isEligible =
           ctx.member.account.member.lastStakeTs < vendor.account.startTs;
+        const expired = vendor.account.expired;
 
-        needsClaim = ownsPoolShares && notYetClaimed && isEligible;
+        needsClaim = ownsPoolShares && notYetClaimed && isEligible && !expired;
       }
     }
     return new RewardListItemViewModel(event, cursor, needsClaim, vendor);
