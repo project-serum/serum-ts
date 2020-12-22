@@ -213,19 +213,16 @@ function PoolCard(props: PoolCardProps) {
   const { enqueueSnackbar } = useSnackbar();
   const { poolTokenMint, member, entity, registrar } = useSelector(
     (state: StoreState) => {
-			const member = state.registry.member.data!;
+      const member = state.registry.member.data!;
       return {
         poolTokenMint: isMega
-										 ? state.registry.megaPoolTokenMint!
-										 : state.registry.poolTokenMint!,
+          ? state.registry.megaPoolTokenMint!
+          : state.registry.poolTokenMint!,
         member,
         registrar: state.registry.registrar!,
-				entity: state.registry.entities
-										 .filter(
-											 e =>
-													e.publicKey.equals(member.account.member.entity),
-										 )
-										 .pop(),
+        entity: state.registry.entities
+          .filter(e => e.publicKey.equals(member.account.member.entity))
+          .pop(),
       };
     },
   );
@@ -305,17 +302,14 @@ function PoolCard(props: PoolCardProps) {
                     ? registrar.account.stakeRateMega
                     : registrar.account.stakeRate;
 
-									if (!isMega) {
-										if (entity?.account.state.active === undefined) {
-                    enqueueSnackbar(
-                      'Entity not active. Please stake MSRM.',
-                      {
+                  if (!isMega) {
+                    if (entity?.account.state.active === undefined) {
+                      enqueueSnackbar('Entity not active. Please stake MSRM.', {
                         variant: 'error',
-                      },
-                    );
-                    return;
-										}
-									}
+                      });
+                      return;
+                    }
+                  }
 
                   // Don't send to the cluster if we know it will fail.
                   if (
@@ -600,10 +594,13 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
   let color = skin.instance().ready;
   let onClick = async () =>
     endPendingWithdrawal().catch(err => {
-			console.error(`Error completing transfer: ${err.toString()}`);
-      enqueueSnackbar(`Error completing transfer. Wait for the transfer's timelock to end and try again.`, {
-        variant: 'error',
-      });
+      console.error(`Error completing transfer: ${err.toString()}`);
+      enqueueSnackbar(
+        `Error completing transfer. Wait for the transfer's timelock to end and try again.`,
+        {
+          variant: 'error',
+        },
+      );
     });
   if (pendingWithdrawal.account.burned) {
     disabled = true;
