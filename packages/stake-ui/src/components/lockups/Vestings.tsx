@@ -20,7 +20,7 @@ export default function Vestings() {
     };
   });
   return (
-    <Container fixed maxWidth="md" style={{ flex: 1 }}>
+    <div style={{ width: '100%' }}>
       <div style={{ marginTop: '24px', marginBottom: '24px' }}>
         <link
           rel="stylesheet"
@@ -85,6 +85,6 @@ export default function Vestings() {
           )}
         </List>
       </div>
-    </Container>
+    </div>
   );
 }
