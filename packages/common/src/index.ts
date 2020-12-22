@@ -1,13 +1,11 @@
 import {
   Account,
-  Connection,
   SystemProgram,
   PublicKey,
   Transaction,
   TransactionInstruction,
 } from '@solana/web3.js';
-import { Provider, SendTxRequest } from './provider';
-import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
+import { Provider } from './provider';
 import {
   MintInfo,
   MintLayout,

@@ -182,7 +182,7 @@ function BalanceTable(props: BalanceTableProps) {
               <TableCell align="right">Available</TableCell>
               <TableCell align="right">Pending</TableCell>
               <TableCell align="right">Staked</TableCell>
-              <TableCell align="right">Shares</TableCell>
+              <TableCell align="right">Pool</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

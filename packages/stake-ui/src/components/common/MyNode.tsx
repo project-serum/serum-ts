@@ -79,8 +79,7 @@ function MyNodeBanner(props: MyNodeBannerProps) {
         .filter(
           e =>
             member.data &&
-            e.publicKey.toString() ===
-              member.data!.account.member.entity.toString(),
+            e.publicKey.equals(member.data!.account.member.entity),
         )
         .pop(),
     };
