@@ -6,7 +6,6 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@material-ui/core/Collapse';
-import Typography from '@material-ui/core/Typography';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
 import { PublicKey } from '@solana/web3.js';
@@ -17,14 +16,17 @@ import { displaySrm, displayMsrm } from '../../utils/tokens';
 type RewardsListProps = {
   rewards: RewardListItemViewModel[];
   network: Network;
+  registrar: ProgramAccount<registry.accounts.Registrar>;
 };
 
 export default function RewardsList(props: RewardsListProps) {
-  const { rewards, network } = props;
+  const { rewards, network, registrar } = props;
   return (
     <List>
       {rewards.length > 0 ? (
-        rewards.map(r => <RewardListItem network={network} rli={r} />)
+        rewards.map(r => (
+          <RewardListItem registrar={registrar} network={network} rli={r} />
+        ))
       ) : (
         <ListItem>
           <ListItemText primary={'No rewards found'} />
@@ -37,10 +39,11 @@ export default function RewardsList(props: RewardsListProps) {
 type RewardListItemProps = {
   rli: RewardListItemViewModel;
   network: Network;
+  registrar: ProgramAccount<registry.accounts.Registrar>;
 };
 
 function RewardListItem(props: RewardListItemProps) {
-  const { rli, network } = props;
+  const { rli, network, registrar } = props;
 
   const rewardEvent = rli.reward.lockedAlloc ?? rli.reward.unlockedAlloc!;
 
@@ -54,10 +57,17 @@ function RewardListItem(props: RewardListItemProps) {
       amountLabel += `${rewardEvent.mint}`;
     }
   })();
-  let lockedLabel = 'vendored';
-  let fromLabel = `${rewardEvent.pool.toString()} | ${rewardEvent.from.toString()} | ${
-    rli.cursor
-  }`;
+  const dateLabel =
+    rli.vendor === undefined
+      ? ''
+      : new Date(
+          rli.vendor!.account.startTs.toNumber() * 1000,
+        ).toLocaleString();
+  const poolLabel = rewardEvent.pool.equals(registrar.account.poolMintMega)
+    ? 'MSRM pool'
+    : 'SRM pool';
+  let lockedLabel = `on ${poolLabel}`;
+  let fromLabel = `Dropped by ${rewardEvent.from.toString()} | ${dateLabel}`;
 
   return (
     <>
@@ -89,7 +99,7 @@ function RewardListItem(props: RewardListItemProps) {
         {rli.vendor === undefined ? (
           <CircularProgress />
         ) : (
-          <RewardListItemDetails vendor={rli.vendor} />
+          <RewardListItemDetails vendor={rli.vendor!} />
         )}
       </Collapse>
     </>
@@ -112,21 +122,27 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
         marginLeft: '56px',
       }}
     >
-      <Typography variant="h6">Vendor</Typography>
-      <Typography>Address: {vendor.publicKey.toString()}</Typography>
-      <Typography>Vault: {vendor.account.vault.toString()}</Typography>
-      <Typography>
-        Pool token supply snapshot: {vendor.account.poolTokenSupply.toString()}
-      </Typography>
-      <Typography>
-        Expiry:{' '}
-        {new Date(
-          vendor.account.expiryTs.toNumber() * 1000,
-        ).toLocaleDateString()}
-      </Typography>
-      <Typography>
-        Expiry receiver: {vendor.account.expiryReceiver.toString()}
-      </Typography>
+      <div>Vendor</div>
+      <ul>
+        <li>Address {vendor.publicKey.toString()}</li>
+        <li>Vault: {vendor.account.vault.toString()}</li>
+        <li>
+          Pool token supply snapshot:{' '}
+          {vendor.account.poolTokenSupply.toString()}
+        </li>
+        <li>
+          Expiry:{' '}
+          {new Date(
+            vendor.account.expiryTs.toNumber() * 1000,
+          ).toLocaleDateString()}
+        </li>
+        <li>Expiry receiver: {vendor.account.expiryReceiver.toString()}</li>
+        <li>Expired: {vendor.account.expired.toString()}</li>
+        <li>
+          Reward queue cursor:{' '}
+          {vendor.account.rewardEventQueueCursor.toString()}
+        </li>
+      </ul>
     </div>
   );
 }
@@ -171,8 +187,9 @@ export class RewardListItemViewModel {
         const notYetClaimed = cursor >= ctx.member.account.member.rewardsCursor;
         const isEligible =
           ctx.member.account.member.lastStakeTs < vendor.account.startTs;
+        const expired = vendor.account.expired;
 
-        needsClaim = ownsPoolShares && notYetClaimed && isEligible;
+        needsClaim = ownsPoolShares && notYetClaimed && isEligible && !expired;
       }
     }
     return new RewardListItemViewModel(event, cursor, needsClaim, vendor);

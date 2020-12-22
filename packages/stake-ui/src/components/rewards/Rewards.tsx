@@ -23,9 +23,10 @@ export default function Rewards() {
       network: state.common.network,
       vendors: state.registry.vendors,
       poolMint: state.registry.registrar!.account.poolMint!,
+      registrar: state.registry.registrar!,
     };
   });
-  const { rewardEventQueue, network, member, vendors } = ctx;
+  const { rewardEventQueue, network, member, vendors, registrar } = ctx;
 
   // Load any reward vendor accounts that hasn't been loaded already.
   useEffect(() => {
@@ -77,7 +78,11 @@ export default function Rewards() {
         </div>
       </div>
       <Paper>
-        <RewardsList rewards={rewards} network={network} />
+        <RewardsList
+          rewards={rewards}
+          network={network}
+          registrar={registrar}
+        />
       </Paper>
     </div>
   );

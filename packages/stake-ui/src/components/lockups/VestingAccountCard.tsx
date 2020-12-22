@@ -276,7 +276,13 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
                   <TableRow>
                     <TableCell>{r.field}</TableCell>
                     <TableCell align="right">
-                      {r.value === null ? <CircularProgress /> : r.value}
+                      {r.value === null ? (
+                        <CircularProgress
+                          style={{ height: '20px', width: '20px', padding: 0 }}
+                        />
+                      ) : (
+                        r.value
+                      )}
                     </TableCell>
                   </TableRow>
                 );
