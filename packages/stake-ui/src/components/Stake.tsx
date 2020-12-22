@@ -46,7 +46,7 @@ export default function Stake() {
     const balanceId = balances.owner;
     const spt = isMega ? balances.sptMega : balances.spt;
 
-    enqueueSnackbar(`Creating ${label} Pool tokens`, {
+    enqueueSnackbar(`Staking ${label} Pool tokens`, {
       variant: 'info',
     });
 
@@ -73,7 +73,7 @@ export default function Stake() {
       },
     });
     closeSnackbar();
-    enqueueSnackbar(`Creation complete`, {
+    enqueueSnackbar(`Staking complete`, {
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
