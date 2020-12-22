@@ -308,6 +308,7 @@ function PoolCard(props: PoolCardProps) {
                   if (!isMega) {
                     if (entity?.account.state.active === undefined) {
                       // MSRM requirement is currently disabled on mainnet beta.
+											// Uncomment this once it's enabled.
                       //
                       // enqueueSnackbar('Entity not active. Please stake MSRM.', {
                       //  variant: 'error',
