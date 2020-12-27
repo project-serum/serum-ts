@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/pool",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Library for interacting with the serum pools",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
@@ -29,9 +29,9 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@project-serum/associated-token": "^0.1.0",
-    "@project-serum/borsh": "^0.0.1-alpha.1",
-    "@project-serum/token": "^0.0.1-alpha.1",
+    "@project-serum/associated-token": "^0.1.1",
+    "@project-serum/borsh": "^0.0.1-beta.0",
+    "@project-serum/token": "^0.0.1-alpha.2",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/associated-token",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Library for interacting with SPL Associated Token Accounts",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
@@ -21,8 +21,6 @@
     "test": "",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"
-  },
-  "dependencies": {
   },
   "peerDependencies": {
     "@solana/web3.js": "^0.86.1"

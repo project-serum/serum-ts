@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/token",
-  "version": "0.0.1-alpha.1",
+  "version": "0.0.1-alpha.2",
   "description": "Utilities for interacting with SPL Tokens",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
@@ -24,7 +24,7 @@
     "prepare": "run-s clean build"
   },
   "dependencies": {
-    "@project-serum/borsh": "^0.0.1-alpha.1",
+    "@project-serum/borsh": "^0.0.1-beta.0",
     "bn.js": "^5.1.3"
   },
   "peerDependencies": {

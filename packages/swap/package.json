@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/swap",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Serum Swap",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",
@@ -31,7 +31,7 @@
     ]
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.8",
+    "@project-serum/serum": "^0.13.17",
     "@solana/spl-token": "^0.0.13",
     "@solana/spl-token-swap": "0.0.4",
     "bn.js": "^5.1.3",
