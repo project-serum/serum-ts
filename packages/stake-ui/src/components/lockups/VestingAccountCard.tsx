@@ -153,7 +153,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
 
   const rows = [
     {
-      field: 'Available for withdrawal',
+      field: 'Available for unlock',
       value:
         availableForWithdrawal === null
           ? null
@@ -171,7 +171,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     },
     { field: 'Initial lockup', value: displayFn(vesting.account.startBalance) },
     {
-      field: 'Amount withdrawn',
+      field: 'Amount unlocked',
       value: displayFn(
         vesting.account.startBalance.sub(vesting.account.outstanding),
       ),
