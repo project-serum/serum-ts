@@ -59,7 +59,7 @@ export default function OwnedTokenAccountsSelect(p: Props) {
                 <div>{`${ownedTokenAccount.publicKey}`}</div>
                 <div style={{ float: 'right', color: '#ccc' }}>{`${toDisplay(
                   ownedTokenAccount.account.amount,
-                  decimals!,
+                  decimals ?? 0,
                 )}`}</div>
               </div>
             </MenuItem>

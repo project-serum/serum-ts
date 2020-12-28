@@ -590,6 +590,9 @@ class Accounts {
       tx,
       'recent',
     );
+    if (resp.value.err) {
+      throw new Error(`RPC error: ${resp.value.err.toString()}`);
+    }
     let log = resp.value.logs![1].slice('Program log: '.length);
     return new BN(JSON.parse(log).result);
   }
