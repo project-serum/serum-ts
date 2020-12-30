@@ -94,23 +94,21 @@ export default function ClaimRewardButton(props: ClaimRewardButtonProps) {
           />
         </div>
       )}
-      <div
-        style={{ marginLeft: '10px', marginRight: '10px' }}
-        onClick={() =>
-          clickHandler().catch(err => {
-            snack.enqueueSnackbar(
-              `Error ending pending redemption: ${err.toString()}`,
-              {
-                variant: 'error',
-              },
-            );
-          })
-        }
-      >
+      <div style={{ marginLeft: '10px', marginRight: '10px' }}>
         <Button
           disabled={rli.reward.unlockedAlloc && token === null}
           variant="contained"
           color="primary"
+          onClick={() =>
+            clickHandler().catch(err => {
+              snack.enqueueSnackbar(
+                `Error ending pending redemption: ${err.toString()}`,
+                {
+                  variant: 'error',
+                },
+              );
+            })
+          }
         >
           Claim Reward
         </Button>
