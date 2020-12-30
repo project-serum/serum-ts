@@ -519,7 +519,6 @@ function TransferDialog(props: TransferDialogProps) {
                 <OwnedTokenAccountsSelect
                   variant="outlined"
                   mint={mint}
-                  decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
                   onChange={(f: PublicKey, _maxDisplayAmount: BN) => {
                     setFrom(f);
                     // TODO: set an actual limit for the withdrawal UI (i.e.

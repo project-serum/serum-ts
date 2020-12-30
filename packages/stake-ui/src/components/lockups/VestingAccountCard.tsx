@@ -44,11 +44,11 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     ? displayMsrm
     : (k: BN) => k.toString();
 
-  const [outstandingLabel, decimals] = vesting.account.mint.equals(network.srm)
-    ? [`${displaySrm(vesting.account.outstanding)} SRM`, 6]
+  const outstandingLabel = vesting.account.mint.equals(network.srm)
+    ? `${displaySrm(vesting.account.outstanding)} SRM`
     : vesting.account.mint.equals(network.msrm)
-    ? [`${displayMsrm(vesting.account.outstanding)} MSRM`, 0]
-    : [vesting.account.mint.toString(), 0];
+    ? `${displayMsrm(vesting.account.outstanding)} MSRM`
+    : vesting.account.mint.toString();
 
   const startTs = vesting.account.startTs;
   const endTs = vesting.account.endTs;
@@ -293,7 +293,6 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             <OwnedTokenAccountsSelect
               mint={vesting.account.mint}
               onChange={(f: PublicKey) => setWithdrawalAccount(f)}
-              decimals={decimals}
             />
             <div style={{ marginLeft: '20px', width: '191px' }}>
               <Button
