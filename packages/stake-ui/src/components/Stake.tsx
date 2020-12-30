@@ -21,6 +21,7 @@ import { State as StoreState, ProgramAccount } from '../store/reducer';
 import { ActionType } from '../store/actions';
 import * as skin from '../skin';
 import { displaySrm, displayMsrm } from '../utils/tokens';
+import * as error from '../utils/errors';
 
 export default function Stake() {
   const { registryClient } = useWallet();
@@ -139,7 +140,7 @@ export default function Stake() {
   const createSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       createPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
-        enqueueSnackbar(`Error staking srm pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error staking srm pool: ${error.toDisplay(err)}`, {
           variant: 'error',
         });
       });
@@ -148,7 +149,7 @@ export default function Stake() {
   const redeemSrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       redeemPoolTokens(shares, 'SRM', false, isLocked).catch(err => {
-        enqueueSnackbar(`Error unstaking SRM pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error unstaking SRM pool: ${error.toDisplay(err)}`, {
           variant: 'error',
         });
       });
@@ -158,7 +159,7 @@ export default function Stake() {
   const createMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       createPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
-        enqueueSnackbar(`Error staking MSRM pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error staking MSRM pool: ${error.toDisplay(err)}`, {
           variant: 'error',
         });
       });
@@ -167,7 +168,7 @@ export default function Stake() {
   const redeemMsrmPool = async (shares: number, isLocked: boolean) => {
     if (shares > 0) {
       redeemPoolTokens(shares, 'MSRM', true, isLocked).catch(err => {
-        enqueueSnackbar(`Error unstaking MSRM pool: ${err.toString()}`, {
+        enqueueSnackbar(`Error unstaking MSRM pool: ${error.toDisplay(err)}`, {
           variant: 'error',
         });
       });
