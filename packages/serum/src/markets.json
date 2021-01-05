@@ -564,6 +564,18 @@
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
     },
     {
+        "address": "3XzrjfZt7f6KHxgjJFHSrAEdbyiKdap68WDKj2ym3HRB",
+        "name": "KIN/SRM",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
+        "address": "8p4xGQLy9LpKyEaEo6z5xGNFg7jyYF8pTuDHuJU3N8AZ",
+        "name": "KIN/SOL",
+        "deprecated": false,
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o"
+    },
+    {
         "address": "EcfDRMrEJ3yW4SgrRyyxTPoKqAZDNSBV8EerigT7BNSS",
         "name": "KEEP/USDC",
         "deprecated": false,
