@@ -616,5 +616,17 @@
         "address": "FrDavxi4QawYnQY259PVfYUjUvuyPNfqSXbLBqMnbfWJ",
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
         "deprecated": false
+    },
+    {
+        "name": "KIN/USDT",
+        "address": "8HEaA1vSA5mGQoHcvRPNibnuZvnUpSjJJru9HJNH3SqM",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
+    },
+    {
+        "name": "KIN/USDC",
+        "address": "CVn1nJ5Utuseyy2qqwrpYoJz9Y7jjYonVL4UYvcCepDH",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
     }
 ]
