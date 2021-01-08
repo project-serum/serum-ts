@@ -616,5 +616,18 @@
         "address": "FrDavxi4QawYnQY259PVfYUjUvuyPNfqSXbLBqMnbfWJ",
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
         "deprecated": false
+    },
+    {
+        "name": "USDC/ODOP",
+        "address": "8e6Rc8xFPdAqWgyKaLqJRZNQy7QxRHf8msNkTKLqMhfi",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
+    },
+    {
+        "name": "BTC/ODOP",
+        "address": "4Vw3TCAxXW7EiR14MGx9p6wx9BtPQnaDLEbzz8oDWBgT",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
     }
+
 ]
