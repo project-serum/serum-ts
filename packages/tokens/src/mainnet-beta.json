@@ -171,5 +171,11 @@
     "mintAddress": "EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp",
     "tokenName": "Bonfida",
     "icon": "https://raw.githubusercontent.com/dr497/awesome-serum-markets/02ce7c74fd2e9bd4cb55a15f735fc3ad0e7335f6/icons/fida.svg"
+  },
+  {
+    "tokenSymbol": "KIN",
+    "mintAddress": "kinXdEcpDQeHPEuQnqmUgtYykqKGVFq6CeVX5iAHJq6",
+    "tokenName": "KIN",
+    "icon": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/kin/info/logo.png",
   }
 ]
