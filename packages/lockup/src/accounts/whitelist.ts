@@ -1,5 +1,5 @@
 import { struct, u8, Layout } from 'buffer-layout';
-import { bool, publicKey, option } from '@project-serum/borsh';
+import { publicKey, option } from '@project-serum/borsh';
 import { PublicKey } from '@solana/web3.js';
 
 export class Whitelist {
@@ -9,7 +9,7 @@ export class Whitelist {
   ) {}
 
   static ITEM_START(): number {
-    return 32;
+    return 33;
   }
 
   static LEN(): number {
