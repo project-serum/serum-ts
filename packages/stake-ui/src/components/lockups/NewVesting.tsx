@@ -110,7 +110,9 @@ function NewVestingDialog(props: NewVestingDialogProps) {
       });
       let amount = mint!.equals(network.srm)
         ? fromDisplaySrm(displayAmount!)
-        : fromDisplayMsrm(displayAmount!);
+        : mint!.equals(network.msrm)
+        ? fromDisplayMsrm(displayAmount!)
+        : new BN(displayAmount!);
       let { vesting, tx } = await lockupClient.createVesting({
         beneficiary: beneficiaryPublicKey,
         endTs: new BN(timestamp),
@@ -164,6 +166,43 @@ function NewVestingDialog(props: NewVestingDialogProps) {
               />
             </div>
           )}
+          <div style={{ display: 'flex', width: '100%' }}>
+            <div>
+              <FormControl variant="outlined" style={{ width: '200px' }}>
+                <InputLabel>Mint</InputLabel>
+                <Select
+                  value={mintLabel}
+                  onChange={e => {
+                    const m = e.target.value;
+                    setMintLabel(m as string);
+                    if (m === 'srm') {
+                      setMint(network.srm);
+                    } else if (m === 'msrm') {
+                      setMint(network.msrm);
+                    } else if (m === 'custom') {
+                      setMint(null);
+                    }
+                  }}
+                  label="Mint"
+                >
+                  <MenuItem value="srm">SRM</MenuItem>
+                  <MenuItem value="msrm">MSRM</MenuItem>
+                  <MenuItem value="custom">Custom</MenuItem>
+                </Select>
+              </FormControl>
+            </div>
+            {mintLabel === 'custom' && (
+              <div style={{ flex: 1, marginLeft: '10px' }}>
+                <TextField
+                  fullWidth
+                  label="Custom mint"
+                  value={mint !== null ? mint.toString() : ''}
+                  onChange={e => setMint(new PublicKey(e.target.value))}
+                />
+                <FormHelperText>Mint of the token to lockup</FormHelperText>
+              </div>
+            )}
+          </div>
           <div>
             <div style={{ display: 'flex', width: '100%' }}>
               <div style={{ flex: 1 }}>
@@ -174,31 +213,6 @@ function NewVestingDialog(props: NewVestingDialogProps) {
                     onChange={(f: PublicKey) => setFromAccount(f)}
                   />
                   <FormHelperText>Token account to send from</FormHelperText>
-                </FormControl>
-              </div>
-              <div>
-                <FormControl
-                  variant="outlined"
-                  style={{ width: '200px', marginLeft: '10px' }}
-                >
-                  <InputLabel>Mint</InputLabel>
-                  <Select
-                    value={mintLabel}
-                    onChange={e => {
-                      const m = e.target.value;
-                      setMintLabel(m as string);
-                      if (m === 'srm') {
-                        setMint(network.srm);
-                      } else if (m === 'msrm') {
-                        setMint(network.msrm);
-                      }
-                      // TODO: add a textfield for a custom mint.
-                    }}
-                    label="Mint"
-                  >
-                    <MenuItem value="srm">SRM</MenuItem>
-                    <MenuItem value="msrm">MSRM</MenuItem>
-                  </Select>
                 </FormControl>
               </div>
             </div>
@@ -219,6 +233,14 @@ function NewVestingDialog(props: NewVestingDialogProps) {
               marginTop: '24px',
             }}
           >
+            {mintLabel === 'custom' && (
+              <FormHelperText style={{ color: 'blue' }}>
+                Note: Amounts for custom mints (i.e., not SRM/MSRM) are in their
+                raw, non-decimal form. Make sure to convert before entering into
+                the fields here. For example, if a token has 6 decimals, then
+                multiply your desired amount by 10^6.
+              </FormHelperText>
+            )}
             <TextField
               fullWidth
               label="Amount"

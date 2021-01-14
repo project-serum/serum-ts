@@ -15,7 +15,6 @@ import Link from '@material-ui/core/Link';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
-import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import { accounts } from '@project-serum/lockup';
 import { Network } from '@project-serum/common';
@@ -38,6 +37,10 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
 
+  const isCustomMint =
+    !vesting.account.mint.equals(network.srm) &&
+    !vesting.account.mint.equals(network.msrm);
+
   const displayFn = vesting.account.mint.equals(network.srm)
     ? displaySrm
     : vesting.account.mint.equals(network.msrm)
@@ -48,7 +51,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     ? `${displaySrm(vesting.account.outstanding)} SRM`
     : vesting.account.mint.equals(network.msrm)
     ? `${displayMsrm(vesting.account.outstanding)} MSRM`
-    : vesting.account.mint.toString();
+    : `${vesting.account.outstanding} ${vesting.account.mint.toString()}`;
 
   const startTs = vesting.account.startTs;
   const endTs = vesting.account.endTs;
@@ -229,6 +232,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             />
             <div
               style={{
+                maxWidth: '400px',
                 marginTop: '6px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 display: 'flex',
@@ -236,7 +240,12 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
                 flexDirection: 'column',
               }}
             >
-              <Typography variant="body1">{outstandingLabel}</Typography>
+              <Typography
+                style={{ overflow: 'hidden', whiteSpace: 'nowrap' }}
+                variant="body1"
+              >
+                {outstandingLabel}
+              </Typography>
             </div>
           </div>
         </ListItem>
@@ -263,13 +272,19 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
           type={'Line'}
         />
         <div>
+          {isCustomMint && (
+            <div
+              style={{
+                padding: '15px',
+              }}
+            >
+              <b>
+                Note: custom mints (i.e. not SRM/MSRM) display raw token amounts
+                without decimals.
+              </b>
+            </div>
+          )}
           <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell></TableCell>
-                <TableCell></TableCell>
-              </TableRow>
-            </TableHead>
             <TableBody>
               {rows.map(r => {
                 return (
