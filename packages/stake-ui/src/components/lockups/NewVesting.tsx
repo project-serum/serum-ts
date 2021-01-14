@@ -110,7 +110,9 @@ function NewVestingDialog(props: NewVestingDialogProps) {
       });
       let amount = mint!.equals(network.srm)
         ? fromDisplaySrm(displayAmount!)
-        : fromDisplayMsrm(displayAmount!);
+        : mint!.equals(network.msrm)
+        ? fromDisplayMsrm(displayAmount!)
+        : new BN(displayAmount!);
       let { vesting, tx } = await lockupClient.createVesting({
         beneficiary: beneficiaryPublicKey,
         endTs: new BN(timestamp),
@@ -231,6 +233,14 @@ function NewVestingDialog(props: NewVestingDialogProps) {
               marginTop: '24px',
             }}
           >
+            {mintLabel === 'custom' && (
+              <FormHelperText style={{ color: 'blue' }}>
+                Note: Amounts for custom mints (i.e., not SRM/MSRM) are in their
+                raw, non-decimal form. Make sure to convert before entering into
+                the fields here. For example, if a token has 6 decimals, then
+                multiply your desired amount by 10^6.
+              </FormHelperText>
+            )}
             <TextField
               fullWidth
               label="Amount"
