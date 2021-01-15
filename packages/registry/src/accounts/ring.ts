@@ -4,11 +4,11 @@ export interface RingItemDecoder<T> {
   decode(data: Buffer): T;
 }
 
-const HEAD_START = 32;
-const TAIL_START = 36;
+const HEAD_START = 33;
+const TAIL_START = 37;
 
 export class Ring<T> {
-  static MESSAGE_START = 40;
+  static MESSAGE_START = 41;
 
   constructor(
     private data: Buffer,
