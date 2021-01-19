@@ -628,5 +628,11 @@
         "address": "CVn1nJ5Utuseyy2qqwrpYoJz9Y7jjYonVL4UYvcCepDH",
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
         "deprecated": false
+    },
+    {
+        "name": "USDT/USDC",
+        "address": "8EuuEwULFM7n7zthPjC7kA64LPRzYkpAyuLFiLuVg7D4",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
     }
 ]
