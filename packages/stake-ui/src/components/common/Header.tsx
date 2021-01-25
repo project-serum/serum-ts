@@ -10,21 +10,18 @@ import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
 import MenuItem from '@material-ui/core/MenuItem';
 import IconButton from '@material-ui/core/IconButton';
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Button from '@material-ui/core/Button';
 import PersonIcon from '@material-ui/icons/Person';
 import BubbleChartIcon from '@material-ui/icons/BubbleChart';
-import * as registry from '@project-serum/registry';
-import { networks } from '@project-serum/common';
+import { networks } from '../../store/config';
 import { State as StoreState, ProgramAccount } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
 import { useWallet } from './WalletProvider';
-import * as bootstrap from './BootstrapProvider';
 
 type HeaderProps = {
   isAppReady: boolean;
-  member?: ProgramAccount<registry.accounts.Member>;
+  member?: ProgramAccount;
 };
 
 export default function Header(props: HeaderProps) {
@@ -54,13 +51,10 @@ export default function Header(props: HeaderProps) {
         >
           <div style={{ display: 'flex' }}>
             <SerumLogoButton />
-            <BarButton label="Stake" hrefClient="/" />
+            <BarButton label="Stake" hrefClient="/stake" />
+            <BarButton label="Lockup" hrefClient="/lockup" />
             <BarButton label="Trade" href="https://dex.projectserum.com" />
             <BarButton label="Swap" href="https://swap.projectserum.com" />
-            <BarButton
-              label="Learn"
-              href="https://serum-academy.com/en/serum-dex/"
-            />
             {network.srmFaucet && (
               <BarButton
                 label="Faucet"
@@ -205,6 +199,7 @@ function NetworkSelector() {
                 type: ActionType.CommonSetNetwork,
                 item: {
                   network: networks[n],
+                  networkKey: n,
                 },
               });
             }}
@@ -218,38 +213,8 @@ function NetworkSelector() {
 }
 
 function UserSelector() {
-  const dispatch = useDispatch();
-  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
-  const { wallet, lockupClient, registryClient } = useWallet();
-  const { network, member } = useSelector((state: StoreState) => {
-    return {
-      member: state.registry.member,
-      network: state.common.network,
-    };
-  });
+  const { wallet } = useWallet();
 
-  const createStakeAccount = async () => {
-    enqueueSnackbar('Creating stake account', {
-      variant: 'info',
-    });
-
-    // TODO: separate member creation from entity joining (i.e., make it so that
-    //       entity doesn't need to be specified here).
-    const entity = network.defaultEntity;
-    const { member } = await registryClient.createMember({
-      entity,
-      delegate: await lockupClient.accounts.vaultAuthority(
-        lockupClient.programId,
-        lockupClient.safe,
-        wallet.publicKey,
-      ),
-    });
-    closeSnackbar();
-    enqueueSnackbar(`Stake account created ${member.toString()}`, {
-      variant: 'success',
-    });
-    bootstrap.subscribeMember(member, registryClient, dispatch);
-  };
   return (
     <Select
       displayEmpty
@@ -270,29 +235,6 @@ function UserSelector() {
         }
       }}
     >
-      {member.isReady && member.data === undefined && (
-        <MenuItem value="create-member">
-          <div
-            onClick={() =>
-              createStakeAccount().catch(err => {
-                enqueueSnackbar(
-                  `Error creating stake account: ${err.toString()}`,
-                  {
-                    variant: 'error',
-                  },
-                );
-              })
-            }
-          >
-            <IconButton color="inherit">
-              <PersonAddIcon />
-              <Typography style={{ marginLeft: '15px' }}>
-                Create stake account
-              </Typography>
-            </IconButton>
-          </div>
-        </MenuItem>
-      )}
       <MenuItem value="disconnect">
         <IconButton color="inherit">
           <ExitToAppIcon />

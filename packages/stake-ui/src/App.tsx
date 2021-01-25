@@ -10,6 +10,7 @@ import WalletProvider from './components/common/WalletProvider';
 import BootstrapProvider from './components/common/BootstrapProvider';
 import Layout from './components/common/Layout';
 import MyNodePage from './pages/MyNode';
+import LockupPage from './pages/Lockup';
 
 function App() {
   const theme = createMuiTheme({
@@ -33,6 +34,8 @@ function App() {
               <HashRouter basename={'/'}>
                 <Layout>
                   <Route exact path="/" component={MyNodePage} />
+                  <Route exact path="/stake" component={MyNodePage} />
+                  <Route exact path="/lockup" component={LockupPage} />
                 </Layout>
               </HashRouter>
             </BootstrapProvider>

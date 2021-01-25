@@ -2,7 +2,6 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
-import CardHeader from '@material-ui/core/CardHeader';
 import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
@@ -11,10 +10,8 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 import CircularProgress from '@material-ui/core/CircularProgress';
-import { accounts } from '@project-serum/registry';
-import { ProgramAccount } from '@project-serum/common';
-import { State as StoreState, AsyncData } from '../store/reducer';
-import { displaySrm, displayMsrm } from '../utils/tokens';
+import { State as StoreState } from '../store/reducer';
+import { toDisplay, toDisplayLabel } from '../utils/tokens';
 
 export default function Me() {
   const { member } = useSelector((state: StoreState) => {
@@ -26,95 +23,68 @@ export default function Me() {
   return (
     <div style={{ display: 'flex', width: '100%' }}>
       <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
-        {member.isReady && member.data !== undefined && (
-          <MemberBalancesCard member={member} />
-        )}
+        {member && <MemberBalancesCard />}
       </div>
     </div>
   );
 }
 
-type MemberBalancesCardProps = {
-  member: AsyncData<ProgramAccount<accounts.MemberDeref>>;
-};
-
-function MemberBalancesCard(props: MemberBalancesCardProps) {
-  const { member } = props;
+// Assumes a member and all vaults is available in the store.
+function MemberBalancesCard() {
+  const {
+    mint,
+    registrar,
+    vault,
+    vaultStake,
+    vaultPw,
+    spt,
+    lockedVault,
+    lockedVaultStake,
+    lockedVaultPw,
+    lockedSpt,
+  } = useSelector((state: StoreState) => {
+    const member = state.accounts[state.registry.member!.toString()];
+    const registrar = state.accounts[state.registry.registrar.toString()];
+    return {
+      registrar,
+      mint: state.accounts[registrar.mint.toString()],
+      vault: state.accounts[member.balances.vault],
+      vaultStake: state.accounts[member.balances.vaultStake],
+      vaultPw: state.accounts[member.balances.vaultPw],
+      spt: state.accounts[member.balances.spt],
+      lockedVault: state.accounts[member.balancesLocked.vault],
+      lockedVaultStake: state.accounts[member.balancesLocked.vaultStake],
+      lockedVaultPw: state.accounts[member.balancesLocked.vaultPw],
+      lockedSpt: state.accounts[member.balancesLocked.spt],
+    };
+  });
   const tables = [
     {
       title: 'Main Balances',
       description: 'Balances deposited directly from the connected wallet.',
-      rows:
-        !member.isReady || member.data === undefined
-          ? null
-          : [
-              {
-                token: 'SRM',
-                balance: displaySrm(
-                  member.data!.account.balances[0]!.vault.amount,
-                ),
-                stake: displaySrm(
-                  member.data!.account.balances[0].vaultStake.amount,
-                ),
-                spt: member.data!.account.balances[0].spt.amount.toString(),
-                pending: displaySrm(
-                  member.data!.account.balances[0].vaultPendingWithdrawal
-                    .amount,
-                ),
-              },
-              {
-                token: 'MSRM',
-                balance: displayMsrm(
-                  member.data!.account.balances[0].vaultMega.amount,
-                ),
-                stake: displayMsrm(
-                  member.data!.account.balances[0].vaultStakeMega.amount,
-                ),
-                spt: member.data!.account.balances[0].sptMega.amount.toString(),
-                pending: displayMsrm(
-                  member.data!.account.balances[0].vaultPendingWithdrawalMega
-                    .amount,
-                ),
-              },
-            ],
+      rows: [
+        {
+          token: toDisplayLabel(registrar.mint),
+          balance: toDisplay(vault.amount, mint.decimals),
+          stake: toDisplay(vaultStake.amount, mint.decimals),
+          pending: toDisplay(vaultPw.amount, mint.decimals),
+          spt: toDisplay(spt.amount, 0),
+        },
+      ],
     },
     {
       title: 'Locked Balances',
       description:
         'Balances deposited from the lockup program. These funds are isolated from the Main Balances and may only be withdrawn back to the lockup program. At all times they are program controlled.',
-      rows:
-        !member.isReady || member.data === undefined
-          ? null
-          : [
-              {
-                token: 'SRM',
-                balance: displaySrm(
-                  member.data!.account.balances[1].vault.amount,
-                ),
-                stake: displaySrm(
-                  member.data!.account.balances[1].vaultStake.amount,
-                ),
-                spt: member.data!.account.balances[1].spt.amount.toString(),
-                pending: displaySrm(
-                  member.data!.account.balances[1].vaultPendingWithdrawal
-                    .amount,
-                ),
-              },
-              {
-                token: 'MSRM',
-                balance: displayMsrm(
-                  member.data!.account.balances[1].vaultMega.amount,
-                ),
-                stake: displayMsrm(
-                  member.data!.account.balances[1].vaultStakeMega.amount,
-                ),
-                spt: member.data!.account.balances[1].sptMega.amount.toString(),
-                pending: displayMsrm(
-                  member.data!.account.balances[1].vaultPendingWithdrawalMega
-                    .amount,
-                ),
-              },
-            ],
+      rows: [
+        {
+          token: toDisplayLabel(registrar.mint),
+          balance: toDisplay(lockedVault.amount, mint.decimals),
+          stake: toDisplay(lockedVaultStake.amount, mint.decimals),
+          pending: toDisplay(lockedVaultPw.amount, mint.decimals),
+          spt: toDisplay(lockedSpt.amount, 0),
+        },
+      ],
     },
   ];
   return (
@@ -123,18 +93,9 @@ function MemberBalancesCard(props: MemberBalancesCardProps) {
         marginBottom: '24px',
       }}
     >
-      <CardHeader
-        title={'My Membership'}
-        subheader={
-          !member.isReady ? (
-            <CircularProgress />
-          ) : (
-            member.data!.publicKey.toString()
-          )
-        }
-      />
       <CardContent
         style={{
+          marginTop: '24px',
           position: 'relative',
           paddingTop: 0,
           paddingBottom: '16px',

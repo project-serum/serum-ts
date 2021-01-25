@@ -1,12 +1,8 @@
-import { AccountInfo as TokenAccount, MintInfo } from '@solana/spl-token';
-import * as lockup from '@project-serum/lockup';
-import * as registry from '@project-serum/registry';
-import {
-  ProgramAccount as CommonProgramAccount,
-  networks,
-  Network,
-} from '@project-serum/common';
+import { PublicKey } from '@solana/web3.js';
+import { AccountInfo as TokenAccount } from '@solana/spl-token';
+import { ProgramAccount as CommonProgramAccount } from '@project-serum/common';
 import { Action, ActionType } from './actions';
+import { networks, Network } from './config';
 
 export enum BootstrapState {
   NeedsBootstrap,
@@ -22,6 +18,7 @@ export default function reducer(
     common: { ...state.common },
     lockup: { ...state.lockup },
     registry: { ...state.registry },
+    accounts: { ...state.accounts },
   };
   switch (action.type) {
     // Common.
@@ -46,6 +43,8 @@ export default function reducer(
         newState.common.network = action.item.network;
         newState.common.bootstrapState = BootstrapState.NeedsBootstrap;
         newState.common.shutdownTrigger = true;
+        const network = networks[action.item.networkKey];
+        newState.registry.registrar = Object.values(network.registrars)[0];
       }
       return newState;
     case ActionType.CommonTriggerBootstrap:
@@ -72,123 +71,56 @@ export default function reducer(
       newState.lockup.vestings = action.item.vestingAccounts;
       return newState;
     case ActionType.LockupUpdateVesting:
-      newState.lockup.vestings = newState.lockup.vestings.map(v => {
-        if (v.publicKey.equals(action.item.vesting.publicKey)) {
-          return action.item.vesting;
-        }
-        return v;
-      });
+      newState.accounts[action.item.vesting.publicKey.toString()] =
+        action.item.vesting.account;
       return newState;
     case ActionType.LockupCreateVesting:
-      newState.lockup.vestings.unshift(action.item.vesting);
-      return newState;
-    case ActionType.LockupSetSafe:
-      newState.lockup.safe = action.item.safe;
+      newState.lockup.vestings.unshift(action.item.vesting.publicKey);
+      newState.accounts[action.item.vesting.publicKey.toString()] =
+        action.item.vesting.account;
       return newState;
 
     // Registry.
-    case ActionType.RegistryCreateEntity:
-      newState.registry.entities.unshift(action.item.entity);
-      return newState;
-    case ActionType.RegistrySetEntities:
-      newState.registry.entities = action.item.entities;
-      return newState;
-    case ActionType.RegistryUpdateEntity:
-      newState.registry.entities = newState.registry.entities.map(e => {
-        if (
-          e.publicKey.toString() === action.item.entity.publicKey.toString()
-        ) {
-          e = action.item.entity;
-        }
-        return { ...e };
-      });
-      return newState;
     case ActionType.RegistrySetMember:
-      newState.registry.member = {
-        isReady: true,
-        data: action.item.member,
-      };
-      return newState;
-    case ActionType.RegistrySetPoolMint:
-      newState.registry.poolTokenMint = action.item.poolMint;
-      return newState;
-    case ActionType.RegistrySetPoolMintMega:
-      newState.registry.megaPoolTokenMint = action.item.poolMintMega;
+      // This should only be called on member creation. All other member
+      // member switches should route through `RegistrySetMember`.
+      newState.registry.member = action.item.member;
       return newState;
     case ActionType.RegistrySetRegistrar:
       newState.registry.registrar = action.item.registrar;
+      newState.registry.member = action.item.member;
+      newState.registry.pendingWithdrawals = null;
       return newState;
     case ActionType.RegistrySetPendingWithdrawals:
-      newState.registry.pendingWithdrawals = new Map(
-        newState.registry.pendingWithdrawals,
-      ).set(
-        action.item.memberPublicKey.toString(),
-        action.item.pendingWithdrawals,
+      action.item.pendingWithdrawals.forEach((pw: any) => {
+        newState.accounts[pw.publicKey.toString()] = pw.account;
+      });
+      newState.registry.pendingWithdrawals = action.item.pendingWithdrawals.map(
+        (pw: any) => pw.publicKey,
       );
       return newState;
     case ActionType.RegistryCreatePendingWithdrawal:
-      const oldPw = newState.registry.pendingWithdrawals;
-      const memberWithdrawals = oldPw.has(
-        action.item.memberPublicKey.toString(),
-      )
-        ? [
-            ...(oldPw.get(
-              action.item.memberPublicKey.toString(),
-            ) as ProgramAccount<registry.accounts.PendingWithdrawal>[]),
-          ]
-        : [];
-      memberWithdrawals.unshift(action.item.pendingWithdrawal);
-      newState.registry.pendingWithdrawals = new Map(oldPw).set(
-        action.item.memberPublicKey.toString(),
-        memberWithdrawals,
+      newState.accounts[action.item.pendingWithdrawal.publicKey.toString()] =
+        action.item.pendingWithdrawal.account;
+      if (newState.registry.pendingWithdrawals === null) {
+        newState.registry.pendingWithdrawals = [];
+      }
+      newState.registry.pendingWithdrawals.unshift(
+        action.item.pendingWithdrawal.publicKey,
       );
       return newState;
     case ActionType.RegistryUpdatePendingWithdrawal:
-      const allPendingWithdrawals = new Map(
-        newState.registry.pendingWithdrawals,
-      );
-      const memberPendingWithdrawals = allPendingWithdrawals
-        .get(action.item.memberPublicKey.toString())!
-        .map(pw => {
-          if (
-            pw.publicKey.toString() ===
-            action.item.pendingWithdrawal.publicKey.toString()
-          ) {
-            return action.item.pendingWithdrawal;
-          }
-          return pw;
-        });
-
-      newState.registry.pendingWithdrawals.set(
-        action.item.memberPublicKey.toString(),
-        memberPendingWithdrawals,
-      );
+      newState.accounts[action.item.pendingWithdrawal.publicKey.toString()] =
+        action.item.pendingWithdrawal.account;
       return newState;
-    case ActionType.RegistrySetMetadata:
-      const entityMetadata = new Map();
-      action.item.entityMetadata.forEach(
-        (
-          emd: ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>,
-        ) => {
-          entityMetadata.set(emd.account.entity.toString(), emd);
-        },
-      );
-      newState.registry.entityMetadata = entityMetadata;
+    case ActionType.AccountAdd:
+      newState.accounts[action.item.account.publicKey.toString()] =
+        action.item.account.account;
       return newState;
-    case ActionType.RegistryCreateMetadata:
-      const emd = new Map(newState.registry.entityMetadata);
-      emd.set(action.item.entityPublicKey.toString(), action.item.metadata);
-      newState.registry.entityMetadata = emd;
+    case ActionType.AccountUpdate:
+      newState.accounts[action.item.account.publicKey.toString()] =
+        action.item.account.account;
       return newState;
-    case ActionType.RegistrySetRewardEventQueue:
-      newState.registry.rewardEventQueue = action.item.rewardEventQueue;
-      return newState;
-    case ActionType.RegistryCreateRewardVendor:
-      const vendors = new Map(newState.registry.vendors);
-      vendors.set(action.item.vendor.publicKey.toString(), action.item.vendor);
-      newState.registry.vendors = vendors;
-      return newState;
-    // Misc.
     default:
       return newState;
   }
@@ -198,6 +130,7 @@ export type State = {
   common: CommonState;
   lockup: LockupState;
   registry: RegistryState;
+  accounts: { [pubkey: string]: any };
 };
 
 export type CommonState = {
@@ -211,45 +144,15 @@ export type CommonState = {
 };
 
 export type LockupState = {
-  safe?: ProgramAccount<lockup.accounts.Safe>;
-  vestings: ProgramAccount<lockup.accounts.Vesting>[];
+  vestings: PublicKey[];
 };
 
+// All state associated with a single instance of a staking registrar.
 export type RegistryState = {
-  entities: ProgramAccount<registry.accounts.Entity>[];
-  entityMetadata: Map<
-    string,
-    ProgramAccount<registry.metaEntity.accounts.metadata.Metadata>
-  >;
-  member: AsyncData<ProgramAccount<registry.accounts.MemberDeref>>;
-  poolTokenMint?: ProgramAccount<MintInfo>;
-  megaPoolTokenMint?: ProgramAccount<MintInfo>;
-  registrar?: ProgramAccount<registry.accounts.Registrar>;
-  pendingWithdrawals: Map<
-    string,
-    Array<ProgramAccount<registry.accounts.PendingWithdrawal>>
-  >;
-  rewardEventQueue?: ProgramAccount<registry.accounts.RewardEventQueue>;
-  vendors: Map<
-    string,
-    ProgramAccount<
-      | registry.accounts.LockedRewardVendor
-      | registry.accounts.UnlockedRewardVendor
-    >
-  >;
+  registrar: PublicKey;
+  member?: PublicKey;
+  pendingWithdrawals: PublicKey[] | null;
 };
-
-export type AsyncData<T> = {
-  isReady: boolean;
-  data?: T;
-};
-
-function defaultAsyncData<T>(): AsyncData<T> {
-  return { isReady: false };
-}
-
-// Re-export.
-export type ProgramAccount<T> = CommonProgramAccount<T>;
 
 export const initialState: State = {
   common: {
@@ -258,17 +161,25 @@ export const initialState: State = {
     isWalletConnected: false,
     walletProvider: 'https://www.sollet.io',
     bootstrapState: BootstrapState.NeedsBootstrap,
-    network: networks.mainnet,
+    //network: networks.localhost,
+    network: networks.devnet,
     ownedTokenAccounts: [],
   },
   lockup: {
     vestings: [],
   },
   registry: {
-    member: defaultAsyncData(),
-    entities: [],
-    entityMetadata: new Map(),
-    pendingWithdrawals: new Map(),
-    vendors: new Map(),
+    pendingWithdrawals: null,
+    registrar: networks.devnet.registrars.token1,
+    //registrar: networks.localhost.registrars.token1,
   },
+  accounts: {},
 };
+
+export type AsyncData<T> = {
+  isReady: boolean;
+  data?: T;
+};
+
+// Re-export.
+export type ProgramAccount<T = any> = CommonProgramAccount<T>;

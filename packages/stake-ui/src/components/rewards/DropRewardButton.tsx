@@ -16,13 +16,20 @@ import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
 import InputLabel from '@material-ui/core/InputLabel';
 import Select from '@material-ui/core/Select';
-import { PublicKey } from '@solana/web3.js';
-import { Network } from '@project-serum/common';
+import * as serumCmn from '@project-serum/common';
+import { TokenInstructions } from '@project-serum/serum';
+import {
+  Account,
+  PublicKey,
+  SYSVAR_CLOCK_PUBKEY,
+  SYSVAR_RENT_PUBKEY,
+} from '@solana/web3.js';
 import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import OwnedTokenAccountsSelect from '../common/OwnedTokenAccountsSelect';
 import * as notification from '../common/Notification';
-import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
+import { fromDisplay } from '../../utils/tokens';
+import { Network } from '../../store/config';
 
 export default function DropRewardButton() {
   const [showDialog, setShowDialog] = useState(false);
@@ -41,11 +48,6 @@ export default function DropRewardButton() {
   );
 }
 
-enum PoolTabViewModel {
-  Srm,
-  Msrm,
-}
-
 enum RewardTypeViewModel {
   Unlocked,
   Locked,
@@ -59,7 +61,6 @@ type DropRewardsDialogProps = {
 function DropRewardDialog(props: DropRewardsDialogProps) {
   const { open, onClose } = props;
 
-  const [poolTab, setPoolTab] = useState(PoolTabViewModel.Srm);
   const [rewardTypeTab, setRewardTypeTab] = useState(
     RewardTypeViewModel.Unlocked,
   );
@@ -78,19 +79,11 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
           <Tab value={RewardTypeViewModel.Unlocked} label="Unlocked" />
           <Tab value={RewardTypeViewModel.Locked} label="Locked" />
         </Tabs>
-        <Tabs
-          style={{ marginTop: '10px' }}
-          value={poolTab}
-          onChange={(_e, t) => setPoolTab(t)}
-        >
-          <Tab value={PoolTabViewModel.Srm} label="Pool" />
-          <Tab value={PoolTabViewModel.Msrm} label="Mega Pool" />
-        </Tabs>
         {rewardTypeTab === RewardTypeViewModel.Unlocked && (
-          <DropUnlockedForm onClose={onClose} poolTab={poolTab} />
+          <DropUnlockedForm onClose={onClose} />
         )}
         {rewardTypeTab === RewardTypeViewModel.Locked && (
-          <DropLockedForm onClose={onClose} poolTab={poolTab} />
+          <DropLockedForm onClose={onClose} />
         )}
       </DialogContent>
     </Dialog>
@@ -99,61 +92,101 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
 
 type DropUnlockedFormProps = {
   onClose: () => void;
-  poolTab: PoolTabViewModel;
 };
 
 function DropUnlockedForm(props: DropUnlockedFormProps) {
-  const { onClose, poolTab } = props;
+  const { onClose } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
-  const { network, poolMint, megaPoolMint } = useSelector(
-    (state: StoreState) => {
-      return {
-        network: state.common.network,
-        poolMint: state.registry.registrar!.account.poolMint,
-        megaPoolMint: state.registry.registrar!.account.poolMintMega,
-      };
-    },
-  );
+  const { network, registrar, accounts } = useSelector((state: StoreState) => {
+    return {
+      network: state.common.network,
+      registrar: {
+        publicKey: state.registry.registrar,
+        account: state.accounts[state.registry.registrar.toString()],
+      },
+      accounts: state.accounts,
+    };
+  });
 
-  const [lockedRewardDisplayAmount, setLockedRewardDisplayAmount] = useState<
-    null | number
-  >(null);
+  const [rewardDisplayAmount, setRewardDisplayAmount] = useState<null | number>(
+    null,
+  );
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
-  const [mintLabel, setMintLabel] = useState('srm');
-  const [mint, setMint] = useState<null | PublicKey>(network.srm);
+  const [mint, setMint] = useState<null | string>(null);
 
   const isSendEnabled =
     mint !== null &&
     depositor !== null &&
-    lockedRewardDisplayAmount !== null &&
+    rewardDisplayAmount !== null &&
     expiryTs !== null;
 
   const sendUnlockedReward = async () => {
     await notification.withTx(
       snack,
-      'Dropping unllocked reward...',
+      'Dropping unlocked reward...',
       'Unlocked reward dropped',
       async () => {
-        const lockedRewardAmount = mint!.equals(network.srm)
-          ? fromDisplaySrm(lockedRewardDisplayAmount!)
-          : fromDisplayMsrm(lockedRewardDisplayAmount!);
-        let { tx } = await registryClient.dropUnlockedReward({
-          total: lockedRewardAmount,
-          expiryTs: new BN(expiryTs as number),
-          depositor: depositor as PublicKey,
-          depositorMint: mint as PublicKey,
-          poolTokenMint:
-            poolTab === PoolTabViewModel.Srm ? poolMint : megaPoolMint,
-        });
-        return tx;
+        let mintAccount = accounts[network.mints[mint!].toString()];
+        if (!mintAccount) {
+          mintAccount = await serumCmn.getMintInfo(
+            registryClient.provider,
+            network.mints[mint!],
+          );
+        }
+
+        const lockedRewardAmount = fromDisplay(
+          rewardDisplayAmount!,
+          mintAccount.decimals,
+        );
+        const rewardKind = { unlocked: {} };
+        const vendor = new Account();
+        const vendorVault = new Account();
+        const [vendorSigner, nonce] = await PublicKey.findProgramAddress(
+          [registrar.publicKey.toBuffer(), vendor.publicKey.toBuffer()],
+          registryClient.programId,
+        );
+        return await registryClient.rpc.dropReward(
+          rewardKind,
+          lockedRewardAmount,
+          new BN(expiryTs!),
+          registryClient.provider.wallet.publicKey,
+          nonce,
+          {
+            accounts: {
+              registrar: registrar.publicKey,
+              rewardEventQ: registrar.account.rewardEventQ,
+              poolMint: registrar.account.poolMint,
+              vendor: vendor.publicKey,
+              vendorVault: vendorVault.publicKey,
+              depositor,
+              depositorAuthority: registryClient.provider.wallet.publicKey,
+              tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+              clock: SYSVAR_CLOCK_PUBKEY,
+              rent: SYSVAR_RENT_PUBKEY,
+            },
+            signers: [vendorVault, vendor],
+            instructions: [
+              ...(await serumCmn.createTokenAccountInstrs(
+                registryClient.provider,
+                vendorVault.publicKey,
+                network.mints[mint!],
+                vendorSigner,
+              )),
+              await registryClient.account.rewardVendor.createInstruction(
+                vendor,
+              ),
+            ],
+          },
+        );
       },
     );
     onClose();
   };
   const onClick = () => {
     sendUnlockedReward().catch(err => {
+      console.error(err);
       snack.enqueueSnackbar(
         `Error dropping unlocked reward: ${err.toString()}`,
         {
@@ -167,10 +200,8 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
       network={network}
       mint={mint}
       setMint={setMint}
-      mintLabel={mintLabel}
-      setMintLabel={setMintLabel}
       setDepositor={setDepositor}
-      setLockedRewardDisplayAmount={setLockedRewardDisplayAmount}
+      setRewardDisplayAmount={setRewardDisplayAmount}
       expiryTs={expiryTs}
       setExpiryTs={setExpiryTs}
       onCancel={onClose}
@@ -183,33 +214,33 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
 type DropLockedFormProps = DropUnlockedFormProps;
 
 function DropLockedForm(props: DropLockedFormProps) {
-  const { onClose, poolTab } = props;
+  const { onClose } = props;
   const snack = useSnackbar();
   const { registryClient } = useWallet();
-  const { network, poolMint, megaPoolMint } = useSelector(
-    (state: StoreState) => {
-      return {
-        network: state.common.network,
-        poolMint: state.registry.registrar!.account.poolMint,
-        megaPoolMint: state.registry.registrar!.account.poolMintMega,
-      };
-    },
-  );
+  const { network, registrar, accounts } = useSelector((state: StoreState) => {
+    return {
+      network: state.common.network,
+      registrar: {
+        publicKey: state.registry.registrar,
+        account: state.accounts[state.registry.registrar.toString()],
+      },
+      accounts: state.accounts,
+    };
+  });
 
-  const [lockedRewardDisplayAmount, setLockedRewardDisplayAmount] = useState<
-    null | number
-  >(null);
+  const [rewardDisplayAmount, setRewardDisplayAmount] = useState<null | number>(
+    null,
+  );
   const [endTs, setEndTs] = useState<null | number>(null);
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
-  const [mintLabel, setMintLabel] = useState('srm');
-  const [mint, setMint] = useState<null | PublicKey>(network.srm);
+  const [mint, setMint] = useState<null | string>(null);
   const [periodCount, setPeriodCount] = useState(7);
 
   const isSendEnabled =
     mint !== null &&
     depositor !== null &&
-    lockedRewardDisplayAmount !== null &&
+    rewardDisplayAmount !== null &&
     expiryTs !== null;
 
   const sendLockedRewards = async () => {
@@ -218,20 +249,56 @@ function DropLockedForm(props: DropLockedFormProps) {
       'Dropping locked reward...',
       'Locked reward dropped',
       async () => {
-        const lockedRewardAmount = mint!.equals(network.srm)
-          ? fromDisplaySrm(lockedRewardDisplayAmount!)
-          : fromDisplayMsrm(lockedRewardDisplayAmount!);
-        let { tx } = await registryClient.dropLockedReward({
-          total: lockedRewardAmount,
-          endTs: new BN(endTs as number),
-          expiryTs: new BN(expiryTs as number),
-          depositor: depositor as PublicKey,
-          depositorMint: mint as PublicKey,
-          poolTokenMint:
-            poolTab === PoolTabViewModel.Srm ? poolMint : megaPoolMint,
-          periodCount: new BN(periodCount),
-        });
-        return tx;
+        const rewardKind = {
+          locked: {
+            endTs: new BN(endTs!),
+            periodCount: new BN(periodCount),
+          },
+        };
+        const vendor = new Account();
+        const vendorVault = new Account();
+        const [vendorSigner, nonce] = await PublicKey.findProgramAddress(
+          [registrar.publicKey.toBuffer(), vendor.publicKey.toBuffer()],
+          registryClient.programId,
+        );
+        let mintAccount = accounts[network.mints[mint!].toString()];
+        const rewardAmount = fromDisplay(
+          rewardDisplayAmount!,
+          mintAccount.decimals,
+        );
+        return await registryClient.rpc.dropReward(
+          rewardKind,
+          rewardAmount,
+          new BN(expiryTs!),
+          registryClient.provider.wallet.publicKey,
+          nonce,
+          {
+            accounts: {
+              registrar: registrar.publicKey,
+              rewardEventQ: registrar.account.rewardEventQ,
+              poolMint: registrar.account.poolMint,
+              vendor: vendor.publicKey,
+              vendorVault: vendorVault.publicKey,
+              depositor,
+              depositorAuthority: registryClient.provider.wallet.publicKey,
+              tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+              clock: SYSVAR_CLOCK_PUBKEY,
+              rent: SYSVAR_RENT_PUBKEY,
+            },
+            signers: [vendorVault, vendor],
+            instructions: [
+              ...(await serumCmn.createTokenAccountInstrs(
+                registryClient.provider,
+                vendorVault.publicKey,
+                network.mints[mint!],
+                vendorSigner,
+              )),
+              await registryClient.account.rewardVendor.createInstruction(
+                vendor,
+              ),
+            ],
+          },
+        );
       },
     );
     onClose();
@@ -250,10 +317,8 @@ function DropLockedForm(props: DropLockedFormProps) {
       network={network}
       mint={mint}
       setMint={setMint}
-      mintLabel={mintLabel}
-      setMintLabel={setMintLabel}
       setDepositor={setDepositor}
-      setLockedRewardDisplayAmount={setLockedRewardDisplayAmount}
+      setRewardDisplayAmount={setRewardDisplayAmount}
       setEndTs={setEndTs}
       periodCount={periodCount}
       setPeriodCount={setPeriodCount}
@@ -268,12 +333,10 @@ function DropLockedForm(props: DropLockedFormProps) {
 
 type DropVendorFormProps = {
   network: Network;
-  mint: PublicKey | null;
-  mintLabel: string;
-  setMintLabel: (s: string) => void;
-  setMint: (m: PublicKey) => void;
+  mint: string | null;
+  setMint: (mintLabel: string) => void;
   setDepositor: (pk: PublicKey) => void;
-  setLockedRewardDisplayAmount: (n: number) => void;
+  setRewardDisplayAmount: (n: number) => void;
   setEndTs?: (n: number) => void;
   periodCount?: number;
   setPeriodCount?: (p: number) => void;
@@ -289,10 +352,8 @@ function DropVendorForm(props: DropVendorFormProps) {
     network,
     mint,
     setDepositor,
-    mintLabel,
-    setMintLabel,
     setMint,
-    setLockedRewardDisplayAmount,
+    setRewardDisplayAmount,
     setEndTs,
     periodCount,
     setPeriodCount,
@@ -303,6 +364,15 @@ function DropVendorForm(props: DropVendorFormProps) {
     isSendEnabled,
   } = props;
 
+  const mintOptions: { label: string; publicKey: PublicKey }[] = Object.keys(
+    network.mints,
+  ).map(label => {
+    return {
+      label,
+      publicKey: network.mints[label],
+    };
+  });
+
   return (
     <>
       <div>
@@ -310,7 +380,7 @@ function DropVendorForm(props: DropVendorFormProps) {
           <div style={{ flex: 1 }}>
             <OwnedTokenAccountsSelect
               style={{ height: '100%' }}
-              mint={mint}
+              mint={mint === null ? undefined : network.mints[mint]}
               onChange={(f: PublicKey) => setDepositor(f)}
             />
             <FormHelperText>Account to send from</FormHelperText>
@@ -322,20 +392,13 @@ function DropVendorForm(props: DropVendorFormProps) {
             >
               <InputLabel>Mint</InputLabel>
               <Select
-                value={mintLabel}
-                onChange={e => {
-                  const m = e.target.value;
-                  setMintLabel(m as string);
-                  if (m === 'srm') {
-                    setMint(network.srm);
-                  } else if (m === 'msrm') {
-                    setMint(network.msrm);
-                  }
-                }}
+                value={mint}
+                onChange={e => setMint(e.target.value as string)}
                 label="Mint"
               >
-                <MenuItem value="srm">SRM</MenuItem>
-                <MenuItem value="msrm">MSRM</MenuItem>
+                {mintOptions.map(m => (
+                  <MenuItem value={m.label}>{m.label.toUpperCase()}</MenuItem>
+                ))}
               </Select>
             </FormControl>
           </div>
@@ -350,9 +413,7 @@ function DropVendorForm(props: DropVendorFormProps) {
               }}
               variant="outlined"
               onChange={e =>
-                setLockedRewardDisplayAmount(
-                  parseFloat(e.target.value) as number,
-                )
+                setRewardDisplayAmount(parseFloat(e.target.value) as number)
               }
               InputProps={{ inputProps: { min: 0 } }}
             />

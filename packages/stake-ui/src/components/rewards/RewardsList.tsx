@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import BN from 'bn.js';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import LockIcon from '@material-ui/icons/Lock';
 import List from '@material-ui/core/List';
@@ -8,25 +7,32 @@ import ListItemText from '@material-ui/core/ListItemText';
 import Collapse from '@material-ui/core/Collapse';
 import ExpandLess from '@material-ui/icons/ExpandLess';
 import ExpandMore from '@material-ui/icons/ExpandMore';
-import { PublicKey } from '@solana/web3.js';
-import { Network, ProgramAccount } from '@project-serum/common';
-import * as registry from '@project-serum/registry';
-import { displaySrm, displayMsrm } from '../../utils/tokens';
+import { toDisplay } from '../../utils/tokens';
+import { ProgramAccount } from '../../store/reducer';
+import { Network } from '../../store/config';
 
 type RewardsListProps = {
-  rewards: RewardListItemViewModel[];
-  network: Network;
-  registrar: ProgramAccount<registry.accounts.Registrar>;
+  rewards: (RewardListItemViewModel | null)[];
 };
 
 export default function RewardsList(props: RewardsListProps) {
-  const { rewards, network, registrar } = props;
+  const { rewards } = props;
   return (
     <List>
       {rewards.length > 0 ? (
-        rewards.map(r => (
-          <RewardListItem registrar={registrar} network={network} rli={r} />
-        ))
+        rewards.map(r =>
+          r === null ? (
+            <CircularProgress
+              style={{
+                display: 'block',
+                marginLeft: 'auto',
+                marginRight: 'auto',
+              }}
+            />
+          ) : (
+            <RewardListItem rli={r} />
+          ),
+        )
       ) : (
         <ListItem>
           <ListItemText primary={'No rewards found'} />
@@ -38,44 +44,23 @@ export default function RewardsList(props: RewardsListProps) {
 
 type RewardListItemProps = {
   rli: RewardListItemViewModel;
-  network: Network;
-  registrar: ProgramAccount<registry.accounts.Registrar>;
 };
 
 function RewardListItem(props: RewardListItemProps) {
-  const { rli, network, registrar } = props;
-
-  const rewardEvent = rli.reward.lockedAlloc ?? rli.reward.unlockedAlloc!;
+  const { rli } = props;
 
   const [open, setOpen] = useState(false);
-  let amountLabel = (() => {
-    if (rewardEvent.mint.equals(network.srm)) {
-      return `${displaySrm(rewardEvent.total)} SRM`;
-    } else if (rewardEvent.mint.equals(network.msrm)) {
-      return `${displayMsrm(rewardEvent.total)} MSRM`;
-    } else {
-      amountLabel += `${rewardEvent.mint}`;
-    }
-  })();
-  const dateLabel =
-    rli.vendor === undefined
-      ? ''
-      : new Date(
-          rli.vendor!.account.startTs.toNumber() * 1000,
-        ).toLocaleString();
-  const poolLabel = rewardEvent.pool.equals(registrar.account.poolMintMega)
-    ? 'MSRM pool'
-    : 'SRM pool';
-  let lockedLabel = `on ${poolLabel}`;
-  let fromLabel = `Dropped by ${rewardEvent.from.toString()} | ${dateLabel}`;
 
+  const dateLabel = new Date(
+    rli.vendor!.account.startTs.toNumber() * 1000,
+  ).toLocaleString();
+  let fromLabel = `Dropped by ${rli.vendor.account.from.toString()} | ${dateLabel}`;
   return (
     <>
       <ListItem button onClick={() => setOpen(open => !open)}>
         <LockIcon
           style={{
-            visibility:
-              rli.reward.lockedAlloc === undefined ? 'hidden' : 'visible',
+            visibility: rli.reward.locked ? 'visible' : 'hidden',
             marginRight: '16px',
           }}
         />
@@ -88,7 +73,10 @@ function RewardListItem(props: RewardListItemProps) {
                 color: rli.needsClaim ? '#54a15e' : '',
               }}
             >
-              <div>{`${amountLabel} ${lockedLabel}`}</div>
+              <div>{`${toDisplay(
+                rli.vendor.account.total,
+                rli.mint!.account.decimals,
+              )} ${rli.mint!.publicKey}`}</div>
             </div>
           }
           secondary={fromLabel}
@@ -107,10 +95,7 @@ function RewardListItem(props: RewardListItemProps) {
 }
 
 type RewardListItemDetailsProps = {
-  vendor: ProgramAccount<
-    | registry.accounts.LockedRewardVendor
-    | registry.accounts.UnlockedRewardVendor
-  >;
+  vendor: ProgramAccount;
 };
 
 function RewardListItemDetails(props: RewardListItemDetailsProps) {
@@ -126,6 +111,7 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
       <ul>
         <li>Address {vendor.publicKey.toString()}</li>
         <li>Vault: {vendor.account.vault.toString()}</li>
+        <li>Mint: {vendor.account.mint.toString()}</li>
         <li>
           Pool token supply snapshot:{' '}
           {vendor.account.poolTokenSupply.toString()}
@@ -139,8 +125,7 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
         <li>Expiry receiver: {vendor.account.expiryReceiver.toString()}</li>
         <li>Expired: {vendor.account.expired.toString()}</li>
         <li>
-          Reward queue cursor:{' '}
-          {vendor.account.rewardEventQueueCursor.toString()}
+          Reward queue cursor: {vendor.account.rewardEventQCursor.toString()}
         </li>
       </ul>
     </div>
@@ -149,63 +134,71 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
 
 export class RewardListItemViewModel {
   constructor(
-    readonly reward: registry.accounts.RewardEvent,
+    readonly reward: any,
     readonly cursor: number,
     readonly needsClaim: boolean,
-    readonly vendor?: ProgramAccount<
-      | registry.accounts.LockedRewardVendor
-      | registry.accounts.UnlockedRewardVendor
-    >,
+    readonly mint: ProgramAccount,
+    readonly vendor: ProgramAccount,
   ) {}
 
   static fromMessage(
     ctx: Context,
-    event: registry.accounts.RewardEvent,
+    event: any,
     idx: number,
-  ): RewardListItemViewModel {
-    let cursor = ctx.rewardEventQueue!.account.tailCursor() + idx;
+  ): RewardListItemViewModel | null {
+    let cursor = ctx.rewardEventQueue!.account.tail + idx;
     let needsClaim = false;
-    let vendor = undefined;
-    if (event.lockedAlloc !== undefined || event.unlockedAlloc !== undefined) {
-      const eventInner = event.lockedAlloc
-        ? event.lockedAlloc
-        : event.unlockedAlloc!;
-      vendor = ctx.vendors.get(eventInner.vendor.toString());
-      if (vendor !== undefined && ctx.member !== undefined) {
-        const ownsPool =
-          ctx.member.account.balances.filter(
-            b => b.spt.amount.cmp(new BN(0)) === 1,
-          ).length > 0;
-        const ownsPoolMega =
-          ctx.member.account.balances.filter(
-            b => b.sptMega.amount.cmp(new BN(0)) === 1,
-          ).length > 0;
-        // The member must own shares of the reward's target pool.
-        const ownsPoolShares = eventInner.pool.equals(ctx.poolMint)
-          ? ownsPool
-          : ownsPoolMega;
-        const notYetClaimed = cursor >= ctx.member.account.member.rewardsCursor;
-        const isEligible =
-          ctx.member.account.member.lastStakeTs < vendor.account.startTs;
-        const expired = vendor.account.expired;
 
-        needsClaim = ownsPoolShares && notYetClaimed && isEligible && !expired;
-      }
+    const vendor = ctx.accounts[event.vendor.toString()];
+
+    if (vendor === undefined) {
+      return null;
     }
-    return new RewardListItemViewModel(event, cursor, needsClaim, vendor);
+
+    const mint = {
+      publicKey: vendor.mint,
+      account: ctx.accounts[vendor.mint.toString()],
+    };
+
+    if (ctx.member !== undefined) {
+      // Must own shares of the reward's target pool.
+      const sptAccount =
+        ctx.accounts[ctx.member.account.balances.spt.toString()];
+      const lockedSptAccount =
+        ctx.accounts[ctx.member.account.balancesLocked.spt.toString()];
+
+      const ownsPoolShares = sptAccount.amount + lockedSptAccount.amount > 0;
+
+      // Must not have claimed the reward yet.
+      const notYetClaimed = cursor >= ctx.member.account.rewardsCursor;
+
+      // Must have staked before the reward was dropped.
+      const isEligible = ctx.member.account.lastStakeTs < vendor.startTs;
+
+      // Must not have let the reward expire.
+      const expired = vendor.expired;
+
+      needsClaim = ownsPoolShares && notYetClaimed && isEligible && !expired;
+    }
+
+    const vendorProgramAccount = {
+      publicKey: event.vendor,
+      account: vendor,
+    };
+
+    return new RewardListItemViewModel(
+      event,
+      cursor,
+      needsClaim,
+      mint,
+      vendorProgramAccount,
+    );
   }
 }
 
 type Context = {
-  rewardEventQueue: ProgramAccount<registry.accounts.RewardEventQueue>;
-  member: ProgramAccount<registry.accounts.MemberDeref>;
+  accounts: any;
+  rewardEventQueue: ProgramAccount;
+  member?: ProgramAccount;
   network: Network;
-  vendors: Map<
-    string,
-    ProgramAccount<
-      | registry.accounts.LockedRewardVendor
-      | registry.accounts.UnlockedRewardVendor
-    >
-  >;
-  poolMint: PublicKey;
 };
