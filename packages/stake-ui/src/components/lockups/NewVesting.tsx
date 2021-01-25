@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import BN from 'bn.js';
-import { PublicKey, SystemProgram } from '@solana/web3.js';
+import {
+  Account,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  SYSVAR_CLOCK_PUBKEY,
+} from '@solana/web3.js';
+import { TokenInstructions } from '@project-serum/serum';
+import { createTokenAccountInstrs } from '@project-serum/common';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import FormControl from '@material-ui/core/FormControl';
@@ -20,7 +28,8 @@ import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
 import { useWallet } from '../../components/common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
-import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
+import { fromDisplay } from '../../utils/tokens';
+import { vestingSigner } from '../../utils/lockup';
 import { ViewTransactionOnExplorerButton } from '../common/Notification';
 
 export default function NewVestingButton() {
@@ -44,9 +53,10 @@ type NewVestingDialogProps = {
 
 function NewVestingDialog(props: NewVestingDialogProps) {
   const { open, onClose } = props;
-  const { network } = useSelector((state: StoreState) => {
+  const { network, accounts } = useSelector((state: StoreState) => {
     return {
       network: state.common.network,
+      accounts: state.accounts,
     };
   });
 
@@ -68,17 +78,18 @@ function NewVestingDialog(props: NewVestingDialogProps) {
   const [timestamp, setTimestamp] = useState(defaultEndTs);
   const [periodCount, setPeriodCount] = useState(7);
   const [displayAmount, setDisplayAmount] = useState<null | number>(null);
-
-  const submitBtnEnabled =
-    fromAccount !== null && isValidBeneficiary && displayAmount !== null;
-
   const { lockupClient } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
+  const [mint, setMint] = useState<null | PublicKey>(null);
 
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
-  const [mint, setMint] = useState<null | PublicKey>(null);
-  const [mintLabel, setMintLabel] = useState('');
+
+  const submitBtnEnabled =
+    mint !== null &&
+    fromAccount !== null &&
+    isValidBeneficiary &&
+    displayAmount !== null;
 
   const createVestingClickHandler = async () => {
     setIsLoading(true);
@@ -108,24 +119,55 @@ function NewVestingDialog(props: NewVestingDialogProps) {
       enqueueSnackbar('Creating vesting acount...', {
         variant: 'info',
       });
-      let amount = mint!.equals(network.srm)
-        ? fromDisplaySrm(displayAmount!)
-        : mint!.equals(network.msrm)
-        ? fromDisplayMsrm(displayAmount!)
+
+      const mintAccount = accounts[mint!.toString()];
+      let amount = mintAccount
+        ? fromDisplay(displayAmount!, mintAccount.decimals)
         : new BN(displayAmount!);
-      let { vesting, tx } = await lockupClient.createVesting({
-        beneficiary: beneficiaryPublicKey,
-        endTs: new BN(timestamp),
-        periodCount: new BN(periodCount),
-        depositAmount: amount,
-        depositor: fromAccount as PublicKey,
-      });
-      const vestingAccount = await lockupClient.accounts.vesting(vesting);
+
+      const vesting = new Account();
+      const vestingVault = new Account();
+      const _vestingSigner = await vestingSigner(
+        lockupClient.programId,
+        vesting.publicKey,
+      );
+
+      let tx = await lockupClient.rpc.createVesting(
+        beneficiaryPublicKey,
+        new BN(timestamp),
+        new BN(periodCount),
+        amount,
+        _vestingSigner.nonce,
+        {
+          accounts: {
+            vesting: vesting.publicKey,
+            vault: vestingVault.publicKey,
+            depositor: fromAccount,
+            depositorAuthority: lockupClient.provider.wallet.publicKey,
+            tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+            clock: SYSVAR_CLOCK_PUBKEY,
+          },
+          signers: [vesting, vestingVault],
+          instructions: [
+            await lockupClient.account.vesting.createInstruction(vesting),
+            ...(await createTokenAccountInstrs(
+              lockupClient.provider,
+              vestingVault.publicKey,
+              mint!,
+              _vestingSigner.publicKey,
+            )),
+          ],
+        },
+      );
+      const vestingAccount = await lockupClient.account.vesting(
+        vesting.publicKey,
+      );
       dispatch({
         type: ActionType.LockupCreateVesting,
         item: {
           vesting: {
-            publicKey: vesting,
+            publicKey: vesting.publicKey,
             account: vestingAccount,
           },
         },
@@ -171,32 +213,26 @@ function NewVestingDialog(props: NewVestingDialogProps) {
               <FormControl variant="outlined" style={{ width: '200px' }}>
                 <InputLabel>Mint</InputLabel>
                 <Select
-                  value={mintLabel}
-                  onChange={e => {
-                    const m = e.target.value;
-                    setMintLabel(m as string);
-                    if (m === 'srm') {
-                      setMint(network.srm);
-                    } else if (m === 'msrm') {
-                      setMint(network.msrm);
-                    } else if (m === 'custom') {
-                      setMint(null);
-                    }
-                  }}
-                  label="Mint"
+                  value={mint ? mint!.toString() : ''}
+                  onChange={e =>
+                    setMint(new PublicKey(e.target.value as string))
+                  }
                 >
-                  <MenuItem value="srm">SRM</MenuItem>
-                  <MenuItem value="msrm">MSRM</MenuItem>
-                  <MenuItem value="custom">Custom</MenuItem>
+                  {Object.keys(network.mints).map(m => (
+                    <MenuItem value={network.mints[m].toString()}>
+                      {m.toUpperCase()}
+                    </MenuItem>
+                  ))}
+                  {/*<MenuItem value="custom">Custom</MenuItem>*/}
                 </Select>
               </FormControl>
             </div>
-            {mintLabel === 'custom' && (
+            {false && (
               <div style={{ flex: 1, marginLeft: '10px' }}>
                 <TextField
                   fullWidth
                   label="Custom mint"
-                  value={mint !== null ? mint.toString() : ''}
+                  value={mint ? mint!.toString() : ''}
                   onChange={e => setMint(new PublicKey(e.target.value))}
                 />
                 <FormHelperText>Mint of the token to lockup</FormHelperText>
@@ -233,7 +269,7 @@ function NewVestingDialog(props: NewVestingDialogProps) {
               marginTop: '24px',
             }}
           >
-            {mintLabel === 'custom' && (
+            {false && (
               <FormHelperText style={{ color: 'blue' }}>
                 Note: Amounts for custom mints (i.e., not SRM/MSRM) are in their
                 raw, non-decimal form. Make sure to convert before entering into

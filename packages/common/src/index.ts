@@ -18,7 +18,6 @@ import BN from 'bn.js';
 
 export * from './provider';
 export * as token from './token';
-export { networks, Network } from './networks';
 export { simulateTransaction } from './simulate-transaction';
 export * as connection from './connection';
 

@@ -3,56 +3,80 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
-import * as registry from '@project-serum/registry';
-import { RewardEvent } from '@project-serum/registry/dist/accounts';
 import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
 import RewardsList, { RewardListItemViewModel } from './RewardsList';
 import DropRewardButton from './DropRewardButton';
 import ClaimRewardButton from './ClaimRewardButton';
+import { rewardEvents } from '../../utils/registry';
 
 export default function Rewards() {
   const { registryClient } = useWallet();
   const dispatch = useDispatch();
   const snack = useSnackbar();
   const ctx = useSelector((state: StoreState) => {
+    const registrar = state.accounts[state.registry.registrar.toString()];
+    const rewardEventQueue = {
+      publicKey: registrar.rewardEventQ,
+      account: state.accounts[registrar.rewardEventQ.toString()],
+    };
     return {
-      rewardEventQueue: state.registry.rewardEventQueue!,
-      member: state.registry.member.data!,
+      accounts: state.accounts,
+      rewardEventQueue,
+      member: state.registry.member
+        ? {
+            publicKey: state.registry.member,
+            account: state.accounts[state.registry.member.toString()],
+          }
+        : undefined,
       network: state.common.network,
-      vendors: state.registry.vendors,
-      poolMint: state.registry.registrar!.account.poolMint!,
-      registrar: state.registry.registrar!,
     };
   });
-  const { rewardEventQueue, network, member, vendors, registrar } = ctx;
+  const { rewardEventQueue, accounts } = ctx;
+
+  const events = rewardEvents(rewardEventQueue.account);
 
   // Load any reward vendor accounts that hasn't been loaded already.
   useEffect(() => {
-    rewardEventQueue!.account.messages().forEach(m => {
-      loadVendorIfNeeded(m, vendors, dispatch, registryClient).catch(err =>
-        snack.enqueueSnackbar(
-          `Error fetching locked reward vendor: ${err.toString()}`,
-          {
-            variant: 'error',
-          },
-        ),
-      );
+    events.forEach(m => {
+      const vendor = accounts[m.vendor.toString()];
+      if (!vendor) {
+        registryClient.account
+          .rewardVendor(m.vendor)
+          .then((account: any) => {
+            dispatch({
+              type: ActionType.AccountAdd,
+              item: {
+                account: { publicKey: m.vendor, account },
+              },
+            });
+          })
+          .catch((err: any) => {
+            console.error(err);
+            snack.enqueueSnackbar(`Error fetching reward vendor`, {
+              variant: 'error',
+            });
+          });
+      }
     });
   });
 
   // All rewards to display.
-  const rewards = rewardEventQueue!.account
-    .messages()
-    .map((m, idx) => RewardListItemViewModel.fromMessage(ctx, m, idx))
+  const rewards = events
+    .map((m: any, idx: any) => RewardListItemViewModel.fromMessage(ctx, m, idx))
     .reverse();
 
   // Next reward to claim.
-  let nextReward = rewards
-    .filter(r => r.needsClaim)
-    .sort((a, b) => (a.cursor < b.cursor ? -1 : a.cursor > b.cursor ? 1 : 0))
-    .shift();
+  let nextReward = null;
+  if (rewards.filter(r => r === null).length === 0) {
+    nextReward = rewards
+      .filter(r => r!.needsClaim)
+      .sort((a, b) =>
+        a!.cursor < b!.cursor ? -1 : a!.cursor > b!.cursor ? 1 : 0,
+      )
+      .shift();
+  }
 
   return (
     <div style={{ width: '100%', marginTop: '24px' }}>
@@ -67,57 +91,13 @@ export default function Rewards() {
           Reward History
         </Typography>
         <div style={{ display: 'flex' }}>
-          {nextReward !== undefined && (
-            <ClaimRewardButton
-              rli={nextReward}
-              member={member}
-              network={network}
-            />
-          )}
+          {nextReward && <ClaimRewardButton rli={nextReward} />}
           <DropRewardButton />
         </div>
       </div>
       <Paper>
-        <RewardsList
-          rewards={rewards}
-          network={network}
-          registrar={registrar}
-        />
+        <RewardsList rewards={rewards} />
       </Paper>
     </div>
   );
-}
-
-// Fetch the vendor account and load it into the redux store.
-async function loadVendorIfNeeded(
-  m: RewardEvent,
-  vendors: Map<string, any>,
-  dispatch: any,
-  registryClient: registry.Client,
-) {
-  if (m.lockedAlloc !== undefined) {
-    if (vendors.get(m.lockedAlloc.vendor.toString()) === undefined) {
-      const vendor = await registryClient.accounts.lockedRewardVendor(
-        m.lockedAlloc.vendor,
-      );
-      dispatch({
-        type: ActionType.RegistryCreateRewardVendor,
-        item: {
-          vendor,
-        },
-      });
-    }
-  } else if (m.unlockedAlloc !== undefined) {
-    if (vendors.get(m.unlockedAlloc.vendor.toString()) === undefined) {
-      const vendor = await registryClient.accounts.unlockedRewardVendor(
-        m.unlockedAlloc.vendor,
-      );
-      dispatch({
-        type: ActionType.RegistryCreateRewardVendor,
-        item: {
-          vendor,
-        },
-      });
-    }
-  }
 }

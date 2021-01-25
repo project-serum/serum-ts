@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ChartistGraph from 'react-chartist';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import BN from 'bn.js';
 import { useSnackbar } from 'notistack';
 import { FixedScaleAxis, IChartOptions, Interpolation } from 'chartist';
@@ -16,19 +16,23 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
-import { accounts } from '@project-serum/lockup';
-import { Network } from '@project-serum/common';
-import { PublicKey } from '@solana/web3.js';
-import { ProgramAccount } from '../../store/reducer';
+import { PublicKey, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
+import { TokenInstructions } from '@project-serum/serum';
+import { ProgramAccount, State as StoreState } from '../../store/reducer';
+import { Network } from '../../store/config';
 import { useWallet } from '../common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { withTx } from '../../components/common/Notification';
 import { ActionType } from '../../store/actions';
-import { displaySrm, displayMsrm } from '../../utils/tokens';
+import { toDisplay, toDisplayLabel } from '../../utils/tokens';
+import {
+  vestingSigner,
+  availableForWithdrawal as _availableForWithdrawal,
+} from '../../utils/lockup';
 
 type VestingAccountCardProps = {
   network: Network;
-  vesting: ProgramAccount<accounts.Vesting>;
+  vesting: ProgramAccount;
 };
 
 export default function VestingAccountCard(props: VestingAccountCardProps) {
@@ -36,23 +40,26 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { lockupClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
+  const { accounts } = useSelector((state: StoreState) => {
+    return {
+      network: state.common.network,
+      accounts: state.accounts,
+    };
+  });
 
-  const isCustomMint =
-    !vesting.account.mint.equals(network.srm) &&
-    !vesting.account.mint.equals(network.msrm);
+  // Whitelisted mints only for now.
+  const isCustomMint = false;
 
-  const displayFn = vesting.account.mint.equals(network.srm)
-    ? displaySrm
-    : vesting.account.mint.equals(network.msrm)
-    ? displayMsrm
-    : (k: BN) => k.toString();
+  let mint = accounts[vesting.account.mint.toString()];
+  const displayFn = mint
+    ? (input: BN) => {
+        return toDisplay(input, mint.decimals);
+      }
+    : (input: BN) => input.toString();
 
-  const outstandingLabel = vesting.account.mint.equals(network.srm)
-    ? `${displaySrm(vesting.account.outstanding)} SRM`
-    : vesting.account.mint.equals(network.msrm)
-    ? `${displayMsrm(vesting.account.outstanding)} MSRM`
-    : `${vesting.account.outstanding} ${vesting.account.mint.toString()}`;
-
+  const outstandingLabel = `${displayFn(
+    vesting.account.outstanding,
+  )} ${toDisplayLabel(vesting.account.mint)}`;
   const startTs = vesting.account.startTs;
   const endTs = vesting.account.endTs;
 
@@ -106,12 +113,12 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   );
 
   useEffect(() => {
-    lockupClient.accounts
-      .availableForWithdrawal(vesting.publicKey)
-      .then(amount => {
+    _availableForWithdrawal(lockupClient, vesting.publicKey)
+      .then((amount: BN) => {
         setAvailableForWithdrawal(amount);
       })
-      .catch(err => {
+      .catch((err: any) => {
+        console.error(err);
         enqueueSnackbar(
           `Error fetching available for withdrawal: ${err.toString()}`,
           {
@@ -119,7 +126,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
           },
         );
       });
-  }, [lockupClient.accounts, vesting, enqueueSnackbar]);
+  }, [lockupClient, vesting, enqueueSnackbar]);
   const snack = useSnackbar();
 
   const withdrawEnabled =
@@ -132,12 +139,20 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
       'Withdrawing locked tokens',
       'Tokens unlocked',
       async () => {
-        const { tx } = await lockupClient.withdraw({
-          amount: availableForWithdrawal!,
-          vesting: vesting.publicKey,
-          tokenAccount: withdrawalAccount!,
+        const tx = await lockupClient.rpc.withdraw(availableForWithdrawal!, {
+          accounts: {
+            vesting: vesting.publicKey,
+            beneficiary: lockupClient.provider.wallet.publicKey,
+            token: withdrawalAccount!,
+            vault: vesting.account.vault,
+            vestingSigner: (
+              await vestingSigner(lockupClient.programId, vesting.publicKey)
+            ).publicKey,
+            tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+            clock: SYSVAR_CLOCK_PUBKEY,
+          },
         });
-        const newVesting = await lockupClient.accounts.vesting(
+        const newVesting = await lockupClient.account.vesting(
           vesting.publicKey,
         );
         dispatch({

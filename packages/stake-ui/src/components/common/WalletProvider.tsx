@@ -10,9 +10,10 @@ import { Connection, ConfirmOptions } from '@solana/web3.js';
 // @ts-ignore
 import Wallet from '@project-serum/sol-wallet-adapter';
 import { Provider } from '@project-serum/common';
-import { Client as LockupClient } from '@project-serum/lockup';
-import { Client as RegistryClient } from '@project-serum/registry';
+import { Program } from '@project-serum/anchor';
 import { State as StoreState } from '../../store/reducer';
+import LockupIdl from '../../idl/lockup';
+import RegistryIdl from '../../idl/registry';
 
 export function useWallet(): WalletContextValues {
   const w = useContext(WalletContext);
@@ -26,8 +27,8 @@ const WalletContext = React.createContext<null | WalletContextValues>(null);
 
 type WalletContextValues = {
   wallet: Wallet;
-  lockupClient: LockupClient;
-  registryClient: RegistryClient;
+  lockupClient: Program;
+  registryClient: Program;
 };
 
 export default function WalletProvider(
@@ -49,20 +50,21 @@ export default function WalletProvider(
     const wallet = new Wallet(walletProvider, network.url);
     const provider = new Provider(connection, wallet, opts);
 
+    const lockupClient = new Program(
+      LockupIdl,
+      network.lockupProgramId,
+      provider,
+    );
+    const registryClient = new Program(
+      RegistryIdl,
+      network.registryProgramId,
+      provider,
+    );
+
     return {
       wallet,
-      lockupClient: new LockupClient({
-        provider,
-        programId: network.lockupProgramId,
-        safe: network.safe,
-      }),
-      registryClient: new RegistryClient({
-        provider,
-        programId: network.registryProgramId,
-        metaEntityProgramId: network.metaEntityProgramId,
-        registrar: network.registrar,
-        rewardEventQueue: network.rewardEventQueue,
-      }),
+      lockupClient,
+      registryClient,
     };
   }, [walletProvider, network]);
 

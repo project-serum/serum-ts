@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import BN from 'bn.js';
+import styled from 'styled-components';
+import LockIcon from '@material-ui/icons/Lock';
 import Container from '@material-ui/core/Container';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
@@ -14,31 +16,36 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import FormControl from '@material-ui/core/FormControl';
-import Select from '@material-ui/core/Select';
-import MenuItem from '@material-ui/core/MenuItem';
-import InputLabel from '@material-ui/core/InputLabel';
 import Slide from '@material-ui/core/Slide';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import Tabs from '@material-ui/core/Tabs';
 import Tab from '@material-ui/core/Tab';
-import { PublicKey } from '@solana/web3.js';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+import Switch from '@material-ui/core/Switch';
+import { SYSVAR_RENT_PUBKEY, PublicKey, SystemProgram } from '@solana/web3.js';
+import { TokenInstructions } from '@project-serum/serum';
 import { useWallet } from '../../components/common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { ViewTransactionOnExplorerButton } from '../../components/common/Notification';
-import { State as StoreState } from '../../store/reducer';
+import RegistrarSelect from './RegistrarSelect';
+import { State as StoreState, ProgramAccount } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
-import EntityGallery, { EntityActivityLabel } from '../nodes/EntityGallery';
+import * as bootstrap from './BootstrapProvider';
 import Me from '../Me';
+import {
+  memberSigner,
+  memberSeed,
+  createBalanceSandbox,
+} from '../../utils/registry';
+import { vestingSigner } from '../../utils/lockup';
 import Stake from '../Stake';
 import Rewards from '../rewards/Rewards';
-import Vestings from '../lockups/Vestings';
 import VestingAccountsSelect from './VestingAccountsSelect';
-import { fromDisplaySrm, fromDisplayMsrm } from '../../utils/tokens';
+import { toDisplayLabel, fromDisplay } from '../../utils/tokens';
 
 enum TabModel {
   Me,
   Stake,
-  EntityGallery,
   Rewards,
   Lockup,
 }
@@ -51,9 +58,7 @@ export default function MyNode() {
       <Container fixed maxWidth="md" style={{ flex: 1, display: 'flex' }}>
         {tab === TabModel.Me && <Me />}
         {tab === TabModel.Stake && <Stake />}
-        {tab === TabModel.EntityGallery && <EntityGallery />}
         {tab === TabModel.Rewards && <Rewards />}
-        {tab === TabModel.Lockup && <Vestings />}
       </Container>
     </div>
   );
@@ -65,27 +70,121 @@ type MyNodeBannerProps = {
 
 function MyNodeBanner(props: MyNodeBannerProps) {
   const [tab, setTab] = useState(TabModel.Me);
-  const { member, entity } = useSelector((state: StoreState) => {
-    const member = state.registry.member;
-    return {
-      registrar: state.registry.registrar,
-      member,
-      pendingWithdrawals: member.data
-        ? state.registry.pendingWithdrawals.get(
-            member.data.publicKey.toString(),
-          )
-        : [],
-      entity: state.registry.entities
-        .filter(
-          e =>
-            member.data &&
-            e.publicKey.equals(member.data!.account.member.entity),
-        )
-        .pop(),
-    };
-  });
+  const { member, registrar, registrarAccount } = useSelector(
+    (state: StoreState) => {
+      return {
+        member: state.registry.member,
+        registrar: state.registry.registrar,
+        registrarAccount: state.accounts[state.registry.registrar.toString()],
+      };
+    },
+  );
   const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showWithdrawDialog, setShowWithdrawDialog] = useState(false);
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { wallet, registryClient } = useWallet();
+  const dispatch = useDispatch();
+
+  const createStakeAccount = async () => {
+    enqueueSnackbar('Creating stake account', {
+      variant: 'info',
+    });
+    const seed = await memberSeed(registrar);
+    const member = await PublicKey.createWithSeed(
+      wallet.publicKey,
+      seed,
+      registryClient.programId,
+    );
+    const { publicKey, nonce } = await memberSigner(
+      registryClient.programId,
+      registrar,
+      member,
+    );
+    const memberSignerPublicKey = publicKey;
+
+    const [mainTx, balances] = await createBalanceSandbox(
+      registryClient.provider,
+      registrarAccount,
+      memberSignerPublicKey,
+    );
+    const [lockedTx, balancesLocked] = await createBalanceSandbox(
+      registryClient.provider,
+      registrarAccount,
+      memberSignerPublicKey,
+    );
+    const tx = registryClient.transaction.createMember(nonce, {
+      accounts: {
+        registrar: registrar,
+        member: member,
+        beneficiary: wallet.publicKey,
+        memberSigner: memberSignerPublicKey,
+        balances,
+        balancesLocked,
+        tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+      },
+      instructions: [
+        SystemProgram.createAccountWithSeed({
+          fromPubkey: wallet.publicKey,
+          newAccountPubkey: member,
+          basePubkey: wallet.publicKey,
+          seed,
+          lamports: await registryClient.provider.connection.getMinimumBalanceForRentExemption(
+            registryClient.account.member.size,
+          ),
+          space: registryClient.account.member.size,
+          programId: registryClient.programId,
+        }),
+      ],
+    });
+    const signers: Account[] = [];
+    const allTxs = [mainTx, lockedTx, { tx, signers }];
+    // @ts-ignore
+    let txSigs = await registryClient.provider.sendAll(allTxs);
+    console.log('Accounts created with transactions:', txSigs);
+
+    const memberAccount = await registryClient.account.member(member);
+    const memberProgramAccount = {
+      publicKey: member,
+      account: memberAccount,
+    };
+    // Add the new member to the store.
+    dispatch({
+      type: ActionType.AccountAdd,
+      item: {
+        account: memberProgramAccount,
+      },
+    });
+
+    // Populate the store with all of the member's accounts.
+    await bootstrap.fetchAndDispatchMemberAccounts(
+      memberProgramAccount,
+      dispatch,
+      registryClient.provider.connection,
+    );
+
+    // Subscribe to any updates to the member.
+    bootstrap.subscribeMember(memberProgramAccount, registryClient, dispatch);
+
+    // Tell the UI that our member is ready.
+    dispatch({
+      type: ActionType.RegistrySetMember,
+      item: {
+        member,
+      },
+    });
+
+    closeSnackbar();
+    enqueueSnackbar(`Stake account created ${member.toString()}`, {
+      variant: 'success',
+    });
+  };
+
+  const HoverSpan = styled.span`
+    :hover {
+      cursor: pointer;
+    }
+  `;
 
   return (
     <>
@@ -109,24 +208,18 @@ function MyNodeBanner(props: MyNodeBannerProps) {
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
             <div>
               <Typography variant="h4" style={{ marginBottom: '10px' }}>
-                My Node
+                My Stake
               </Typography>
             </div>
-            {entity && (
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                }}
-              >
-                <EntityActivityLabel
-                  noBubble={true}
-                  textStyle={{ fontSize: '16px' }}
-                  entity={entity}
-                />
-              </div>
-            )}
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'column',
+              }}
+            >
+              <RegistrarSelect />
+            </div>
           </div>
           <div
             style={{
@@ -136,15 +229,40 @@ function MyNodeBanner(props: MyNodeBannerProps) {
           >
             <div>
               <Typography>
-                {member.data !== undefined
-                  ? member.data.account.member.entity.toString()
-                  : 'Account not found. Please create a stake account.'}
+                {member !== undefined ? (
+                  member.toString()
+                ) : (
+                  <>
+                    Account not found. Please{' '}
+                    <HoverSpan
+                      onClick={() => {
+                        createStakeAccount().catch(err => {
+                          console.error(err);
+                          enqueueSnackbar(
+                            `Error creating stake account: ${err.toString()}`,
+                            {
+                              variant: 'error',
+                            },
+                          );
+                        });
+                      }}
+                      style={{
+                        color: 'black',
+                        fontWeight: 'bold',
+                        textDecoration: 'underline',
+                      }}
+                    >
+                      create
+                    </HoverSpan>
+                    {' '}a stake account.
+                  </>
+                )}
               </Typography>
             </div>
             <div>
               <div>
                 <Button
-                  disabled={member.data === undefined}
+                  disabled={member === undefined}
                   onClick={() => setShowDepositDialog(true)}
                   variant="outlined"
                   color="primary"
@@ -156,7 +274,7 @@ function MyNodeBanner(props: MyNodeBannerProps) {
                   </Typography>
                 </Button>
                 <Button
-                  disabled={member.data === undefined}
+                  disabled={member === undefined}
                   variant="outlined"
                   color="primary"
                   onClick={() => setShowWithdrawDialog(true)}
@@ -189,9 +307,7 @@ function MyNodeBanner(props: MyNodeBannerProps) {
           >
             <Tab value={TabModel.Me} label="Me" />
             <Tab value={TabModel.Stake} label="Stake" />
-            <Tab value={TabModel.EntityGallery} label="Nodes" />
             <Tab value={TabModel.Rewards} label="Rewards" />
-            <Tab value={TabModel.Lockup} label="Lockups" />
           </Tabs>
         </div>
       </div>
@@ -216,103 +332,146 @@ type DepositDialogProps = {
   onClose: () => void;
 };
 
-type Coin = 'srm' | 'lsrm' | 'msrm' | 'lmsrm';
-
 function DepositDialog(props: DepositDialogProps) {
   const { open, onClose } = props;
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const { registryClient, lockupClient } = useWallet();
   const dispatch = useDispatch();
-  const { safe, registrar, member } = useSelector((state: StoreState) => {
+  const {
+    registrar,
+    member,
+    memberAccount,
+    mintAccount,
+    accounts,
+  } = useSelector((state: StoreState) => {
+    let memberAccount = undefined;
+    if (state.registry.member) {
+      memberAccount = state.accounts[state.registry.member.toString()];
+    }
+    const registrarAccount =
+      state.accounts[state.registry.registrar.toString()];
+    const registrar: ProgramAccount = {
+      publicKey: state.registry.registrar,
+      account: registrarAccount,
+    };
     return {
-      registrar: state.registry.registrar!,
-      safe: state.lockup.safe!,
-      member: state.registry.member!,
+      registrar,
+      memberAccount,
+      member: state.registry.member,
+      mintAccount: state.accounts[registrar.account.mint.toString()],
+      accounts: state.accounts,
     };
   });
   return (
     <TransferDialog
       deposit={true}
       title={'Deposit'}
-      contextText={'Select the amount and coin you want to deposit'}
+      contextText={'Select the amount to deposit'}
       open={open}
       onClose={onClose}
       onTransfer={async (
         from: PublicKey,
         displayAmount: number,
-        coin: Coin,
         isLocked: boolean,
       ) => {
-        const amount =
-          coin === 'srm' || coin === 'lsrm'
-            ? fromDisplaySrm(displayAmount)
-            : fromDisplayMsrm(displayAmount);
+        const amount = fromDisplay(displayAmount, mintAccount.decimals);
         enqueueSnackbar(
-          `Depositing ${amount} ${coin} from ${from.toString()}`,
+          `Depositing ${amount} ${toDisplayLabel(
+            registrar.account.mint,
+          )} from ${from.toString()}`,
           {
             variant: 'info',
           },
         );
         const tx = await (async () => {
-          let vault =
-            coin === 'srm' || coin === 'lsrm'
-              ? member.data!.account.member.balances[isLocked ? 1 : 0].vault
-              : member.data!.account.member.balances[isLocked ? 1 : 0]
-                  .vaultMega;
           if (isLocked) {
-            const { tx } = await registryClient.depositLocked({
-              amount: new BN(amount),
-              vesting: from,
-              safe: safe.account,
-              lockupClient,
-              registrar: registrar.account,
-              entity: member.data!.account.member.entity,
-              member: member.data!.publicKey,
-              vault,
+            const relayData = registryClient.coder.instruction.encode({
+              depositLocked: {
+                amount,
+              },
             });
-            const vesting = await lockupClient.accounts.vesting(from);
+            const vesting = accounts[from.toString()];
+            const _memberSigner = (
+              await memberSigner(
+                registryClient.programId,
+                registrar.publicKey,
+                member!,
+              )
+            ).publicKey;
+            const _vestingSigner = (
+              await vestingSigner(lockupClient.programId, from)
+            ).publicKey;
+            const relayAccounts = [
+              {
+                pubkey: await registryClient.state.address(),
+                isWritable: false,
+                isSigner: false,
+              },
+              {
+                pubkey: registrar.publicKey,
+                isWritable: false,
+                isSigner: false,
+              },
+              { pubkey: member!, isWritable: false, isSigner: false },
+              {
+                pubkey: registryClient.provider.wallet.publicKey,
+                isWritable: false,
+                isSigner: true,
+              },
+            ];
+            const tx = await lockupClient.rpc.whitelistWithdraw(
+              relayData,
+              amount,
+              {
+                accounts: {
+                  transfer: {
+                    lockup: await lockupClient.state.address(),
+                    beneficiary: registryClient.provider.wallet.publicKey,
+                    whitelistedProgram: registryClient.programId,
+                    vesting: from,
+                    vault: vesting.vault,
+                    vestingSigner: _vestingSigner,
+                    tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+                    whitelistedProgramVault: memberAccount.balancesLocked.vault,
+                    whitelistedProgramVaultAuthority: _memberSigner,
+                  },
+                },
+                remainingAccounts: relayAccounts,
+              },
+            );
+
+            // Update the store with the updated account.
+            const updatedVestingAccount = await lockupClient.account.vesting(
+              from,
+            );
             dispatch({
               type: ActionType.LockupUpdateVesting,
               item: {
                 vesting: {
                   publicKey: from,
-                  account: vesting,
+                  account: updatedVestingAccount,
                 },
               },
             });
+
             return tx;
           } else {
-            const { tx } = await registryClient.deposit({
-              member: member.data!.publicKey,
-              depositor: from,
-              amount: new BN(amount),
-              entity: member.data!.account.member.entity,
-              vault,
-              vaultOwner: await registryClient.accounts.vaultAuthority(
-                registryClient.programId,
-                registryClient.registrar,
-                registrar.account,
-              ),
+            return await registryClient.rpc.deposit(amount, {
+              accounts: {
+                depositor: from,
+                depositorAuthority: registryClient.provider.wallet.publicKey,
+                tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+                vault: memberAccount.balances.vault,
+                beneficiary: registryClient.provider.wallet.publicKey,
+                member: member,
+              },
             });
-            return tx;
           }
         })();
-        const newEntity = await registryClient.accounts.entity(
-          member.data!.account.member.entity,
-        );
-        dispatch({
-          type: ActionType.RegistryUpdateEntity,
-          item: {
-            entity: {
-              publicKey: member.data!.account.member.entity,
-              account: newEntity,
-            },
-          },
-        });
         closeSnackbar();
         enqueueSnackbar(`Deposit complete`, {
           variant: 'success',
-          action: <ViewTransactionOnExplorerButton signature={tx} />,
+          action: <ViewTransactionOnExplorerButton signature={tx as string} />,
         });
         onClose();
       }}
@@ -327,92 +486,133 @@ function WithdrawDialog(props: WithdrawDialogProps) {
   const { registryClient, lockupClient } = useWallet();
   const { enqueueSnackbar, closeSnackbar } = useSnackbar();
   const dispatch = useDispatch();
-  const { safe, registrar, member } = useSelector((state: StoreState) => {
+  const {
+    registrar,
+    registrarAccount,
+    member,
+    memberAccount,
+    mintAccount,
+    accounts,
+  } = useSelector((state: StoreState) => {
+    let memberAccount = undefined;
+    if (state.registry.member) {
+      memberAccount = state.accounts[state.registry.member.toString()];
+    }
+    const registrarAccount =
+      state.accounts[state.registry.registrar.toString()];
     return {
-      registrar: state.registry.registrar!,
-      safe: state.lockup.safe!,
-      member: state.registry.member!,
+      registrar: state.registry.registrar,
+      registrarAccount,
+      member: state.registry.member,
+      memberAccount,
+      mintAccount: state.accounts[registrarAccount.mint.toString()],
+      accounts: state.accounts,
     };
   });
   return (
     <TransferDialog
       title={'Withdraw'}
-      contextText={'Select the amount and coin you want to withdraw'}
+      contextText={'Select the amount to withdraw'}
       open={open}
       onClose={onClose}
       onTransfer={async (
         from: PublicKey,
         displayAmount: number,
-        coin: Coin,
         isLocked: boolean,
       ) => {
-        const amount =
-          coin === 'srm' || coin === 'lsrm'
-            ? fromDisplaySrm(displayAmount)
-            : fromDisplayMsrm(displayAmount);
-        enqueueSnackbar(`Withdrawing ${amount} ${coin} to ${from.toString()}`, {
-          variant: 'info',
-        });
+        const amount = fromDisplay(displayAmount, mintAccount.decimals);
+        enqueueSnackbar(
+          `Withdrawing ${amount} ${toDisplayLabel(
+            registrarAccount.mint,
+          )} to ${from.toString()}`,
+          {
+            variant: 'info',
+          },
+        );
         const tx = await (async () => {
-          let vault =
-            coin === 'srm' || coin === 'lsrm'
-              ? member.data!.account.member.balances[isLocked ? 1 : 0].vault
-              : member.data!.account.member.balances[isLocked ? 1 : 0]
-                  .vaultMega;
+          const _memberSigner = await memberSigner(
+            registryClient.programId,
+            registrar,
+            member!,
+          );
           if (isLocked) {
-            const { tx } = await registryClient.withdrawLocked({
-              amount: new BN(amount),
-              vesting: from,
-              safe: safe.account,
-              lockupClient,
-              registrar: registrar.account,
-              entity: member.data!.account.member.entity,
-              member: member.data!.publicKey,
-              vault,
+            const relayData = registryClient.coder.instruction.encode({
+              withdrawLocked: {
+                amount,
+              },
             });
-            const vesting = await lockupClient.accounts.vesting(from);
+            const vesting = accounts[from.toString()];
+            const _memberSigner = (
+              await memberSigner(registryClient.programId, registrar, member!)
+            ).publicKey;
+            const _vestingSigner = (
+              await vestingSigner(lockupClient.programId, from)
+            ).publicKey;
+            const relayAccounts = [
+              {
+                pubkey: await registryClient.state.address(),
+                isWritable: false,
+                isSigner: false,
+              },
+              { pubkey: registrar, isWritable: false, isSigner: false },
+              { pubkey: member!, isWritable: false, isSigner: false },
+              {
+                pubkey: registryClient.provider.wallet.publicKey,
+                isWritable: false,
+                isSigner: true,
+              },
+            ];
+            const tx = await lockupClient.rpc.whitelistDeposit(relayData, {
+              accounts: {
+                transfer: {
+                  lockup: await lockupClient.state.address(),
+                  beneficiary: registryClient.provider.wallet.publicKey,
+                  whitelistedProgram: registryClient.programId,
+                  vesting: from,
+                  vault: vesting.vault,
+                  vestingSigner: _vestingSigner,
+                  tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+                  whitelistedProgramVault: memberAccount.balancesLocked.vault,
+                  whitelistedProgramVaultAuthority: _memberSigner,
+                },
+              },
+              remainingAccounts: relayAccounts,
+            });
+
+            // Update the store with the updated account.
+            const updatedVestingAccount = await lockupClient.account.vesting(
+              from,
+            );
             dispatch({
               type: ActionType.LockupUpdateVesting,
               item: {
                 vesting: {
                   publicKey: from,
-                  account: vesting,
+                  account: updatedVestingAccount,
                 },
               },
             });
+
             return tx;
           } else {
-            const { tx } = await registryClient.withdraw({
-              member: member.data!.publicKey,
-              depositor: from,
-              amount: new BN(amount),
-              entity: member.data!.account.member.entity,
-              vault,
-              vaultOwner: await registryClient.accounts.vaultAuthority(
-                registryClient.programId,
-                registryClient.registrar,
-                registrar.account,
-              ),
+            return await registryClient.rpc.withdraw(amount, {
+              accounts: {
+                registrar,
+                member,
+                beneficiary: registryClient.provider.wallet.publicKey,
+                vault: memberAccount.balances.vault,
+                memberSigner: _memberSigner.publicKey,
+                depositor: from,
+                tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
+              },
             });
-            return tx;
           }
         })();
-        const newEntity = await registryClient.accounts.entity(
-          member.data!.account.member.entity,
-        );
-        dispatch({
-          type: ActionType.RegistryUpdateEntity,
-          item: {
-            entity: {
-              publicKey: member.data!.account.member.entity,
-              account: newEntity,
-            },
-          },
-        });
+
         closeSnackbar();
         enqueueSnackbar(`Withdraw complete`, {
           variant: 'success',
-          action: <ViewTransactionOnExplorerButton signature={tx} />,
+          action: <ViewTransactionOnExplorerButton signature={tx as string} />,
         });
         onClose();
       }}
@@ -429,37 +629,29 @@ type TransferDialogProps = {
   onTransfer: (
     from: PublicKey,
     amount: number,
-    coin: Coin,
     isLocked: boolean,
   ) => Promise<void>;
 };
 
 function TransferDialog(props: TransferDialogProps) {
-  const { srmMint, msrmMint } = useSelector((state: StoreState) => {
-    const network = state.common.network;
+  const { mint, mintAccount } = useSelector((state: StoreState) => {
+    const registrar = state.accounts[state.registry.registrar.toString()];
+    const mint = registrar ? registrar.mint : undefined;
     return {
-      srmMint: network.srm,
-      msrmMint: network.msrm,
-      member: state.registry.member,
+      mint,
+      mintAccount: state.accounts[registrar.mint.toString()],
     };
   });
   const { enqueueSnackbar } = useSnackbar();
   const { open, onClose, onTransfer, title, contextText, deposit } = props;
   const [displayAmount, setDisplayAmount] = useState<null | number>(null);
-  const [coin, setCoin] = useState<null | Coin>(null);
   const [from, setFrom] = useState<null | PublicKey>(null);
   const [vesting, setVesting] = useState<null | PublicKey>(null);
   const [maxDisplayAmount, setMaxDisplayAmount] = useState<null | number>(null);
-  const mint = !coin
-    ? undefined
-    : coin === 'srm' || coin === 'lsrm'
-    ? srmMint
-    : msrmMint;
-  const isLocked = coin === 'lsrm' || coin === 'lmsrm';
+  const [isLocked, setIsLocked] = useState(false);
   const submitBtnDisabled =
     (isLocked ? !vesting : !from) ||
     !displayAmount ||
-    !coin ||
     !maxDisplayAmount ||
     displayAmount > maxDisplayAmount;
 
@@ -472,7 +664,30 @@ function TransferDialog(props: TransferDialogProps) {
         onClose={onClose}
         fullWidth
       >
-        <DialogTitle>{title}</DialogTitle>
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <DialogTitle>{title}</DialogTitle>
+          <div style={{ display: 'flex', paddingRight: '24px' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'center',
+                flexDirection: 'column',
+              }}
+            >
+              <LockIcon />
+            </div>
+            <FormControlLabel
+              style={{ marginLeft: '0px', marginRight: '0px' }}
+              control={
+                <Switch
+                  checked={isLocked}
+                  onChange={() => setIsLocked(!isLocked)}
+                />
+              }
+              label=""
+            />
+          </div>
+        </div>
         <DialogContent>
           <div style={{ display: 'flex' }}>
             <div style={{ flex: 1 }}>
@@ -493,24 +708,6 @@ function TransferDialog(props: TransferDialogProps) {
                 }}
               />
               <FormHelperText>{contextText}</FormHelperText>
-            </div>
-            <div>
-              <FormControl
-                variant="outlined"
-                style={{ minWidth: '100px', marginLeft: '10px' }}
-              >
-                <InputLabel>Coin</InputLabel>
-                <Select
-                  value={coin}
-                  onChange={e => setCoin(e.target.value as Coin)}
-                  label="Coin"
-                >
-                  <MenuItem value="srm">SRM</MenuItem>
-                  <MenuItem value="msrm">MSRM</MenuItem>
-                  <MenuItem value="lsrm">Locked SRM</MenuItem>
-                  <MenuItem value="lmsrm">Locked MSRM</MenuItem>
-                </Select>
-              </FormControl>
             </div>
           </div>
           <FormControl fullWidth>
@@ -539,7 +736,7 @@ function TransferDialog(props: TransferDialogProps) {
                 <VestingAccountsSelect
                   variant="outlined"
                   mint={mint}
-                  decimals={!mint ? undefined : mint.equals(srmMint) ? 6 : 0}
+                  decimals={mintAccount.decimals}
                   deposit={deposit}
                   onChange={(v: PublicKey, maxDisplayAmount: BN) => {
                     setVesting(v);
@@ -547,7 +744,8 @@ function TransferDialog(props: TransferDialogProps) {
                   }}
                 />
                 <FormHelperText>
-                  Vesting account to transfer to/from
+                  Vesting account to transfer to/from your <b>locked</b>{' '}
+                  balances
                 </FormHelperText>
               </>
             )}
@@ -563,9 +761,9 @@ function TransferDialog(props: TransferDialogProps) {
               onTransfer(
                 isLocked ? vesting! : from!,
                 displayAmount!,
-                coin!,
                 isLocked,
               ).catch(err => {
+                console.error(err);
                 enqueueSnackbar(`Error transferring funds: ${err.toString()}`, {
                   variant: 'error',
                 });

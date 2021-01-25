@@ -18,24 +18,18 @@ export enum ActionType {
   CommonWalletReset,
 
   // Lockup.
-  LockupSetSafe,
   LockupSetVestings,
   LockupUpdateVesting,
   LockupCreateVesting,
 
   // Registry.
-  RegistryCreateEntity,
-  RegistrySetEntities,
-  RegistryUpdateEntity,
   RegistrySetMember,
-  RegistrySetMetadata,
-  RegistrySetRewardEventQueue,
-  RegistryCreateMetadata,
-  RegistrySetPoolMint,
-  RegistrySetPoolMintMega,
   RegistrySetRegistrar,
   RegistrySetPendingWithdrawals,
   RegistryCreatePendingWithdrawal,
   RegistryUpdatePendingWithdrawal,
-  RegistryCreateRewardVendor,
+
+  // Accounts.
+  AccountAdd,
+  AccountUpdate,
 }
