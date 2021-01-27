@@ -29,6 +29,7 @@ export const SPL_SHARED_MEMORY_ID = new PublicKey(
 export async function createMint(
   provider: Provider,
   authority?: PublicKey,
+  decimals?: number,
 ): Promise<PublicKey> {
   if (authority === undefined) {
     authority = provider.wallet.publicKey;
@@ -38,6 +39,7 @@ export async function createMint(
     provider,
     authority,
     mint.publicKey,
+    decimals,
   );
 
   const tx = new Transaction();
@@ -52,6 +54,7 @@ export async function createMintInstructions(
   provider: Provider,
   authority: PublicKey,
   mint: PublicKey,
+  decimals?: number,
 ): Promise<TransactionInstruction[]> {
   let instructions = [
     SystemProgram.createAccount({
@@ -63,7 +66,7 @@ export async function createMintInstructions(
     }),
     TokenInstructions.initializeMint({
       mint,
-      decimals: 0,
+      decimals: decimals ?? 0,
       mintAuthority: authority,
     }),
   ];
@@ -74,6 +77,7 @@ export async function createMintAndVault(
   provider: Provider,
   amount: BN,
   owner?: PublicKey,
+  decimals?: number,
 ): Promise<[PublicKey, PublicKey]> {
   if (owner === undefined) {
     owner = provider.wallet.publicKey;
@@ -91,7 +95,7 @@ export async function createMintAndVault(
     }),
     TokenInstructions.initializeMint({
       mint: mint.publicKey,
-      decimals: 0,
+      decimals: decimals ?? 0,
       mintAuthority: provider.wallet.publicKey,
     }),
     SystemProgram.createAccount({
