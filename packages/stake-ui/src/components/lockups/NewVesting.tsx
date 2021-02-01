@@ -160,18 +160,21 @@ function NewVestingDialog(props: NewVestingDialogProps) {
           ],
         },
       );
-      const vestingAccount = await lockupClient.account.vesting(
-        vesting.publicKey,
-      );
-      dispatch({
-        type: ActionType.LockupCreateVesting,
-        item: {
-          vesting: {
-            publicKey: vesting.publicKey,
-            account: vestingAccount,
+      // Only add to the local store if the lockup belongs to the current user.
+      if (beneficiaryPublicKey.equals(lockupClient.provider.wallet.publicKey)) {
+        const vestingAccount = await lockupClient.account.vesting(
+          vesting.publicKey,
+        );
+        dispatch({
+          type: ActionType.LockupCreateVesting,
+          item: {
+            vesting: {
+              publicKey: vesting.publicKey,
+              account: vestingAccount,
+            },
           },
-        },
-      });
+        });
+      }
       enqueueSnackbar(`Vesting account created`, {
         variant: 'success',
         action: <ViewTransactionOnExplorerButton signature={tx} />,

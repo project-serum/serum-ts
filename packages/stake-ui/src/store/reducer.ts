@@ -162,7 +162,7 @@ export const initialState: State = {
     walletProvider: 'https://www.sollet.io',
     bootstrapState: BootstrapState.NeedsBootstrap,
     //network: networks.localhost,
-    network: networks.devnet,
+    network: networks.mainnet,
     ownedTokenAccounts: [],
   },
   lockup: {
@@ -170,7 +170,7 @@ export const initialState: State = {
   },
   registry: {
     pendingWithdrawals: null,
-    registrar: networks.devnet.registrars.token1,
+    registrar: networks.mainnet.registrars.srm,
     //registrar: networks.localhost.registrars.token1,
   },
   accounts: {},

@@ -253,8 +253,8 @@ function MyNodeBanner(props: MyNodeBannerProps) {
                       }}
                     >
                       create
-                    </HoverSpan>
-                    {' '}a stake account.
+                    </HoverSpan>{' '}
+                    a stake account.
                   </>
                 )}
               </Typography>
