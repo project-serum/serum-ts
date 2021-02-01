@@ -634,5 +634,17 @@
         "address": "8EuuEwULFM7n7zthPjC7kA64LPRzYkpAyuLFiLuVg7D4",
         "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
         "deprecated": false
+    },
+    {
+        "name": "MAPS/USDT",
+        "address": "8grUs4WZoTs4KJ8LfRNUBs6SNkMTp5BnVRzJgQ2ranDT",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
+    },
+    {
+        "name": "MAPS/USDC",
+        "address": "BqjGW7ousAizgs8VrHo5SR1LxTksAQPtb8cKZZiNvX5D",
+        "programId": "EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o",
+        "deprecated": false
     }
 ]

@@ -177,5 +177,10 @@
     "mintAddress": "kinXdEcpDQeHPEuQnqmUgtYykqKGVFq6CeVX5iAHJq6",
     "tokenName": "KIN",
     "icon": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/kin/info/logo.png"
+  },
+  {
+    "tokenSymbol": "MAPS",
+    "mintAddress": "MAPS41MDahZ9QdKXhVa4dWB9RuyfV4XqhyAZ8XcYepb",
+    "tokenName": "MAPS"
   }
 ]
