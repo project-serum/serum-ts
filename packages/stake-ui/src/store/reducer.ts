@@ -56,11 +56,12 @@ export default function reducer(
       newState.common.shutdownTrigger = true;
       return newState;
     case ActionType.CommonDidShutdown:
-      // Reset everything except network.
+      // Reset everything except network and registrar.
       let s = {
         ...initialState,
       };
       s.common.network = newState.common.network;
+      s.registry.registrar = newState.registry.registrar;
       return s;
     case ActionType.CommonOwnedTokenAccountsSet:
       newState.common.ownedTokenAccounts = action.item.ownedTokenAccounts;
