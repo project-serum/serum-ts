@@ -30,6 +30,7 @@ import OwnedTokenAccountsSelect from '../common/OwnedTokenAccountsSelect';
 import * as notification from '../common/Notification';
 import { fromDisplay } from '../../utils/tokens';
 import { Network } from '../../store/config';
+import { activeRegistrar } from '../common/RegistrarSelect';
 
 export default function DropRewardButton() {
   const [showDialog, setShowDialog] = useState(false);
@@ -60,7 +61,11 @@ type DropRewardsDialogProps = {
 
 function DropRewardDialog(props: DropRewardsDialogProps) {
   const { open, onClose } = props;
-
+  const { selectedRegistrar } = useSelector((state: StoreState) => {
+    return {
+      selectedRegistrar: activeRegistrar(state),
+    };
+  });
   const [rewardTypeTab, setRewardTypeTab] = useState(
     RewardTypeViewModel.Unlocked,
   );
@@ -70,7 +75,7 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
       <DialogTitle>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <Typography variant="h4" component="h2">
-            {'Drop Rewards'}
+            {`Drop Rewards on ${selectedRegistrar.label.toUpperCase()} Stakers`}
           </Typography>
         </div>
       </DialogTitle>

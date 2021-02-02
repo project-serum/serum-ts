@@ -2581,15 +2581,6 @@
     find "^0.3.0"
     react-refresh "^0.9.0"
 
-"@project-serum/common@^0.0.1-beta.2":
-  version "0.0.1-beta.2"
-  resolved "https://registry.yarnpkg.com/@project-serum/common/-/common-0.0.1-beta.2.tgz#e94a13e1ee7db4fe0b44d1a7098e146d1e095bad"
-  integrity sha512-eBI9JkABQz0kLff6/bMfnRYEwSe+beSdiKkxmsZVnJ9z1ykIPp2KVtomu4t4O37FSWSkk6hBCANiXxx/ecsMRA==
-  dependencies:
-    "@project-serum/serum" "^0.13.20"
-    bn.js "^5.1.2"
-    superstruct "0.8.3"
-
 "@project-serum/lockup@^0.0.1-beta.0":
   version "0.0.1-beta.2"
   resolved "https://registry.yarnpkg.com/@project-serum/lockup/-/lockup-0.0.1-beta.2.tgz#4b30ddaab7451e8271d51a75f4f11ddaaaafafc0"
@@ -2598,15 +2589,6 @@
     "@project-serum/borsh" "^0.0.1-beta.0"
     "@project-serum/common" "^0.0.1-beta.2"
     "@solana/spl-token" "0.0.11"
-    bn.js "^5.1.2"
-    buffer-layout "^1.2.0"
-
-"@project-serum/serum@^0.13.20":
-  version "0.13.20"
-  resolved "https://registry.yarnpkg.com/@project-serum/serum/-/serum-0.13.20.tgz#a3f6d8637198a7ba758207b9b802af49f6c47175"
-  integrity sha512-jSuWgK11FLgRV6VCWfsxiWxexJLEI2f57mR55e+PX53gnZHeXiIF61+M0Kr4XH2yHg5ZzpSHmVrSAO4lw2hygw==
-  dependencies:
-    "@solana/web3.js" "0.86.1"
     bn.js "^5.1.2"
     buffer-layout "^1.2.0"
 
