@@ -12,8 +12,15 @@ export function getLayoutVersion(programId: PublicKey) {
     )
   ) {
     return 1;
+  } else if (
+    programId.equals(
+      new PublicKey('EUqojwWA2rd19FZrzeBncJsm38Jm1hEhE3zsmX3bRc2o'),
+    )
+  ) {
+    return 2;
+  } else {
+    return 3;
   }
-  return 2;
 }
 
 export const TOKEN_MINTS: Array<{

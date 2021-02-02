@@ -393,6 +393,10 @@ export class Market {
     return getLayoutVersion(this._programId) > 1;
   }
 
+  get usesRequestQueue() {
+    return getLayoutVersion(this._programId) <= 2;
+  }
+
   async findFeeDiscountKeys(
     connection: Connection,
     ownerAddress: PublicKey,
@@ -533,15 +537,19 @@ export class Market {
     let useFeeDiscountPubkey: PublicKey | null;
     if (feeDiscountPubkey) {
       useFeeDiscountPubkey = feeDiscountPubkey;
-    } else if (feeDiscountPubkey === undefined && this.supportsSrmFeeDiscounts) {
-      useFeeDiscountPubkey =  (await this.findBestFeeDiscountKey(
+    } else if (
+      feeDiscountPubkey === undefined &&
+      this.supportsSrmFeeDiscounts
+    ) {
+      useFeeDiscountPubkey = (
+        await this.findBestFeeDiscountKey(
           connection,
           ownerAddress,
           feeDiscountPubkeyCacheDurationMs,
         )
-      ).pubkey
+      ).pubkey;
     } else {
-      useFeeDiscountPubkey = null
+      useFeeDiscountPubkey = null;
     }
 
     let openOrdersAddress;
@@ -659,22 +667,46 @@ export class Market {
     if (!this.supportsSrmFeeDiscounts) {
       feeDiscountPubkey = null;
     }
-    return DexInstructions.newOrder({
-      market: this.address,
-      requestQueue: this._decoded.requestQueue,
-      baseVault: this._decoded.baseVault,
-      quoteVault: this._decoded.quoteVault,
-      openOrders: openOrdersAddressKey,
-      owner: ownerAddress,
-      payer,
-      side,
-      limitPrice: this.priceNumberToLots(price),
-      maxQuantity: this.baseSizeNumberToLots(size),
-      orderType,
-      clientId,
-      programId: this._programId,
-      feeDiscountPubkey,
-    });
+    if (this.usesRequestQueue) {
+      return DexInstructions.newOrder({
+        market: this.address,
+        requestQueue: this._decoded.requestQueue,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        openOrders: openOrdersAddressKey,
+        owner: ownerAddress,
+        payer,
+        side,
+        limitPrice: this.priceNumberToLots(price),
+        maxQuantity: this.baseSizeNumberToLots(size),
+        orderType,
+        clientId,
+        programId: this._programId,
+        feeDiscountPubkey,
+      });
+    } else {
+      return DexInstructions.newOrderV3({
+        market: this.address,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        requestQueue: this._decoded.requestQueue,
+        eventQueue: this._decoded.eventQueue,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        openOrders: openOrdersAddressKey,
+        owner: ownerAddress,
+        payer,
+        side,
+        limitPrice: this.priceNumberToLots(price),
+        maxBaseQuantity: this.baseSizeNumberToLots(size),
+        maxQuoteQuantity: this.baseSizeNumberToLots(size * price),
+        orderType,
+        clientId,
+        programId: this._programId,
+        selfTradeBehavior: 'decrementTake',
+        feeDiscountPubkey,
+      });
+    }
   }
 
   private async _sendTransaction(
@@ -717,16 +749,31 @@ export class Market {
     clientId: BN,
   ) {
     const transaction = new Transaction();
-    transaction.add(
-      DexInstructions.cancelOrderByClientId({
-        market: this.address,
-        owner,
-        openOrders,
-        requestQueue: this._decoded.requestQueue,
-        clientId,
-        programId: this._programId,
-      }),
-    );
+    if (this.usesRequestQueue) {
+      transaction.add(
+        DexInstructions.cancelOrderByClientId({
+          market: this.address,
+          owner,
+          openOrders,
+          requestQueue: this._decoded.requestQueue,
+          clientId,
+          programId: this._programId,
+        }),
+      );
+    } else {
+      transaction.add(
+        DexInstructions.cancelOrderByClientIdV2({
+          market: this.address,
+          owner,
+          openOrders,
+          bids: this._decoded.bids,
+          asks: this._decoded.asks,
+          eventQueue: this._decoded.eventQueue,
+          clientId,
+          programId: this._programId,
+        }),
+      );
+    }
     return transaction;
   }
 
@@ -754,16 +801,31 @@ export class Market {
     owner: PublicKey,
     order: Order,
   ) {
-    return DexInstructions.cancelOrder({
-      market: this.address,
-      owner,
-      openOrders: order.openOrdersAddress,
-      requestQueue: this._decoded.requestQueue,
-      side: order.side,
-      orderId: order.orderId,
-      openOrdersSlot: order.openOrdersSlot,
-      programId: this._programId,
-    });
+    if (this.usesRequestQueue) {
+      return DexInstructions.cancelOrder({
+        market: this.address,
+        owner,
+        openOrders: order.openOrdersAddress,
+        requestQueue: this._decoded.requestQueue,
+        side: order.side,
+        orderId: order.orderId,
+        openOrdersSlot: order.openOrdersSlot,
+        programId: this._programId,
+      });
+    } else {
+      return DexInstructions.cancelOrderV2({
+        market: this.address,
+        owner,
+        openOrders: order.openOrdersAddress,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        eventQueue: this._decoded.eventQueue,
+        side: order.side,
+        orderId: order.orderId,
+        openOrdersSlot: order.openOrdersSlot,
+        programId: this._programId,
+      });
+    }
   }
 
   async settleFunds(
