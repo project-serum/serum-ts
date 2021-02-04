@@ -1,13 +1,17 @@
 import { Numberu64 } from '@solana/spl-token-swap';
 import { PublicKey, Account, TransactionInstruction } from '@solana/web3.js';
-import { Layout, struct, Structure, u8, nu64, blob } from 'buffer-layout';
+import { Layout, struct, Structure, u8, nu64, blob, union } from 'buffer-layout';
 import { AccountInfo, AccountLayout, MintInfo, u64 } from '@solana/spl-token';
 import BN from 'bn.js';
 
 export { TokenSwap } from '@solana/spl-token-swap';
 
-export const PROGRAM_ID = new PublicKey(
+export const PROGRAM_ID_V1 = new PublicKey(
   '9qvG1zUp8xF1Bi4m6UdRNby1BAAuaDrUxSpv4CmRRMjL',
+);
+
+export const PROGRAM_ID = new PublicKey(
+  'SwaPpA9LAaLfeLi3a68M4DjnLqgtticKg6CnyNwgAC8',
 );
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
@@ -25,7 +29,7 @@ export const SWAP_PROGRAM_OWNER_FEE_ADDRESS = new PublicKey(
 export const DEFAULT_LIQUIDITY_TOKEN_PRECISION = 8;
 
 export function getProgramVersion(programId: PublicKey): number {
-  return 1;
+  return PROGRAM_ID.equals(programId) ? 2 : 1;
 }
 
 /**
@@ -54,7 +58,7 @@ export const TokenSwapLayoutLegacyV0 = struct([
 ]);
 
 // TODO: add a proper <T> parameter to `TokenSwapLayout`.
-export const TokenSwapLayout: Structure = struct([
+export const TokenSwapLayoutV1: Structure = struct([
   u8('isInitialized'),
   u8('nonce'),
   publicKey('tokenProgramId'),
@@ -73,6 +77,55 @@ export const TokenSwapLayout: Structure = struct([
   uint64('ownerWithdrawFeeDenominator'),
   blob(16, 'padding'),
 ]);
+
+const FEE_LAYOUT = struct(
+  [
+    nu64("tradeFeeNumerator"),
+    nu64("tradeFeeDenominator"),
+    nu64("ownerTradeFeeNumerator"),
+    nu64("ownerTradeFeeDenominator"),
+    nu64("ownerWithdrawFeeNumerator"),
+    nu64("ownerWithdrawFeeDenominator"),
+    nu64("hostFeeNumerator"),
+    nu64("hostFeeDenominator"),
+  ],
+  "fees"
+);
+
+const CURVE_NODE = union(
+  u8(),
+  blob(32),
+  "curve"
+);
+CURVE_NODE.addVariant(0, struct([]), "constantProduct");
+CURVE_NODE.addVariant(
+  1,
+  struct([nu64("token_b_price")]),
+  "constantPrice"
+);
+CURVE_NODE.addVariant(2, struct([]), "stable");
+CURVE_NODE.addVariant(
+  3,
+  struct([nu64("token_b_offset")]),
+  "offset"
+);
+
+export const TokenSwapLayout: Structure = struct(
+  [
+    u8('version'),
+    u8("isInitialized"),
+    u8("nonce"),
+    publicKey("tokenProgramId"),
+    publicKey("tokenAccountA"),
+    publicKey("tokenAccountB"),
+    publicKey("tokenPool"),
+    publicKey("mintA"),
+    publicKey("mintB"),
+    publicKey("feeAccount"),
+    FEE_LAYOUT,
+    CURVE_NODE,
+  ]
+);
 
 export const createInitSwapInstruction = (
   tokenSwapAccount: Account,

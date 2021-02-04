@@ -22,7 +22,6 @@ import {
   getProgramVersion,
   parseMintData,
   parseTokenAccount,
-  PROGRAM_ID,
   SWAP_PROGRAM_OWNER_FEE_ADDRESS,
   swapInstruction,
   TOKEN_PROGRAM_ID,
@@ -557,7 +556,7 @@ export class Pool {
         toAccount,
         this._poolTokenMint,
         this._feeAccount,
-        PROGRAM_ID,
+        this._programId,
         TOKEN_PROGRAM_ID,
         amountIn,
         minAmountOut,
@@ -608,6 +607,7 @@ export class Pool {
 
   static async makeInitializePoolTransaction<T extends PublicKey | Account>(
     connection: Connection,
+    tokenSwapProgram: PublicKey,
     owner: T,
     componentMints: PublicKey[],
     sourceTokenAccounts: {
@@ -627,6 +627,7 @@ export class Pool {
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const initializeAccountsInstructions: TransactionInstruction[] = [];
     const initializeAccountsSigners: Account[] = [];
+    const version = getProgramVersion(tokenSwapProgram);
 
     const liquidityTokenMintAccount = new Account();
     initializeAccountsInstructions.push(
@@ -645,7 +646,7 @@ export class Pool {
     const tokenSwapAccount = new Account();
     const [authority, nonce] = await PublicKey.findProgramAddress(
       [tokenSwapAccount.publicKey.toBuffer()],
-      PROGRAM_ID,
+      tokenSwapProgram,
     );
 
     // create mint for pool liquidity token
@@ -715,7 +716,7 @@ export class Pool {
           TokenSwapLayout.span,
         ),
         space: TokenSwapLayout.span,
-        programId: PROGRAM_ID,
+        programId: tokenSwapProgram,
       }),
     );
 
@@ -762,7 +763,7 @@ export class Pool {
         feeAccount.publicKey,
         depositorAccount.publicKey,
         TOKEN_PROGRAM_ID,
-        PROGRAM_ID,
+        tokenSwapProgram,
         nonce,
         options.curveType,
         options.tradeFeeNumerator,
@@ -789,6 +790,7 @@ export class Pool {
 
   static async initializePool(
     connection: Connection,
+    tokenSwapProgram: PublicKey,
     owner: Account,
     componentMints: PublicKey[],
     sourceTokenAccounts: {
@@ -808,6 +810,7 @@ export class Pool {
       initializePoolSigners,
     } = await Pool.makeInitializePoolTransaction(
       connection,
+      tokenSwapProgram,
       owner,
       componentMints,
       sourceTokenAccounts,
