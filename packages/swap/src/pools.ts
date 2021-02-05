@@ -17,22 +17,28 @@ import {
 } from '@solana/web3.js';
 import {
   createInitSwapInstruction,
-  DEFAULT_LIQUIDITY_TOKEN_PRECISION,
   depositInstruction,
+  swapInstruction,
+  TokenSwapLayout,
+  withdrawInstruction,
+} from './instructions';
+import {
   getProgramVersion,
   parseMintData,
   parseTokenAccount,
+} from './types';
+import {
+  DEFAULT_LIQUIDITY_TOKEN_PRECISION,
   SWAP_PROGRAM_OWNER_FEE_ADDRESS,
-  swapInstruction,
   TOKEN_PROGRAM_ID,
-  TokenSwapLayout,
-  withdrawInstruction,
   WRAPPED_SOL_MINT,
-} from './instructions';
+  LATEST_VERSION,
+} from './constants';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
 import assert from 'assert';
 import BN from 'bn.js';
+import { approve } from '../../serum/lib/token-instructions';
 
 export class Pool {
   private _decoded: any;
@@ -63,15 +69,15 @@ export class Pool {
     this._poolAccount = poolAccount;
     this._programId = programId;
     this._tokenMints = [
-      new PublicKey(decoded.mintA),
-      new PublicKey(decoded.mintB),
+      decoded.mintA,
+      decoded.mintB,
     ];
     this._holdingAccounts = [
-      new PublicKey(decoded.tokenAccountA),
-      new PublicKey(decoded.tokenAccountB),
+      decoded.tokenAccountA,
+      decoded.tokenAccountB,
     ];
-    this._poolTokenMint = new PublicKey(decoded.tokenPool);
-    this._feeAccount = new PublicKey(decoded.feeAccount);
+    this._poolTokenMint = decoded.tokenPool;
+    this._feeAccount = decoded.feeAccount;
     this._skipPreflight = skipPreflight;
     this._commitment = commitment;
     this._mintAccountsCache = {};
@@ -102,6 +108,10 @@ export class Pool {
 
   get programVersion(): number {
     return getProgramVersion(this._programId);
+  }
+
+  get isLatest(): boolean {
+    return getProgramVersion(this._programId) === LATEST_VERSION;
   }
 
   async cached<T>(
@@ -247,10 +257,23 @@ export class Pool {
       ),
     );
 
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanUpInstructions,
+      ownerAddress,
+      ownerAddress,
+      liquidityAmount,
+      this.isLatest ? undefined : authority);
+
+    if(this.isLatest) {
+      signers.push(transferAuthority);
+    }
+
     instructions.push(
       withdrawInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         this._poolTokenMint,
         this._feeAccount,
         poolAccount.pubkey,
@@ -765,13 +788,7 @@ export class Pool {
         TOKEN_PROGRAM_ID,
         tokenSwapProgram,
         nonce,
-        options.curveType,
-        options.tradeFeeNumerator,
-        options.tradeFeeDenominator,
-        options.ownerTradeFeeNumerator,
-        options.ownerTradeFeeDenominator,
-        options.ownerWithdrawFeeNumerator,
-        options.ownerWithdrawFeeDenominator,
+        options,
       ),
     );
     initializePoolSigners.push(tokenSwapAccount);
@@ -922,6 +939,39 @@ export const getTokenAccount = async (
     info: accountInfo,
   };
 };
+
+export const approveTransfer = (
+  instructions: TransactionInstruction[],
+  cleanupInstructions: TransactionInstruction[],
+  account: PublicKey,
+  owner: PublicKey,
+  amount: number,
+
+  // if delegate is not passed ephemeral transfer authority is used
+  delegate?: PublicKey,
+)  => {
+  const transferAuthority = new Account();
+  instructions.push(
+    Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      account,
+      delegate ?? transferAuthority.publicKey,
+      owner,
+      [],
+      amount
+    )
+  );
+
+  cleanupInstructions.push(
+    Token.createRevokeInstruction(
+      TOKEN_PROGRAM_ID,
+      account,
+      owner,
+      []),
+  );
+
+  return transferAuthority;
+}
 
 export const createTokenAccount = (
   owner: PublicKey,
