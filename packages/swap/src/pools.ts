@@ -246,17 +246,6 @@ export class Pool {
       `Token account for mint ${accountB.info.mint.toBase58()} not provided`,
     );
 
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        poolAccount.pubkey,
-        authority,
-        ownerAddress,
-        [],
-        liquidityAmount,
-      ),
-    );
-
     const transferAuthority = approveTransfer(
       instructions,
       cleanUpInstructions,
@@ -423,32 +412,32 @@ export class Pool {
     }
 
     // create approval for transfer transactions
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        fromKeyA,
-        authority,
-        ownerAddress,
-        [],
-        amount0,
-      ),
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKeyA,
+      ownerAddress,
+      amount0,
+      this.isLatest ? undefined : authority,
     );
+    if(this.isLatest) {
+      signers.push(transferAuthority);
+    }
 
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        fromKeyB,
-        authority,
-        ownerAddress,
-        [],
-        amount1,
-      ),
+    approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKeyB,
+      ownerAddress,
+      amount1,
+      this.isLatest ? transferAuthority.publicKey : authority,
     );
 
     instructions.push(
       depositInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         fromKeyA,
         fromKeyB,
         this._holdingAccounts[0],
@@ -557,22 +546,25 @@ export class Pool {
       toAccount = tokenOut.tokenAccount;
     }
 
-    // create approval for transfer transactions
-    const approveInstruction = Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      fromAccount,
-      authority,
-      ownerAddress,
-      [],
-      amountIn,
-    );
-    instructions.push(approveInstruction);
+  // create approval for transfer transactions
+  const transferAuthority = approveTransfer(
+    instructions,
+    cleanupInstructions,
+    fromAccount,
+    ownerAddress,
+    amountIn,
+    this.isLatest ? undefined : authority,
+  );
+  if(this.isLatest) {
+    signers.push(transferAuthority);
+  }
 
     // swap
     instructions.push(
       swapInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         fromAccount,
         holdingA,
         holdingB,
