@@ -38,7 +38,6 @@ import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
 import assert from 'assert';
 import BN from 'bn.js';
-import { approve } from '../../serum/lib/token-instructions';
 
 export class Pool {
   private _decoded: any;
