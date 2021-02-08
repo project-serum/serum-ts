@@ -82,7 +82,7 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
       <DialogContent>
         <Tabs value={rewardTypeTab} onChange={(_e, t) => setRewardTypeTab(t)}>
           <Tab value={RewardTypeViewModel.Unlocked} label="Unlocked" />
-          <Tab value={RewardTypeViewModel.Locked} label="Locked" />
+          {/*<Tab value={RewardTypeViewModel.Locked} label="Locked" />*/}
         </Tabs>
         {rewardTypeTab === RewardTypeViewModel.Unlocked && (
           <DropUnlockedForm onClose={onClose} />
