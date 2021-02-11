@@ -52,7 +52,7 @@ export default function Header(props: HeaderProps) {
           <div style={{ display: 'flex' }}>
             <SerumLogoButton />
             <BarButton label="Stake" hrefClient="/stake" />
-            {/*<BarButton label="Lockup" hrefClient="/lockup" />*/}
+            <BarButton label="Lockup" hrefClient="/lockup" />
             <BarButton label="Trade" href="https://dex.projectserum.com" />
             <BarButton label="Swap" href="https://swap.projectserum.com" />
             {network.srmFaucet && (

@@ -49,6 +49,18 @@ const idl: Idl = {
           type: 'publicKey',
         },
         {
+          name: 'depositAmount',
+          type: 'u64',
+        },
+        {
+          name: 'nonce',
+          type: 'u8',
+        },
+        {
+          name: 'startTs',
+          type: 'i64',
+        },
+        {
           name: 'endTs',
           type: 'i64',
         },
@@ -57,12 +69,12 @@ const idl: Idl = {
           type: 'u64',
         },
         {
-          name: 'depositAmount',
-          type: 'u64',
-        },
-        {
-          name: 'nonce',
-          type: 'u8',
+          name: 'realizor',
+          type: {
+            option: {
+              defined: 'Realizor',
+            },
+          },
         },
       ],
     },
@@ -373,6 +385,10 @@ const idl: Idl = {
             type: 'u64',
           },
           {
+            name: 'createdTs',
+            type: 'i64',
+          },
+          {
             name: 'startTs',
             type: 'i64',
           },
@@ -392,11 +408,35 @@ const idl: Idl = {
             name: 'nonce',
             type: 'u8',
           },
+          {
+            name: 'realizor',
+            type: {
+              option: {
+                defined: 'Realizor',
+              },
+            },
+          },
         ],
       },
     },
   ],
   types: [
+    {
+      name: 'Realizor',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'program',
+            type: 'publicKey',
+          },
+          {
+            name: 'metadata',
+            type: 'publicKey',
+          },
+        ],
+      },
+    },
     {
       name: 'WhitelistEntry',
       type: {
@@ -448,7 +488,7 @@ const idl: Idl = {
     },
     {
       code: 107,
-      name: 'InsufficienWithdrawalBalance',
+      name: 'InsufficientWithdrawalBalance',
       msg: 'Insufficient withdrawal balance.',
     },
     {
@@ -485,6 +525,26 @@ const idl: Idl = {
       code: 114,
       name: 'Unauthorized',
       msg: 'You do not have sufficient permissions to perform this action.',
+    },
+    {
+      code: 115,
+      name: 'UnableToWithdrawWhileStaked',
+      msg: 'You are unable to realize projected rewards until unstaking.',
+    },
+    {
+      code: 116,
+      name: 'InvalidLockRealizor',
+      msg: "The given lock realizor doesn't match the vesting account.",
+    },
+    {
+      code: 117,
+      name: 'UnrealizedVesting',
+      msg: 'You have not realized this vesting account.',
+    },
+    {
+      code: 118,
+      name: 'InvalidSchedule',
+      msg: 'Invalid vesting schedule given.',
     },
   ],
 };

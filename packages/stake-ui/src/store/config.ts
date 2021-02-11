@@ -37,7 +37,7 @@ export const networks: Networks = {
       'GrAkKfEpTKQuVHG2Y97Y2FF4i7y7Q5AHLK94JBy7Y5yv',
     ),
     lockupProgramId: new PublicKey(
-      'AxeE1onr5r6ccMcFF7yMAcxJzQXAXWBUY9wsEnGAp5Du',
+      '6ebQNeTPZ1j7k3TtkCCtEPRvG7GQsucQrZ7sSEDQi9Ks',
     ),
     registrars: {
       srm: new PublicKey('5vJRzKtcp4fJxqmR7qzajkaKSiAb6aT9grRsaZKXU222'),
@@ -64,18 +64,18 @@ export const networks: Networks = {
     msrmFaucet: null,
 
     registryProgramId: new PublicKey(
-      '26c6KiAgdFV5o6CMccaWVo6pfFyEGXVXQC5LQvxh14ma',
+      'DVBFLTDaN29K69yW61AiVTcQuEmbnuodvW9qGXpQQuRc',
     ),
     lockupProgramId: new PublicKey(
-      '128BA7kccVixqsXF9pGEPBgrgua8Y8AxeN9SfJfnv1T6',
+      'FXef1WbmM9WHzFMDcXvsgPWzgHQz7Hrz1CoqNUq5EEi9',
     ),
     registrars: {
-      token1: new PublicKey('5qg2Vey9KCNWar2PFsnv1UJavXBxMcCARKEz1rsttTGa'),
-      token2: new PublicKey('FVAtZrwcdMYhvBRJBY4Jzg35hGYN1LxptXQkCMpPPETA'),
+      token1: new PublicKey('4QK3drbHCjouKbHUGP9PW8AYH6LuB5f4DQDq4ExCZD5u'),
+      token2: new PublicKey('Gz6kVhoUc9mHF2bXkAQik7gXtDoWKvDkJ99fr1v2WTbi'),
     },
     mints: {
-      token1: new PublicKey('9BS8Ut95cCVsC36mr8oDCCUCRMp2Tiom15vcgenMUh2t'),
-      token2: new PublicKey('7aTYaDoZtCWi71op4G71d8VVVM1BiBNqVNUGRm9rcnvY'),
+      token1: new PublicKey('2CRHQWy4LaM5pXGwfYkgQLvxRJh4vsm4FGzTpjXTFe2p'),
+      token2: new PublicKey('GeRsQMtERmiEief53PDv8iTDTDZe8RPpqfcHWukR5nGt'),
     },
   },
 

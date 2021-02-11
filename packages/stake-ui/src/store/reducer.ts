@@ -162,7 +162,6 @@ export const initialState: State = {
     isWalletConnected: false,
     walletProvider: 'https://www.sollet.io',
     bootstrapState: BootstrapState.NeedsBootstrap,
-    //network: networks.localhost,
     network: networks.mainnet,
     ownedTokenAccounts: [],
   },
@@ -172,7 +171,6 @@ export const initialState: State = {
   registry: {
     pendingWithdrawals: null,
     registrar: networks.mainnet.registrars.srm,
-    //registrar: networks.localhost.registrars.token1,
   },
   accounts: {},
 };
