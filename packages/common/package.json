@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/common",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.3",
   "description": "Serum common utilities",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -22,7 +22,7 @@
     "prepare": "run-s clean build"
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.20",
+    "@project-serum/serum": "^0.13.21",
     "bn.js": "^5.1.2",
     "superstruct": "0.8.3"
   },
