@@ -37,13 +37,18 @@ type VestingAccountCardProps = {
 
 export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { vesting, network } = props;
-  const { lockupClient } = useWallet();
+  const { lockupClient, registryClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
-  const { accounts } = useSelector((state: StoreState) => {
+  const { accounts, member } = useSelector((state: StoreState) => {
     return {
-      network: state.common.network,
       accounts: state.accounts,
+      member: state.registry.member
+        ? {
+            publicKey: state.registry.member,
+            account: state.accounts[state.registry.member.toString()],
+          }
+        : undefined,
     };
   });
 
@@ -139,6 +144,34 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
       'Withdrawing locked tokens',
       'Tokens unlocked',
       async () => {
+        const remainingAccounts = (() => {
+          if (vesting.account.realizor) {
+            if (!member) {
+              // Should never be thrown.
+              throw new Error('Member account not found');
+            }
+            return [
+              {
+                pubkey: registryClient.programId,
+                isSigner: false,
+                isWritable: false,
+              },
+              { pubkey: member.publicKey, isSigner: false, isWritable: false },
+              {
+                pubkey: member.account.balances.spt,
+                isSigner: false,
+                isWritable: false,
+              },
+              {
+                pubkey: member.account.balancesLocked.spt,
+                isSigner: false,
+                isWritable: false,
+              },
+            ];
+          } else {
+            return undefined;
+          }
+        })();
         const tx = await lockupClient.rpc.withdraw(availableForWithdrawal!, {
           accounts: {
             vesting: vesting.publicKey,
@@ -151,6 +184,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
             clock: SYSVAR_CLOCK_PUBKEY,
           },
+          remainingAccounts,
         });
         const newVesting = await lockupClient.account.vesting(
           vesting.publicKey,
@@ -168,10 +202,9 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
       },
     );
   };
-
   const rows = [
     {
-      field: 'Available for unlock',
+      field: 'Projected unlock',
       value:
         availableForWithdrawal === null
           ? null
@@ -199,7 +232,12 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
       value: displayFn(vesting.account.whitelistOwned),
     },
     { field: 'Period count', value: vesting.account.periodCount.toString() },
-    { field: 'Vault', value: vesting.account.vault.toString() },
+    {
+      field: 'Created at timestamp',
+      value: `${new Date(
+        vesting.account.createdTs.toNumber() * 1000,
+      ).toLocaleString()} (${vesting.account.createdTs.toString()})`,
+    },
     {
       field: 'Start timestamp',
       value: `${new Date(
@@ -211,6 +249,19 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
       value: `${new Date(
         vesting.account.endTs.toNumber() * 1000,
       ).toLocaleString()} (${vesting.account.endTs.toString()})`,
+    },
+    { field: 'Vault', value: vesting.account.vault.toString() },
+    {
+      field: 'Realizor program',
+      value: vesting.account.realizor
+        ? vesting.account.realizor.program.toString()
+        : 'None',
+    },
+    {
+      field: 'Realizor metadata',
+      value: vesting.account.realizor
+        ? vesting.account.realizor.metadata.toString()
+        : 'None',
     },
   ];
 
@@ -247,7 +298,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             />
             <div
               style={{
-                maxWidth: '400px',
+                maxWidth: '155px',
                 marginTop: '6px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 display: 'flex',
@@ -264,28 +315,33 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             </div>
           </div>
         </ListItem>
-        <ChartistGraph
-          data={{
-            labels: vestingDates,
-            series: [cumulativeVesting],
-          }}
-          options={
-            {
-              axisY: {
-                type: FixedScaleAxis,
-                low: 0,
-                high: cumulativeVesting[cumulativeVesting.length - 1],
-                ticks: cumulativeVesting,
-              },
-              axisX: {
-                ticks: vestingDates,
-              },
-              lineSmooth: Interpolation.step(),
-              height: 400,
-            } as IChartOptions
-          }
-          type={'Line'}
-        />
+        <Typography></Typography>
+        {vestingDates.length <= 15 ? (
+          <ChartistGraph
+            data={{
+              labels: vestingDates,
+              series: [cumulativeVesting],
+            }}
+            options={
+              {
+                axisY: {
+                  type: FixedScaleAxis,
+                  low: 0,
+                  high: cumulativeVesting[cumulativeVesting.length - 1],
+                  ticks: cumulativeVesting,
+                },
+                lineSmooth: Interpolation.step(),
+                height: 400,
+              } as IChartOptions
+            }
+            type={'Line'}
+          />
+        ) : (
+          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+            {/* TOOD: graphs for vesting accounts with a lot of periods. */}A
+            graph isn't available for this account.
+          </div>
+        )}
         <div>
           {isCustomMint && (
             <div
@@ -326,11 +382,19 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             />
             <div style={{ marginLeft: '20px', width: '191px' }}>
               <Button
+                style={{ fontSize: '12px' }}
                 color="primary"
                 disabled={!withdrawEnabled}
                 variant="contained"
                 onClick={() =>
                   withdraw().catch(err => {
+                    let msg = err.toString();
+                    if (
+                      msg &&
+                      msg.split('custom program error: 0x78').length === 2
+                    ) {
+                      msg = 'Unrealized rewards. Please unstake';
+                    }
                     enqueueSnackbar(
                       `Error withdrawing from vesting account: ${err.toString()}`,
                       {

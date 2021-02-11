@@ -82,7 +82,7 @@ function DropRewardDialog(props: DropRewardsDialogProps) {
       <DialogContent>
         <Tabs value={rewardTypeTab} onChange={(_e, t) => setRewardTypeTab(t)}>
           <Tab value={RewardTypeViewModel.Unlocked} label="Unlocked" />
-          {/*<Tab value={RewardTypeViewModel.Locked} label="Locked" />*/}
+          <Tab value={RewardTypeViewModel.Locked} label="Locked" />
         </Tabs>
         {rewardTypeTab === RewardTypeViewModel.Unlocked && (
           <DropUnlockedForm onClose={onClose} />
@@ -236,6 +236,7 @@ function DropLockedForm(props: DropLockedFormProps) {
   const [rewardDisplayAmount, setRewardDisplayAmount] = useState<null | number>(
     null,
   );
+  const [startTs, setStartTs] = useState<null | number>(null);
   const [endTs, setEndTs] = useState<null | number>(null);
   const [expiryTs, setExpiryTs] = useState<null | number>(null);
   const [depositor, setDepositor] = useState<null | PublicKey>(null);
@@ -243,6 +244,8 @@ function DropLockedForm(props: DropLockedFormProps) {
   const [periodCount, setPeriodCount] = useState(7);
 
   const isSendEnabled =
+    startTs !== null &&
+    endTs !== null &&
     mint !== null &&
     depositor !== null &&
     rewardDisplayAmount !== null &&
@@ -256,6 +259,7 @@ function DropLockedForm(props: DropLockedFormProps) {
       async () => {
         const rewardKind = {
           locked: {
+            startTs: new BN(startTs!),
             endTs: new BN(endTs!),
             periodCount: new BN(periodCount),
           },
@@ -324,6 +328,7 @@ function DropLockedForm(props: DropLockedFormProps) {
       setMint={setMint}
       setDepositor={setDepositor}
       setRewardDisplayAmount={setRewardDisplayAmount}
+      setStartTs={setStartTs}
       setEndTs={setEndTs}
       periodCount={periodCount}
       setPeriodCount={setPeriodCount}
@@ -342,6 +347,7 @@ type DropVendorFormProps = {
   setMint: (mintLabel: string) => void;
   setDepositor: (pk: PublicKey) => void;
   setRewardDisplayAmount: (n: number) => void;
+  setStartTs?: (n: number) => void;
   setEndTs?: (n: number) => void;
   periodCount?: number;
   setPeriodCount?: (p: number) => void;
@@ -359,6 +365,7 @@ function DropVendorForm(props: DropVendorFormProps) {
     setDepositor,
     setMint,
     setRewardDisplayAmount,
+    setStartTs,
     setEndTs,
     periodCount,
     setPeriodCount,
@@ -424,9 +431,26 @@ function DropVendorForm(props: DropVendorFormProps) {
             />
           </div>
         </div>
-        {setEndTs !== undefined && (
-          <div style={{ display: 'flex', marginTop: '37px' }}>
-            <div style={{ flex: 1 }}>
+        {setEndTs !== undefined && setStartTs !== undefined && (
+          <>
+            <div style={{ display: 'flex', marginTop: '37px' }}>
+              <div style={{ flex: 1 }}>
+                <TextField
+                  fullWidth
+                  label="Start date"
+                  type="datetime-local"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  onChange={e => {
+                    const d = new Date(e.target.value);
+                    setStartTs(d.getTime() / 1000);
+                  }}
+                />
+                <FormHelperText>Date vesting begins</FormHelperText>
+              </div>
+            </div>
+            <div style={{ flex: 1, marginTop: '20px' }}>
               <TextField
                 fullWidth
                 label="End date"
@@ -444,23 +468,25 @@ function DropVendorForm(props: DropVendorFormProps) {
               </FormHelperText>
             </div>
             <div>
-              <TextField
-                style={{ marginLeft: '10px', marginTop: '10px' }}
-                id="outlined-number"
-                label="Period Count"
-                type="number"
-                InputLabelProps={{
-                  shrink: true,
-                }}
-                variant="outlined"
-                value={periodCount}
-                onChange={e =>
-                  setPeriodCount!(parseInt(e.target.value) as number)
-                }
-                InputProps={{ inputProps: { min: 1 } }}
-              />
+              <FormControl fullWidth>
+                <TextField
+                  style={{ marginTop: '37px' }}
+                  id="outlined-number"
+                  label="Period Count"
+                  type="number"
+                  InputLabelProps={{
+                    shrink: true,
+                  }}
+                  variant="outlined"
+                  value={periodCount}
+                  onChange={e =>
+                    setPeriodCount!(parseInt(e.target.value) as number)
+                  }
+                  InputProps={{ inputProps: { min: 1 } }}
+                />
+              </FormControl>
             </div>
-          </div>
+          </>
         )}
         <div style={{ marginTop: '37px', display: 'flex' }}>
           <div

@@ -54,7 +54,7 @@ export default function Vestings() {
                     fontWeight: 'bold',
                   }}
                 >
-                  My Vesting Accounts
+                  Projected Unlocks
                 </Typography>
               </div>
               <div>
@@ -62,7 +62,18 @@ export default function Vestings() {
               </div>
             </div>
           )}
-          <List disablePadding>
+          <Typography color="textSecondary">
+            In addition to a vesting schedule, locked token accounts are subject
+            to an application dependent
+            <b> realization condition</b>, determining if and when locked tokens
+            are given to a user. For example, in the case of locked staking
+            rewards, locked tokens become realized in the event of unstaking. If
+            one never unstakes, one never receives locked token rewards.
+          </Typography>
+          <List
+            disablePadding
+            style={{ width: '656px', marginLeft: 'auto', marginRight: 'auto' }}
+          >
             {vestingAccounts.map(v => (
               <VestingAccountCard network={network} vesting={v} />
             ))}
@@ -70,6 +81,7 @@ export default function Vestings() {
               <Card
                 style={{
                   marginTop: '24px',
+                  width: '656px',
                 }}
               >
                 <CardContent>

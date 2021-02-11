@@ -60,6 +60,8 @@ function NewVestingDialog(props: NewVestingDialogProps) {
     };
   });
 
+  const defaultStartDate = new Date().toString();
+  const defaultStartTs = new Date(defaultStartDate).getTime() / 1000;
   const defaultEndDate = '2027-01-01T12:00';
   const defaultEndTs = new Date(defaultEndDate).getTime() / 1000;
 
@@ -75,6 +77,7 @@ function NewVestingDialog(props: NewVestingDialogProps) {
   const displayBeneficiaryError = !isValidBeneficiary && beneficiary !== '';
 
   const [fromAccount, setFromAccount] = useState<null | PublicKey>(null);
+  const [startTimestamp, setStartTimestamp] = useState(defaultStartTs);
   const [timestamp, setTimestamp] = useState(defaultEndTs);
   const [periodCount, setPeriodCount] = useState(7);
   const [displayAmount, setDisplayAmount] = useState<null | number>(null);
@@ -134,10 +137,12 @@ function NewVestingDialog(props: NewVestingDialogProps) {
 
       let tx = await lockupClient.rpc.createVesting(
         beneficiaryPublicKey,
-        new BN(timestamp),
-        new BN(periodCount),
         amount,
         _vestingSigner.nonce,
+        new BN(startTimestamp),
+        new BN(timestamp),
+        new BN(periodCount),
+        null,
         {
           accounts: {
             vesting: vesting.publicKey,
@@ -291,6 +296,37 @@ function NewVestingDialog(props: NewVestingDialogProps) {
             <FormHelperText>
               Amount to deposit into the vesting account
             </FormHelperText>
+          </div>
+          <div
+            style={{
+              marginTop: '24px',
+              display: 'flex',
+            }}
+          >
+            <div style={{ flex: 1, marginRight: '10px' }}>
+              <TextField
+                fullWidth
+                label="Start date"
+                type="datetime-local"
+                defaultValue={defaultStartDate}
+                InputLabelProps={{
+                  shrink: true,
+                }}
+                onChange={e => {
+                  const d = new Date(e.target.value);
+                  setStartTimestamp(d.getTime() / 1000);
+                }}
+              />
+              <FormHelperText>Date when vesting begins</FormHelperText>
+            </div>
+            <div>
+              <TextField
+                disabled
+                fullWidth
+                label="Unix Timestamp"
+                value={startTimestamp}
+              />
+            </div>
           </div>
           <div
             style={{

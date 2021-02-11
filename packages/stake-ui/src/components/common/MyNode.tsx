@@ -385,11 +385,12 @@ function DepositDialog(props: DepositDialogProps) {
         );
         const tx = await (async () => {
           if (isLocked) {
-            const relayData = registryClient.coder.instruction.encode({
-              depositLocked: {
+            const relayData = registryClient.coder.instruction.encode(
+              'deposit_locked',
+              {
                 amount,
               },
-            });
+            );
             const vesting = accounts[from.toString()];
             const _memberSigner = (
               await memberSigner(
@@ -536,11 +537,12 @@ function WithdrawDialog(props: WithdrawDialogProps) {
             member!,
           );
           if (isLocked) {
-            const relayData = registryClient.coder.instruction.encode({
-              withdrawLocked: {
+            const relayData = registryClient.coder.instruction.encode(
+              'withdraw_locked',
+              {
                 amount,
               },
-            });
+            );
             const vesting = accounts[from.toString()];
             const _memberSigner = (
               await memberSigner(registryClient.programId, registrar, member!)

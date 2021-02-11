@@ -1056,6 +1056,22 @@ const idl: Idl = {
         ],
         args: [],
       },
+      {
+        name: 'setLockupProgram',
+        accounts: [
+          {
+            name: 'authority',
+            isMut: false,
+            isSigner: true,
+          },
+        ],
+        args: [
+          {
+            name: 'lockupProgram',
+            type: 'publicKey',
+          },
+        ],
+      },
     ],
   },
   accounts: [
@@ -1323,6 +1339,10 @@ const idl: Idl = {
             name: 'Locked',
             fields: [
               {
+                name: 'start_ts',
+                type: 'i64',
+              },
+              {
                 name: 'end_ts',
                 type: 'i64',
               },
@@ -1436,6 +1456,31 @@ const idl: Idl = {
       code: 119,
       name: 'InvalidVestingSigner',
       msg: 'Locked deposit from an invalid deposit authority.',
+    },
+    {
+      code: 120,
+      name: 'UnrealizedReward',
+      msg: 'Locked rewards cannot be realized until one unstaked all tokens.',
+    },
+    {
+      code: 121,
+      name: 'InvalidBeneficiary',
+      msg: "The beneficiary doesn't match.",
+    },
+    {
+      code: 122,
+      name: 'InvalidRealizorMetadata',
+      msg: 'The given member account does not match the realizor metadata.',
+    },
+    {
+      code: 123,
+      name: 'InvalidVestingSchedule',
+      msg: 'Invalid vesting schedule for the locked reward.',
+    },
+    {
+      code: 124,
+      name: 'InvalidProgramAuthority',
+      msg: 'Please specify the correct authority for this program.',
     },
   ],
 };
