@@ -1,5 +1,5 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
+import {accountFlagsLayout, publicKeyLayout, selfTradeBehaviorLayout, u128, u64} from './layout';
 import { Slab, SLAB_LAYOUT } from './slab';
 import { DexInstructions } from './instructions';
 import BN from 'bn.js';
@@ -654,6 +654,7 @@ export class Market {
       clientId,
       openOrdersAddressKey,
       feeDiscountPubkey = null,
+      selfTradeBehavior = 'decrementTake'
     }: OrderParams<T>,
   ): TransactionInstruction {
     // @ts-ignore
@@ -699,11 +700,11 @@ export class Market {
         side,
         limitPrice: this.priceNumberToLots(price),
         maxBaseQuantity: this.baseSizeNumberToLots(size),
-        maxQuoteQuantity: this.baseSizeNumberToLots(size * price),
+        maxQuoteQuantity: this.quoteSizeNumberToLots(size * price),
         orderType,
         clientId,
         programId: this._programId,
-        selfTradeBehavior: 'decrementTake',
+        selfTradeBehavior,
         feeDiscountPubkey,
       });
     }
@@ -1114,6 +1115,7 @@ export interface OrderParams<T = Account> {
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
   feeDiscountPubkey?: PublicKey | null;
+  selfTradeBehavior?: 'decrementTake' | 'cancelProvide' | 'abortTransaction' | undefined;
 }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([

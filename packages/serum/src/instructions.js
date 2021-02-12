@@ -387,7 +387,6 @@ export class DexInstructions {
         { pubkey: bids, isSigner: false, isWritable: true },
         { pubkey: asks, isSigner: false, isWritable: true },
         { pubkey: openOrders, isSigner: false, isWritable: true },
-        { pubkey: openOrders, isSigner: false, isWritable: true },
         { pubkey: owner, isSigner: true, isWritable: false },
         { pubkey: eventQueue, isSigner: false, isWritable: true },
       ],
