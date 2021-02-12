@@ -63,7 +63,8 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   struct([u64('clientId')]),
   'cancelOrderByClientId',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(10,
+INSTRUCTION_LAYOUT.inner.addVariant(
+  10,
   struct([
     sideLayout('side'),
     u64('limitPrice'),
@@ -76,19 +77,16 @@ INSTRUCTION_LAYOUT.inner.addVariant(10,
   ]),
   'newOrderV3',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(11,
-  struct([
-    sideLayout('side'),
-    u128('orderId'),
-  ]),
+INSTRUCTION_LAYOUT.inner.addVariant(
+  11,
+  struct([sideLayout('side'), u128('orderId')]),
   'cancelOrderV2',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(12,
-  struct([
-    u64('clientId')
-  ]),
-  'cancelOrderByClientIdV2'
-)
+INSTRUCTION_LAYOUT.inner.addVariant(
+  12,
+  struct([u64('clientId')]),
+  'cancelOrderByClientIdV2',
+);
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -245,7 +243,6 @@ export class DexInstructions {
         },
       }),
     });
-
   }
 
   static matchOrders({
@@ -347,7 +344,6 @@ export class DexInstructions {
       }),
     });
   }
-
 
   static cancelOrderByClientId({
     market,

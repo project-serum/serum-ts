@@ -141,7 +141,11 @@ export function orderTypeLayout(property) {
 }
 
 export function selfTradeBehaviorLayout(property) {
-  return new EnumLayout({ decrementTake: 0, cancelProvide: 1, abortTransaction: 2 }, 4, property);
+  return new EnumLayout(
+    { decrementTake: 0, cancelProvide: 1, abortTransaction: 2 },
+    4,
+    property,
+  );
 }
 
 const ACCOUNT_FLAGS_LAYOUT = new WideBits();

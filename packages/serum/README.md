@@ -68,12 +68,7 @@ for (let order of myOrders) {
 
 // Retrieving fills
 for (let fill of await market.loadFills(connection)) {
-  console.log(
-    fill.orderId,
-    fill.price,
-    fill.size,
-    fill.side,
-  );
+  console.log(fill.orderId, fill.price, fill.size, fill.side);
 }
 
 // Settle funds
