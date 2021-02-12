@@ -706,7 +706,7 @@ export class Market {
         side,
         limitPrice: this.priceNumberToLots(price),
         maxBaseQuantity: this.baseSizeNumberToLots(size),
-        maxQuoteQuantity: this.quoteSizeNumberToLots(size * price),
+        maxQuoteQuantity: this._quoteSplTokenMultiplier.mul(new BN(size).mul(new BN(price))),
         orderType,
         clientId,
         programId: this._programId,
@@ -771,8 +771,8 @@ export class Market {
       transaction.add(
         DexInstructions.cancelOrderByClientIdV2({
           market: this.address,
-          owner,
           openOrders,
+          owner,
           bids: this._decoded.bids,
           asks: this._decoded.asks,
           eventQueue: this._decoded.eventQueue,
