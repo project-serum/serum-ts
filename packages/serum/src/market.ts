@@ -706,7 +706,9 @@ export class Market {
         side,
         limitPrice: this.priceNumberToLots(price),
         maxBaseQuantity: this.baseSizeNumberToLots(size),
-        maxQuoteQuantity: this._quoteSplTokenMultiplier.mul(new BN(size).mul(new BN(price))),
+        maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
+          this.baseSizeNumberToLots(size).mul(this.priceNumberToLots(price)),
+        ),
         orderType,
         clientId,
         programId: this._programId,
