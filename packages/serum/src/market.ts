@@ -1,5 +1,11 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
+import {
+  accountFlagsLayout,
+  publicKeyLayout,
+  selfTradeBehaviorLayout,
+  u128,
+  u64,
+} from './layout';
 import { Slab, SLAB_LAYOUT } from './slab';
 import { DexInstructions } from './instructions';
 import BN from 'bn.js';
@@ -654,6 +660,7 @@ export class Market {
       clientId,
       openOrdersAddressKey,
       feeDiscountPubkey = null,
+      selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
   ): TransactionInstruction {
     // @ts-ignore
@@ -699,11 +706,13 @@ export class Market {
         side,
         limitPrice: this.priceNumberToLots(price),
         maxBaseQuantity: this.baseSizeNumberToLots(size),
-        maxQuoteQuantity: this.baseSizeNumberToLots(size * price),
+        maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
+          this.baseSizeNumberToLots(size).mul(this.priceNumberToLots(price)),
+        ),
         orderType,
         clientId,
         programId: this._programId,
-        selfTradeBehavior: 'decrementTake',
+        selfTradeBehavior,
         feeDiscountPubkey,
       });
     }
@@ -764,8 +773,8 @@ export class Market {
       transaction.add(
         DexInstructions.cancelOrderByClientIdV2({
           market: this.address,
-          owner,
           openOrders,
+          owner,
           bids: this._decoded.bids,
           asks: this._decoded.asks,
           eventQueue: this._decoded.eventQueue,
@@ -1114,6 +1123,11 @@ export interface OrderParams<T = Account> {
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
   feeDiscountPubkey?: PublicKey | null;
+  selfTradeBehavior?:
+    | 'decrementTake'
+    | 'cancelProvide'
+    | 'abortTransaction'
+    | undefined;
 }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([
