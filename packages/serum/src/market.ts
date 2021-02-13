@@ -524,6 +524,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = undefined,
     }: OrderParams<T>,
     cacheDurationMs = 0,
@@ -558,22 +559,29 @@ export class Market {
       useFeeDiscountPubkey = null;
     }
 
-    let openOrdersAddress;
+    let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      const newOpenOrdersAccount = new Account();
+      let account;
+      if (openOrdersAccount) {
+        account = openOrdersAccount;
+      } else {
+        account = new Account();
+      }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           connection,
           this.address,
           ownerAddress,
-          newOpenOrdersAccount.publicKey,
+          account.publicKey,
           this._programId,
         ),
       );
-      openOrdersAddress = newOpenOrdersAccount.publicKey;
-      signers.push(newOpenOrdersAccount);
+      openOrdersAddress = account.publicKey;
+      signers.push(account);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
+    } else if (openOrdersAccount) {
+      openOrdersAddress = openOrdersAccount.publicKey;
     } else if (openOrdersAddressKey) {
       openOrdersAddress = openOrdersAddressKey;
     } else {
@@ -1123,6 +1131,7 @@ export interface OrderParams<T = Account> {
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
   feeDiscountPubkey?: PublicKey | null;
+  openOrdersAccount?: Account | undefined;
   selfTradeBehavior?:
     | 'decrementTake'
     | 'cancelProvide'
