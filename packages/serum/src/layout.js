@@ -140,6 +140,14 @@ export function orderTypeLayout(property) {
   return new EnumLayout({ limit: 0, ioc: 1, postOnly: 2 }, 4, property);
 }
 
+export function selfTradeBehaviorLayout(property) {
+  return new EnumLayout(
+    { decrementTake: 0, cancelProvide: 1, abortTransaction: 2 },
+    4,
+    property,
+  );
+}
+
 const ACCOUNT_FLAGS_LAYOUT = new WideBits();
 ACCOUNT_FLAGS_LAYOUT.addBoolean('initialized');
 ACCOUNT_FLAGS_LAYOUT.addBoolean('market');
