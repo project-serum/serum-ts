@@ -1,13 +1,13 @@
 {
   "name": "@project-serum/stake-ui",
-  "version": "0.0.1-beta.2",
+  "version": "0.0.1-beta.3",
   "private": true,
-  "homepage": "https://project-serum.github.io/serum-ts/stake-ui/",
+  "homepage": ".",
   "dependencies": {
     "@material-ui/core": "^4.11.0",
     "@material-ui/icons": "^4.9.1",
     "@project-serum/anchor": "^0.0.0-alpha.7",
-    "@project-serum/common": "^0.0.1-beta.2",
+    "@project-serum/common": "^0.0.1-beta.3",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
@@ -37,7 +37,7 @@
     "web-vitals": "^0.2.4"
   },
   "scripts": {
-    "deploy:app": "rm -rf ../../docs/stake-ui && mv ./build ../../docs/stake-ui/",
+    "deploy:app": "gh-pages -d build/ --repo git@github.com:project-serum/stake-ui.git",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test:ui": "react-scripts test",

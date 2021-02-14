@@ -63,6 +63,14 @@ export function i64(property?: string): Layout<BN> {
   return new BNLayout(8, true, property);
 }
 
+export function u128(property?: string): Layout<BN> {
+  return new BNLayout(16, false, property);
+}
+
+export function i128(property?: string): Layout<BN> {
+  return new BNLayout(16, true, property);
+}
+
 class WrappedLayout<T, U> extends LayoutCls<U> {
   layout: Layout<T>;
   decoder: (data: T) => U;

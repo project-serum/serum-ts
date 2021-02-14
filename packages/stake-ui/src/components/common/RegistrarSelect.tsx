@@ -7,6 +7,37 @@ import { Network } from '../../store/config';
 import * as bootstrap from './BootstrapProvider';
 import { useWallet } from './WalletProvider';
 
+export function activeRegistrar(
+  state: StoreState,
+): { label: string; programAccount: any } {
+  const registrars = Object.keys(state.common.network.registrars)
+    .map(registrar => {
+      let entry: [string, ProgramAccount] = [
+        registrar,
+        {
+          publicKey: state.common.network.registrars[registrar],
+          account:
+            state.accounts[
+              state.common.network.registrars[registrar].toString()
+            ],
+        },
+      ];
+      return entry;
+    })
+    .filter(r => r[1].account !== undefined);
+  const selectedRegistrar: any = registrars
+    .filter(([r, acc]) => acc.publicKey.equals(state.registry.registrar))
+    .map(([r, acc]) => {
+      return {
+        label: r,
+        programAccount: acc,
+      };
+    })
+    .pop();
+
+  return selectedRegistrar;
+}
+
 export default function RegistrarSelect() {
   const { registryClient } = useWallet();
   const { registrars, selectedRegistrar, accounts, network } = useSelector(

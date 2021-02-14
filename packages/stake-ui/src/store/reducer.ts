@@ -56,11 +56,12 @@ export default function reducer(
       newState.common.shutdownTrigger = true;
       return newState;
     case ActionType.CommonDidShutdown:
-      // Reset everything except network.
+      // Reset everything except network and registrar.
       let s = {
         ...initialState,
       };
       s.common.network = newState.common.network;
+      s.registry.registrar = newState.registry.registrar;
       return s;
     case ActionType.CommonOwnedTokenAccountsSet:
       newState.common.ownedTokenAccounts = action.item.ownedTokenAccounts;
@@ -162,7 +163,7 @@ export const initialState: State = {
     walletProvider: 'https://www.sollet.io',
     bootstrapState: BootstrapState.NeedsBootstrap,
     //network: networks.localhost,
-    network: networks.devnet,
+    network: networks.mainnet,
     ownedTokenAccounts: [],
   },
   lockup: {
@@ -170,7 +171,7 @@ export const initialState: State = {
   },
   registry: {
     pendingWithdrawals: null,
-    registrar: networks.devnet.registrars.token1,
+    registrar: networks.mainnet.registrars.srm,
     //registrar: networks.localhost.registrars.token1,
   },
   accounts: {},

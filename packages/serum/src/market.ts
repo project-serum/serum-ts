@@ -359,6 +359,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     }: OrderParams,
   ) {
@@ -373,6 +374,7 @@ export class Market {
       orderType,
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     });
     return await this._sendTransaction(connection, transaction, [
@@ -524,6 +526,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = undefined,
     }: OrderParams<T>,
     cacheDurationMs = 0,
@@ -558,22 +561,29 @@ export class Market {
       useFeeDiscountPubkey = null;
     }
 
-    let openOrdersAddress;
+    let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      const newOpenOrdersAccount = new Account();
+      let account;
+      if (openOrdersAccount) {
+        account = openOrdersAccount;
+      } else {
+        account = new Account();
+      }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           connection,
           this.address,
           ownerAddress,
-          newOpenOrdersAccount.publicKey,
+          account.publicKey,
           this._programId,
         ),
       );
-      openOrdersAddress = newOpenOrdersAccount.publicKey;
-      signers.push(newOpenOrdersAccount);
+      openOrdersAddress = account.publicKey;
+      signers.push(account);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
+    } else if (openOrdersAccount) {
+      openOrdersAddress = openOrdersAccount.publicKey;
     } else if (openOrdersAddressKey) {
       openOrdersAddress = openOrdersAddressKey;
     } else {
@@ -659,6 +669,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = null,
       selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
@@ -680,7 +691,7 @@ export class Market {
         requestQueue: this._decoded.requestQueue,
         baseVault: this._decoded.baseVault,
         quoteVault: this._decoded.quoteVault,
-        openOrders: openOrdersAddressKey,
+        openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
         owner: ownerAddress,
         payer,
         side,
@@ -700,7 +711,7 @@ export class Market {
         eventQueue: this._decoded.eventQueue,
         baseVault: this._decoded.baseVault,
         quoteVault: this._decoded.quoteVault,
-        openOrders: openOrdersAddressKey,
+        openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
         owner: ownerAddress,
         payer,
         side,
@@ -1122,6 +1133,7 @@ export interface OrderParams<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
+  openOrdersAccount?: Account,
   feeDiscountPubkey?: PublicKey | null;
   selfTradeBehavior?:
     | 'decrementTake'

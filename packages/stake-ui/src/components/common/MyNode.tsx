@@ -253,8 +253,8 @@ function MyNodeBanner(props: MyNodeBannerProps) {
                       }}
                     >
                       create
-                    </HoverSpan>
-                    {' '}a stake account.
+                    </HoverSpan>{' '}
+                    a stake account.
                   </>
                 )}
               </Typography>
@@ -376,7 +376,7 @@ function DepositDialog(props: DepositDialogProps) {
       ) => {
         const amount = fromDisplay(displayAmount, mintAccount.decimals);
         enqueueSnackbar(
-          `Depositing ${amount} ${toDisplayLabel(
+          `Depositing ${displayAmount} ${toDisplayLabel(
             registrar.account.mint,
           )} from ${from.toString()}`,
           {
@@ -522,7 +522,7 @@ function WithdrawDialog(props: WithdrawDialogProps) {
       ) => {
         const amount = fromDisplay(displayAmount, mintAccount.decimals);
         enqueueSnackbar(
-          `Withdrawing ${amount} ${toDisplayLabel(
+          `Withdrawing ${displayAmount} ${toDisplayLabel(
             registrarAccount.mint,
           )} to ${from.toString()}`,
           {

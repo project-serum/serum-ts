@@ -34,18 +34,25 @@ export const networks: Networks = {
     msrmFaucet: null,
 
     registryProgramId: new PublicKey(
-      '6J7ZoSxtKJUjVLpGRcBrEtvE2T3YVf9mfKUaicndzpCc',
+      'GrAkKfEpTKQuVHG2Y97Y2FF4i7y7Q5AHLK94JBy7Y5yv',
     ),
     lockupProgramId: new PublicKey(
-      '4nvqpaMz7H12VgHSABjEDFmH62MoWP3BxfMG3BAFQiBo',
+      'AxeE1onr5r6ccMcFF7yMAcxJzQXAXWBUY9wsEnGAp5Du',
     ),
     registrars: {
-      srm: new PublicKey('C4HmoW3HmydAKUCKRR93jUujYrE4G3poDrXFKsf5V6b3'),
-      msrm: new PublicKey('8ZS85GGfa92JH6vrmpy8fgQQEBLWwYUwWmpBhcA94fDH'),
+      srm: new PublicKey('5vJRzKtcp4fJxqmR7qzajkaKSiAb6aT9grRsaZKXU222'),
+      msrm: new PublicKey('7uURiX2DwCpRuMFebKSkFtX9v5GK1Cd8nWLL8tyoyxZY'),
+      fida: new PublicKey('CJPEDnLSD6gQa94fkFmcPdqikHYMPzAL8NXmaurta2a7'),
+      maps: new PublicKey('9tzkorTXKbw73hokMsq34R6ADd13eJF9X4udXQLiGAKc'),
+      oxy: new PublicKey('DsWhta1RWA9NYEamaeYsGHpfLRX91bA4bWGnaivtFju2'),
     },
-
-    // Whitelisted token mints.
-    mints: {},
+    mints: {
+      srm: new PublicKey('SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt'),
+      msrm: new PublicKey('MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L'),
+      fida: new PublicKey('EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp'),
+      maps: new PublicKey('MAPS41MDahZ9QdKXhVa4dWB9RuyfV4XqhyAZ8XcYepb'),
+      oxy: new PublicKey('z3dn17yLaGMKffVogeFHQ9zWVcXgqgf3PQnDsNs2g6M'),
+    },
   },
   devnet: {
     // Cluster.
@@ -53,22 +60,22 @@ export const networks: Networks = {
     url: 'https://devnet.solana.com',
     explorerClusterSuffix: 'devnet',
 
-    srmFaucet: new PublicKey('4DBWATaYTC24aMXNTnqPcKdQgVNfiqWABTYZmZ4LuK8Z'),
-    msrmFaucet: new PublicKey('2jApmBeQHTt3bKze6QFTRadh38z8i44GNTJhr7eju5zF'),
+    srmFaucet: null,
+    msrmFaucet: null,
 
     registryProgramId: new PublicKey(
-      '5v6MzSGkQP6caq9bGjjHyvxxxkj5KAySAG5ZCsuNxHu',
+      '26c6KiAgdFV5o6CMccaWVo6pfFyEGXVXQC5LQvxh14ma',
     ),
     lockupProgramId: new PublicKey(
-      '9Fcp4Rzz53HHfvgpctX912agYdruY6jjCCJCgi4fHKA1',
+      '128BA7kccVixqsXF9pGEPBgrgua8Y8AxeN9SfJfnv1T6',
     ),
     registrars: {
-      token1: new PublicKey('72VPsxo2k6GWvbeEL2BEhNtNuStcZudWajZzGnXgzTJv'),
-      token2: new PublicKey('8PYA62aL6FZgzC8XeXhSvY94x4N9SGy8JsfVQS3qwsMm'),
+      token1: new PublicKey('5qg2Vey9KCNWar2PFsnv1UJavXBxMcCARKEz1rsttTGa'),
+      token2: new PublicKey('FVAtZrwcdMYhvBRJBY4Jzg35hGYN1LxptXQkCMpPPETA'),
     },
     mints: {
-      token1: new PublicKey('ArAjhHCGREmNfo25oG9amzut1sbWuntzakCT6DsiedWh'),
-      token2: new PublicKey('4rDNpSZb3yWRpSoedicBwcMcsR4QHauHaGPq6VudM8JM'),
+      token1: new PublicKey('9BS8Ut95cCVsC36mr8oDCCUCRMp2Tiom15vcgenMUh2t'),
+      token2: new PublicKey('7aTYaDoZtCWi71op4G71d8VVVM1BiBNqVNUGRm9rcnvY'),
     },
   },
 
