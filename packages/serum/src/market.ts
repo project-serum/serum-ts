@@ -691,7 +691,9 @@ export class Market {
         requestQueue: this._decoded.requestQueue,
         baseVault: this._decoded.baseVault,
         quoteVault: this._decoded.quoteVault,
-        openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
+        openOrders: openOrdersAccount
+          ? openOrdersAccount.publicKey
+          : openOrdersAddressKey,
         owner: ownerAddress,
         payer,
         side,
@@ -711,7 +713,9 @@ export class Market {
         eventQueue: this._decoded.eventQueue,
         baseVault: this._decoded.baseVault,
         quoteVault: this._decoded.quoteVault,
-        openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
+        openOrders: openOrdersAccount
+          ? openOrdersAccount.publicKey
+          : openOrdersAddressKey,
         owner: ownerAddress,
         payer,
         side,
@@ -1133,7 +1137,7 @@ export interface OrderParams<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
-  openOrdersAccount?: Account,
+  openOrdersAccount?: Account;
   feeDiscountPubkey?: PublicKey | null;
   selfTradeBehavior?:
     | 'decrementTake'
