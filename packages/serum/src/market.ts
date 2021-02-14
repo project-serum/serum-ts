@@ -353,6 +353,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     }: OrderParams,
   ) {
@@ -367,6 +368,7 @@ export class Market {
       orderType,
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     });
     return await this._sendTransaction(connection, transaction, [
@@ -653,6 +655,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = null,
     }: OrderParams<T>,
   ): TransactionInstruction {
@@ -672,7 +675,7 @@ export class Market {
       requestQueue: this._decoded.requestQueue,
       baseVault: this._decoded.baseVault,
       quoteVault: this._decoded.quoteVault,
-      openOrders: openOrdersAddressKey,
+      openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
       owner: ownerAddress,
       payer,
       side,
