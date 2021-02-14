@@ -536,15 +536,19 @@ export class Market {
     let useFeeDiscountPubkey: PublicKey | null;
     if (feeDiscountPubkey) {
       useFeeDiscountPubkey = feeDiscountPubkey;
-    } else if (feeDiscountPubkey === undefined && this.supportsSrmFeeDiscounts) {
-      useFeeDiscountPubkey =  (await this.findBestFeeDiscountKey(
+    } else if (
+      feeDiscountPubkey === undefined &&
+      this.supportsSrmFeeDiscounts
+    ) {
+      useFeeDiscountPubkey = (
+        await this.findBestFeeDiscountKey(
           connection,
           ownerAddress,
           feeDiscountPubkeyCacheDurationMs,
         )
-      ).pubkey
+      ).pubkey;
     } else {
-      useFeeDiscountPubkey = null
+      useFeeDiscountPubkey = null;
     }
 
     let openOrdersAddress: PublicKey;
@@ -675,7 +679,9 @@ export class Market {
       requestQueue: this._decoded.requestQueue,
       baseVault: this._decoded.baseVault,
       quoteVault: this._decoded.quoteVault,
-      openOrders: openOrdersAccount ? openOrdersAccount.publicKey : openOrdersAddressKey,
+      openOrders: openOrdersAccount
+        ? openOrdersAccount.publicKey
+        : openOrdersAddressKey,
       owner: ownerAddress,
       payer,
       side,
@@ -1062,7 +1068,7 @@ export interface OrderParams<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
-  openOrdersAccount?: Account,
+  openOrdersAccount?: Account;
   feeDiscountPubkey?: PublicKey | null;
 }
 
