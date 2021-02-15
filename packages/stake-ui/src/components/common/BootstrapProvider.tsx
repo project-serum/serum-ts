@@ -36,207 +36,6 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
 
   // Entry point for bootstrapping all the data for the app.
   const bootstrap = useCallback(async () => {
-    // Fetch all staking instances.
-    const fetchRegistrars = async (): Promise<ProgramAccount[]> => {
-      const registrarAddresses = Object.values(network.registrars);
-
-      // All registrars.
-      const registrars: ProgramAccount[] = (
-        await anchor.utils.getMultipleAccounts(
-          registryClient.provider.connection,
-          registrarAddresses,
-        )
-      ).map(raw => {
-        const account = registryClient.coder.accounts.decode(
-          'Registrar',
-          raw!.account.data,
-        );
-        return {
-          publicKey: raw!.publicKey,
-          account,
-        };
-      });
-
-      // Mint for each registrar.
-      const mints: ProgramAccount[] = (
-        await anchor.utils.getMultipleAccounts(
-          registryClient.provider.connection,
-          registrars.map(r => r.account.mint),
-        )
-      ).map(raw => {
-        const account = parseMintAccount(raw!.account.data);
-        return {
-          publicKey: raw!.publicKey,
-          account,
-        };
-      });
-
-      // Reward queues for each registrar.
-      const rewardQs = (
-        await anchor.utils.getMultipleAccounts(
-          registryClient.provider.connection,
-          registrars.map(r => r.account.rewardEventQ),
-        )
-      ).map(raw => {
-        const account = registryClient.coder.accounts.decode(
-          'RewardQueue',
-          raw!.account.data,
-        );
-        return {
-          publicKey: raw!.publicKey,
-          account,
-        };
-      });
-
-      // Add all the accounts to the store.
-      registrars
-        .concat(mints)
-        .concat(rewardQs)
-        .forEach(r => {
-          dispatch({
-            type: ActionType.AccountAdd,
-            item: {
-              account: r,
-            },
-          });
-        });
-      return registrars;
-    };
-
-    // Fetch the stake accounts for each staking instance (for the connected wallet).
-    const fetchMembers = async (
-      registrars: ProgramAccount[],
-    ): Promise<ProgramAccount[]> => {
-      const members = await Promise.all(
-        registrars
-          .map((r: ProgramAccount) => r.publicKey)
-          .map((r: PublicKey) =>
-            memberSeed(r)
-              .then(seed =>
-                PublicKey.createWithSeed(
-                  wallet.publicKey,
-                  seed,
-                  registryClient.programId,
-                ),
-              )
-              .then(member => {
-                return {
-                  memberPublicKey: member,
-                  registrar: r,
-                };
-              }),
-          ),
-      );
-      const memberAddresses: PublicKey[] = members.map(m => m.memberPublicKey);
-      const memberAccounts: ProgramAccount[] = (
-        await anchor.utils.getMultipleAccounts(
-          registryClient.provider.connection,
-          memberAddresses,
-        )
-      )
-        .filter(raw => raw !== null)
-        .map((raw: any) => {
-          const account = registryClient.coder.accounts.decode(
-            'Member',
-            raw!.account.data,
-          );
-          return {
-            publicKey: raw!.publicKey,
-            account,
-          };
-        });
-
-      // Get all accounts for all of our member accounts.
-      //
-      // Note: As the number of registrars grows, we'll probably want to move
-      //       this fetch to be an on demand query, rather than on application
-      //       bootstrap.
-      await Promise.all(
-        memberAccounts.map(memberAccount => {
-          return fetchAndDispatchMemberAccounts(
-            memberAccount,
-            dispatch,
-            registryClient.provider.connection,
-          );
-        }),
-      );
-
-      // Add all the member accounts to the store. Must be done *after* the
-      // active member's vaults.
-      memberAccounts.forEach(m => {
-        dispatch({
-          type: ActionType.AccountAdd,
-          item: {
-            account: m,
-          },
-        });
-      });
-
-      return memberAccounts;
-    };
-
-    // All mints for each staking instance (pool token and the token being staked).
-    const fetchMints = async (registrars: ProgramAccount[]) => {
-      const mintAddresses = registrars
-        .map(r => r.account.mint)
-        .concat(registrars.map(r => r.account.poolMint));
-      const mints = (
-        await anchor.utils.getMultipleAccounts(
-          registryClient.provider.connection,
-          mintAddresses,
-        )
-      ).map(raw => {
-        const account = parseMintAccount(raw!.account.data);
-        return {
-          publicKey: raw!.publicKey,
-          account,
-        };
-      });
-      mints.forEach(m => {
-        dispatch({
-          type: ActionType.AccountAdd,
-          item: {
-            account: m,
-          },
-        });
-      });
-    };
-
-    // All token accounts owned by the current user.
-    const fetchOwnedTokenAccounts = async () => {
-      const ownedTokenAccounts = await token.getOwnedTokenAccounts(
-        lockupClient.provider.connection,
-        wallet.publicKey,
-      );
-      dispatch({
-        type: ActionType.CommonOwnedTokenAccountsSet,
-        item: {
-          ownedTokenAccounts,
-        },
-      });
-    };
-
-    // All vesting accounts owned by the current user.
-    const fetchVestingAccounts = async () => {
-      const vestingAccounts = await lockupClient.account.vesting.all(
-        wallet.publicKey.toBuffer(),
-      );
-      vestingAccounts.forEach(account => {
-        dispatch({
-          type: ActionType.AccountAdd,
-          item: {
-            account,
-          },
-        });
-      });
-      dispatch({
-        type: ActionType.LockupSetVestings,
-        item: {
-          vestingAccounts: vestingAccounts.map(v => v.publicKey),
-        },
-      });
-    };
-
     enqueueSnackbar(`Connecting to ${network.label}`, {
       variant: 'info',
       autoHideDuration: 2500,
@@ -247,9 +46,13 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       item: {},
     });
 
-    const registrars = await fetchRegistrars();
-    const members = await fetchMembers(registrars);
-    await fetchMints(registrars);
+    let { registrars, members } = await refreshAccounts({
+      dispatch,
+      lockupClient,
+      registryClient,
+      network,
+      wallet,
+    });
 
     // Temporary account store for the initial registrar switch.
     const accountStore = Object.fromEntries(
@@ -267,9 +70,6 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
       undefined,
     );
 
-    await fetchOwnedTokenAccounts();
-    await fetchVestingAccounts();
-
     dispatch({
       type: ActionType.CommonAppDidBootstrap,
       item: {},
@@ -282,13 +82,11 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
   }, [
     dispatch,
     enqueueSnackbar,
-    network.label,
     registryClient,
-    wallet.publicKey,
     registrar,
-    lockupClient.provider.connection,
-    lockupClient.account.vesting,
-    network.registrars,
+    lockupClient,
+    network,
+    wallet,
   ]);
 
   const shutdown = useCallback(async () => {
@@ -319,6 +117,226 @@ export default function BootstrapProvider(props: PropsWithChildren<ReactNode>) {
   }, [bootstrapTrigger, bootstrap, shutdownTrigger, shutdown, enqueueSnackbar]);
 
   return <>{props.children}</>;
+}
+
+// Fetches and populates the redux store with all accounts needed for the app to start.
+export async function refreshAccounts({
+  dispatch,
+  lockupClient,
+  registryClient,
+  network,
+  wallet,
+}: any) {
+  // Fetch all staking instances.
+  const fetchRegistrars = async (): Promise<ProgramAccount[]> => {
+    const registrarAddresses: PublicKey[] = Object.values(network.registrars);
+
+    // All registrars.
+    const registrars: ProgramAccount[] = (
+      await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        registrarAddresses,
+      )
+    ).map(raw => {
+      const account = registryClient.coder.accounts.decode(
+        'Registrar',
+        raw!.account.data,
+      );
+      return {
+        publicKey: raw!.publicKey,
+        account,
+      };
+    });
+
+    // Mint for each registrar.
+    const mints: ProgramAccount[] = (
+      await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        registrars.map(r => r.account.mint),
+      )
+    ).map(raw => {
+      const account = parseMintAccount(raw!.account.data);
+      return {
+        publicKey: raw!.publicKey,
+        account,
+      };
+    });
+
+    // Reward queues for each registrar.
+    const rewardQs = (
+      await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        registrars.map(r => r.account.rewardEventQ),
+      )
+    ).map(raw => {
+      const account = registryClient.coder.accounts.decode(
+        'RewardQueue',
+        raw!.account.data,
+      );
+      return {
+        publicKey: raw!.publicKey,
+        account,
+      };
+    });
+
+    // Add all the accounts to the store.
+    registrars
+      .concat(mints)
+      .concat(rewardQs)
+      .forEach(r => {
+        dispatch({
+          type: ActionType.AccountAdd,
+          item: {
+            account: r,
+          },
+        });
+      });
+    return registrars;
+  };
+
+  // Fetch the stake accounts for each staking instance (for the connected wallet).
+  const fetchMembers = async (
+    registrars: ProgramAccount[],
+  ): Promise<ProgramAccount[]> => {
+    const members = await Promise.all(
+      registrars
+        .map((r: ProgramAccount) => r.publicKey)
+        .map((r: PublicKey) =>
+          memberSeed(r)
+            .then(seed =>
+              PublicKey.createWithSeed(
+                wallet.publicKey,
+                seed,
+                registryClient.programId,
+              ),
+            )
+            .then(member => {
+              return {
+                memberPublicKey: member,
+                registrar: r,
+              };
+            }),
+        ),
+    );
+    const memberAddresses: PublicKey[] = members.map(m => m.memberPublicKey);
+    const memberAccounts: ProgramAccount[] = (
+      await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        memberAddresses,
+      )
+    )
+      .filter(raw => raw !== null)
+      .map((raw: any) => {
+        const account = registryClient.coder.accounts.decode(
+          'Member',
+          raw!.account.data,
+        );
+        return {
+          publicKey: raw!.publicKey,
+          account,
+        };
+      });
+
+    // Get all accounts for all of our member accounts.
+    //
+    // Note: As the number of registrars grows, we'll probably want to move
+    //       this fetch to be an on demand query, rather than on application
+    //       bootstrap.
+    await Promise.all(
+      memberAccounts.map(memberAccount => {
+        return fetchAndDispatchMemberAccounts(
+          memberAccount,
+          dispatch,
+          registryClient.provider.connection,
+        );
+      }),
+    );
+
+    // Add all the member accounts to the store. Must be done *after* the
+    // active member's vaults.
+    memberAccounts.forEach(m => {
+      dispatch({
+        type: ActionType.AccountAdd,
+        item: {
+          account: m,
+        },
+      });
+    });
+
+    return memberAccounts;
+  };
+
+  // All mints for each staking instance (pool token and the token being staked).
+  const fetchMints = async (registrars: ProgramAccount[]) => {
+    const mintAddresses = registrars
+      .map(r => r.account.mint)
+      .concat(registrars.map(r => r.account.poolMint));
+    const mints = (
+      await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        mintAddresses,
+      )
+    ).map(raw => {
+      const account = parseMintAccount(raw!.account.data);
+      return {
+        publicKey: raw!.publicKey,
+        account,
+      };
+    });
+    mints.forEach(m => {
+      dispatch({
+        type: ActionType.AccountAdd,
+        item: {
+          account: m,
+        },
+      });
+    });
+  };
+
+  // All token accounts owned by the current user.
+  const fetchOwnedTokenAccounts = async () => {
+    const ownedTokenAccounts = await token.getOwnedTokenAccounts(
+      lockupClient.provider.connection,
+      wallet.publicKey,
+    );
+    dispatch({
+      type: ActionType.CommonOwnedTokenAccountsSet,
+      item: {
+        ownedTokenAccounts,
+      },
+    });
+  };
+
+  // All vesting accounts owned by the current user.
+  const fetchVestingAccounts = async () => {
+    const vestingAccounts = await lockupClient.account.vesting.all(
+      wallet.publicKey.toBuffer(),
+    );
+    vestingAccounts.forEach((account: any) => {
+      dispatch({
+        type: ActionType.AccountAdd,
+        item: {
+          account,
+        },
+      });
+    });
+    dispatch({
+      type: ActionType.LockupSetVestings,
+      item: {
+        vestingAccounts: vestingAccounts.map(
+          (v: ProgramAccount) => v.publicKey,
+        ),
+      },
+    });
+  };
+
+  const registrars = await fetchRegistrars();
+  const members = await fetchMembers(registrars);
+  await fetchMints(registrars);
+  await fetchOwnedTokenAccounts();
+  await fetchVestingAccounts();
+
+  return { registrars, members };
 }
 
 export async function registrarSwitch(

@@ -14,8 +14,15 @@ import ExitToAppIcon from '@material-ui/icons/ExitToApp';
 import Button from '@material-ui/core/Button';
 import PersonIcon from '@material-ui/icons/Person';
 import BubbleChartIcon from '@material-ui/icons/BubbleChart';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import CircularProgress from '@material-ui/core/CircularProgress';
+import { refreshAccounts } from './BootstrapProvider';
 import { networks } from '../../store/config';
-import { State as StoreState, ProgramAccount } from '../../store/reducer';
+import {
+  State as StoreState,
+  ProgramAccount,
+  BootstrapState,
+} from '../../store/reducer';
 import { ActionType } from '../../store/actions';
 import { useWallet } from './WalletProvider';
 
@@ -29,8 +36,15 @@ export default function Header(props: HeaderProps) {
   const { network } = useSelector((state: StoreState) => {
     return {
       network: state.common.network,
+      isAppReady:
+        state.common.isWalletConnected &&
+        state.common.bootstrapState === BootstrapState.Bootstrapped,
     };
   });
+  const dispatch = useDispatch();
+  const { enqueueSnackbar, closeSnackbar } = useSnackbar();
+  const { wallet, registryClient, lockupClient } = useWallet();
+  const [isRefreshing, setIsRefreshing] = useState(false);
   return (
     <AppBar
       position="static"
@@ -67,6 +81,56 @@ export default function Header(props: HeaderProps) {
               display: 'flex',
             }}
           >
+            <div
+              onClick={() => {
+                setIsRefreshing(true);
+                enqueueSnackbar(`Refreshing`, {
+                  variant: 'info',
+                });
+                refreshAccounts({
+                  dispatch,
+                  lockupClient,
+                  registryClient,
+                  network,
+                  wallet,
+                })
+                  .then(() => {
+                    setIsRefreshing(false);
+                    closeSnackbar();
+                  })
+                  .catch(err => {
+                    setIsRefreshing(false);
+                    closeSnackbar();
+                    enqueueSnackbar(`There was a problem refreshing: ${err}`, {
+                      variant: 'error',
+                      autoHideDuration: 2500,
+                    });
+                  });
+              }}
+              style={{
+                display: isAppReady ? 'block' : 'none',
+                justifyContent: 'center',
+                flexDirection: 'column',
+                marginRight: '10px',
+              }}
+            >
+              {isRefreshing ? (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    padding: '10px',
+                  }}
+                >
+                  <CircularProgress style={{ width: '24px', height: '24px' }} />
+                </div>
+              ) : (
+                <div>
+                  <IconButton>
+                    <RefreshIcon />
+                  </IconButton>
+                </div>
+              )}
+            </div>
             <NetworkSelector />
             <WalletConnectButton
               style={{

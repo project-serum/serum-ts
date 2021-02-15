@@ -252,13 +252,13 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     },
     { field: 'Vault', value: vesting.account.vault.toString() },
     {
-      field: 'Realizor program',
+      field: 'Realizer program',
       value: vesting.account.realizor
         ? vesting.account.realizor.program.toString()
         : 'None',
     },
     {
-      field: 'Realizor metadata',
+      field: 'Realizer metadata',
       value: vesting.account.realizor
         ? vesting.account.realizor.metadata.toString()
         : 'None',
