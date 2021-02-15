@@ -67,6 +67,18 @@ export default function reducer(
       newState.common.ownedTokenAccounts = action.item.ownedTokenAccounts;
       return newState;
 
+    case ActionType.CommonOwnedTokenAccountsUpdate:
+      newState.common.ownedTokenAccounts = newState.common.ownedTokenAccounts.map(
+        programAccount => {
+          if (programAccount.publicKey.equals(action.item.account.publicKey)) {
+            return action.item.account;
+          } else {
+            return programAccount;
+          }
+        },
+      );
+      return newState;
+
     // Lockup.
     case ActionType.LockupSetVestings:
       newState.lockup.vestings = action.item.vestingAccounts;

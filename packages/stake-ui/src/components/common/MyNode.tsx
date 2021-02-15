@@ -24,6 +24,7 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
 import { SYSVAR_RENT_PUBKEY, PublicKey, SystemProgram } from '@solana/web3.js';
 import { TokenInstructions } from '@project-serum/serum';
+import { getTokenAccount } from '@project-serum/common';
 import { useWallet } from '../../components/common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { ViewTransactionOnExplorerButton } from '../../components/common/Notification';
@@ -457,7 +458,7 @@ function DepositDialog(props: DepositDialogProps) {
 
             return tx;
           } else {
-            return await registryClient.rpc.deposit(amount, {
+            const tx = await registryClient.rpc.deposit(amount, {
               accounts: {
                 depositor: from,
                 depositorAuthority: registryClient.provider.wallet.publicKey,
@@ -467,6 +468,22 @@ function DepositDialog(props: DepositDialogProps) {
                 member: member,
               },
             });
+
+            const tokenAccount = await getTokenAccount(
+              registryClient.provider,
+              from,
+            );
+            dispatch({
+              type: ActionType.CommonOwnedTokenAccountsUpdate,
+              item: {
+                account: {
+                  publicKey: from,
+                  account: tokenAccount,
+                },
+              },
+            });
+
+            return tx;
           }
         })();
         closeSnackbar();
@@ -597,7 +614,7 @@ function WithdrawDialog(props: WithdrawDialogProps) {
 
             return tx;
           } else {
-            return await registryClient.rpc.withdraw(amount, {
+            const tx = await registryClient.rpc.withdraw(amount, {
               accounts: {
                 registrar,
                 member,
@@ -608,6 +625,22 @@ function WithdrawDialog(props: WithdrawDialogProps) {
                 tokenProgram: TokenInstructions.TOKEN_PROGRAM_ID,
               },
             });
+
+            const tokenAccount = await getTokenAccount(
+              registryClient.provider,
+              from,
+            );
+            dispatch({
+              type: ActionType.CommonOwnedTokenAccountsUpdate,
+              item: {
+                account: {
+                  publicKey: from,
+                  account: tokenAccount,
+                },
+              },
+            });
+
+            return tx;
           }
         })();
 
@@ -717,6 +750,7 @@ function TransferDialog(props: TransferDialogProps) {
               <>
                 <OwnedTokenAccountsSelect
                   variant="outlined"
+                  decimals={mintAccount.decimals}
                   mint={mint}
                   onChange={(f: PublicKey, _maxDisplayAmount: BN) => {
                     setFrom(f);

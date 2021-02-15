@@ -15,6 +15,7 @@ export enum ActionType {
   CommonWalletSetProvider,
   CommonSetNetwork,
   CommonOwnedTokenAccountsSet,
+  CommonOwnedTokenAccountsUpdate,
   CommonWalletReset,
 
   // Lockup.
