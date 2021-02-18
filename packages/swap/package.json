@@ -45,9 +45,5 @@
     "@types/bs58": "^4.0.1",
     "@types/jest": "^24.9.1",
     "@types/node": "^12.12.62"
-  },
-  "browser": {
-    "./dist/index.umd.js": "./dist/index.browser.umd.js",
-    "./dist/index.es5.js": "./dist/index.browser.es5.js"
   }
 }
