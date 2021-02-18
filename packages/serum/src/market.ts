@@ -1,5 +1,11 @@
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
+import {
+  accountFlagsLayout,
+  publicKeyLayout,
+  selfTradeBehaviorLayout,
+  u128,
+  u64,
+} from './layout';
 import { Slab, SLAB_LAYOUT } from './slab';
 import { DexInstructions } from './instructions';
 import BN from 'bn.js';
@@ -353,12 +359,14 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     }: OrderParams,
   ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction<
-      Account
-    >(connection, {
+    const {
+      transaction,
+      signers,
+    } = await this.makePlaceOrderTransaction<Account>(connection, {
       owner,
       payer,
       side,
@@ -367,6 +375,7 @@ export class Market {
       orderType,
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey,
     });
     return await this._sendTransaction(connection, transaction, [
@@ -391,6 +400,10 @@ export class Market {
 
   get supportsReferralFees() {
     return getLayoutVersion(this._programId) > 1;
+  }
+
+  get usesRequestQueue() {
+    return getLayoutVersion(this._programId) <= 2;
   }
 
   async findFeeDiscountKeys(
@@ -514,6 +527,7 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = undefined,
     }: OrderParams<T>,
     cacheDurationMs = 0,
@@ -533,33 +547,44 @@ export class Market {
     let useFeeDiscountPubkey: PublicKey | null;
     if (feeDiscountPubkey) {
       useFeeDiscountPubkey = feeDiscountPubkey;
-    } else if (feeDiscountPubkey === undefined && this.supportsSrmFeeDiscounts) {
-      useFeeDiscountPubkey =  (await this.findBestFeeDiscountKey(
+    } else if (
+      feeDiscountPubkey === undefined &&
+      this.supportsSrmFeeDiscounts
+    ) {
+      useFeeDiscountPubkey = (
+        await this.findBestFeeDiscountKey(
           connection,
           ownerAddress,
           feeDiscountPubkeyCacheDurationMs,
         )
-      ).pubkey
+      ).pubkey;
     } else {
-      useFeeDiscountPubkey = null
+      useFeeDiscountPubkey = null;
     }
 
-    let openOrdersAddress;
+    let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      const newOpenOrdersAccount = new Account();
+      let account;
+      if (openOrdersAccount) {
+        account = openOrdersAccount;
+      } else {
+        account = new Account();
+      }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           connection,
           this.address,
           ownerAddress,
-          newOpenOrdersAccount.publicKey,
+          account.publicKey,
           this._programId,
         ),
       );
-      openOrdersAddress = newOpenOrdersAccount.publicKey;
-      signers.push(newOpenOrdersAccount);
+      openOrdersAddress = account.publicKey;
+      signers.push(account);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
+    } else if (openOrdersAccount) {
+      openOrdersAddress = openOrdersAccount.publicKey;
     } else if (openOrdersAddressKey) {
       openOrdersAddress = openOrdersAddressKey;
     } else {
@@ -645,7 +670,9 @@ export class Market {
       orderType = 'limit',
       clientId,
       openOrdersAddressKey,
+      openOrdersAccount,
       feeDiscountPubkey = null,
+      selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
   ): TransactionInstruction {
     // @ts-ignore
@@ -659,22 +686,52 @@ export class Market {
     if (!this.supportsSrmFeeDiscounts) {
       feeDiscountPubkey = null;
     }
-    return DexInstructions.newOrder({
-      market: this.address,
-      requestQueue: this._decoded.requestQueue,
-      baseVault: this._decoded.baseVault,
-      quoteVault: this._decoded.quoteVault,
-      openOrders: openOrdersAddressKey,
-      owner: ownerAddress,
-      payer,
-      side,
-      limitPrice: this.priceNumberToLots(price),
-      maxQuantity: this.baseSizeNumberToLots(size),
-      orderType,
-      clientId,
-      programId: this._programId,
-      feeDiscountPubkey,
-    });
+    if (this.usesRequestQueue) {
+      return DexInstructions.newOrder({
+        market: this.address,
+        requestQueue: this._decoded.requestQueue,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        openOrders: openOrdersAccount
+          ? openOrdersAccount.publicKey
+          : openOrdersAddressKey,
+        owner: ownerAddress,
+        payer,
+        side,
+        limitPrice: this.priceNumberToLots(price),
+        maxQuantity: this.baseSizeNumberToLots(size),
+        orderType,
+        clientId,
+        programId: this._programId,
+        feeDiscountPubkey,
+      });
+    } else {
+      return DexInstructions.newOrderV3({
+        market: this.address,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        requestQueue: this._decoded.requestQueue,
+        eventQueue: this._decoded.eventQueue,
+        baseVault: this._decoded.baseVault,
+        quoteVault: this._decoded.quoteVault,
+        openOrders: openOrdersAccount
+          ? openOrdersAccount.publicKey
+          : openOrdersAddressKey,
+        owner: ownerAddress,
+        payer,
+        side,
+        limitPrice: this.priceNumberToLots(price),
+        maxBaseQuantity: this.baseSizeNumberToLots(size),
+        maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
+          this.baseSizeNumberToLots(size).mul(this.priceNumberToLots(price)),
+        ),
+        orderType,
+        clientId,
+        programId: this._programId,
+        selfTradeBehavior,
+        feeDiscountPubkey,
+      });
+    }
   }
 
   private async _sendTransaction(
@@ -717,16 +774,31 @@ export class Market {
     clientId: BN,
   ) {
     const transaction = new Transaction();
-    transaction.add(
-      DexInstructions.cancelOrderByClientId({
-        market: this.address,
-        owner,
-        openOrders,
-        requestQueue: this._decoded.requestQueue,
-        clientId,
-        programId: this._programId,
-      }),
-    );
+    if (this.usesRequestQueue) {
+      transaction.add(
+        DexInstructions.cancelOrderByClientId({
+          market: this.address,
+          owner,
+          openOrders,
+          requestQueue: this._decoded.requestQueue,
+          clientId,
+          programId: this._programId,
+        }),
+      );
+    } else {
+      transaction.add(
+        DexInstructions.cancelOrderByClientIdV2({
+          market: this.address,
+          openOrders,
+          owner,
+          bids: this._decoded.bids,
+          asks: this._decoded.asks,
+          eventQueue: this._decoded.eventQueue,
+          clientId,
+          programId: this._programId,
+        }),
+      );
+    }
     return transaction;
   }
 
@@ -754,16 +826,31 @@ export class Market {
     owner: PublicKey,
     order: Order,
   ) {
-    return DexInstructions.cancelOrder({
-      market: this.address,
-      owner,
-      openOrders: order.openOrdersAddress,
-      requestQueue: this._decoded.requestQueue,
-      side: order.side,
-      orderId: order.orderId,
-      openOrdersSlot: order.openOrdersSlot,
-      programId: this._programId,
-    });
+    if (this.usesRequestQueue) {
+      return DexInstructions.cancelOrder({
+        market: this.address,
+        owner,
+        openOrders: order.openOrdersAddress,
+        requestQueue: this._decoded.requestQueue,
+        side: order.side,
+        orderId: order.orderId,
+        openOrdersSlot: order.openOrdersSlot,
+        programId: this._programId,
+      });
+    } else {
+      return DexInstructions.cancelOrderV2({
+        market: this.address,
+        owner,
+        openOrders: order.openOrdersAddress,
+        bids: this._decoded.bids,
+        asks: this._decoded.asks,
+        eventQueue: this._decoded.eventQueue,
+        side: order.side,
+        orderId: order.orderId,
+        openOrdersSlot: order.openOrdersSlot,
+        programId: this._programId,
+      });
+    }
   }
 
   async settleFunds(
@@ -1051,7 +1138,13 @@ export interface OrderParams<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
+  openOrdersAccount?: Account;
   feeDiscountPubkey?: PublicKey | null;
+  selfTradeBehavior?:
+    | 'decrementTake'
+    | 'cancelProvide'
+    | 'abortTransaction'
+    | undefined;
 }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([

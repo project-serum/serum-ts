@@ -67,6 +67,18 @@ export default function reducer(
       newState.common.ownedTokenAccounts = action.item.ownedTokenAccounts;
       return newState;
 
+    case ActionType.CommonOwnedTokenAccountsUpdate:
+      newState.common.ownedTokenAccounts = newState.common.ownedTokenAccounts.map(
+        programAccount => {
+          if (programAccount.publicKey.equals(action.item.account.publicKey)) {
+            return action.item.account;
+          } else {
+            return programAccount;
+          }
+        },
+      );
+      return newState;
+
     // Lockup.
     case ActionType.LockupSetVestings:
       newState.lockup.vestings = action.item.vestingAccounts;
@@ -162,7 +174,6 @@ export const initialState: State = {
     isWalletConnected: false,
     walletProvider: 'https://www.sollet.io',
     bootstrapState: BootstrapState.NeedsBootstrap,
-    //network: networks.localhost,
     network: networks.mainnet,
     ownedTokenAccounts: [],
   },
@@ -172,7 +183,6 @@ export const initialState: State = {
   registry: {
     pendingWithdrawals: null,
     registrar: networks.mainnet.registrars.srm,
-    //registrar: networks.localhost.registrars.token1,
   },
   accounts: {},
 };

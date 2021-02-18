@@ -2,6 +2,8 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
+import { TOKENS } from '@project-serum/tokens';
+import { PublicKey } from '@solana/web3.js';
 import { State as StoreState, ProgramAccount } from '../../store/reducer';
 import { Network } from '../../store/config';
 import * as bootstrap from './BootstrapProvider';
@@ -102,10 +104,27 @@ export default function RegistrarSelect() {
         registrars.map(([label, registrar]) => {
           return (
             <MenuItem key={label} value={label}>
-              <div style={{ overflow: 'hidden' }}>{`${registrarToDisplayLabel(
-                registrar,
-                network,
-              )}`}</div>
+              <div style={{ display: 'flex' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {getImage(registrar.account.mint)}
+                </div>
+                <div
+                  style={{
+                    overflow: 'hidden',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {`${registrarToDisplayLabel(registrar, network)}`}
+                </div>
+              </div>
             </MenuItem>
           );
         })
@@ -125,4 +144,19 @@ function registrarToDisplayLabel(
     return entry.toUpperCase();
   }
   return registrar.publicKey.toString();
+}
+
+function getImage(mint: PublicKey) {
+  let token = TOKENS.mainnet.filter(t => t.mintAddress === mint.toString());
+  if (token.length === 1 && token[0].icon) {
+    return (
+      <img
+        alt="Token Icon"
+        style={{ marginRight: '10px', height: '25px' }}
+        src={token[0].icon}
+      />
+    );
+  } else {
+    return <div style={{ marginLeft: '32px' }}></div>;
+  }
 }
