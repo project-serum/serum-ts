@@ -2,17 +2,14 @@
   "name": "@project-serum/swap",
   "version": "0.0.5",
   "description": "Serum Swap",
-  "main": "dist/index.umd.js",
-  "module": "dist/index.es5.js",
-  "types": "dist/lib/src/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/src/index.d.ts",
   "license": "Apache-2.0",
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "yarn build:node && yarn build:browser",
-    "build:node": "tsc -b && rollup -c rollup/rollup.config.ts",
-    "build:browser": "tsc -b && rollup -c rollup/rollup.config.browser.ts",
+    "build": "tsc",
     "test": "jest test",
     "coverage": "jest --coverage test",
     "prepublishOnly": "yarn build",
