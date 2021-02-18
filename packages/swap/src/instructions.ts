@@ -171,6 +171,15 @@ export const TokenSwapLayout: Structure = struct(
   ]
 );
 
+export function getLayoutForProgramId(programId: PublicKey): Structure {
+  if (getProgramVersion(programId) == 2) {
+    return TokenSwapLayout;
+  } else if (getProgramVersion(programId) == 1) {
+    return TokenSwapLayoutV1;
+  }
+  return TokenSwapLayoutLegacyV0;
+}
+
 export const createInitSwapInstruction = (
   tokenSwapAccount: Account,
   authority: PublicKey,

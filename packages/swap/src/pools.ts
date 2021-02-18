@@ -22,14 +22,13 @@ import {
   getProgramVersion,
   parseMintData,
   parseTokenAccount,
-  PROGRAM_ID,
   SWAP_PROGRAM_OWNER_FEE_ADDRESS,
   swapInstruction,
   TOKEN_PROGRAM_ID,
-  TokenSwapLayout,
   withdrawInstruction,
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
+  getLayoutForProgramId,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
@@ -89,7 +88,8 @@ export class Pool {
       await connection.getAccountInfo(address),
       'Pool not found',
     );
-    const decoded = TokenSwapLayout.decode(account.data);
+    const layout = getLayoutForProgramId(programId);
+    const decoded = layout.decode(account.data);
     return new Pool(decoded, address, programId, options);
   }
 
@@ -723,9 +723,9 @@ export class Pool {
         fromPubkey: ownerAddress,
         newAccountPubkey: tokenSwapAccount.publicKey,
         lamports: await connection.getMinimumBalanceForRentExemption(
-          TokenSwapLayout.span,
+          getLayoutForProgramId(tokenSwapProgram).span,
         ),
-        space: TokenSwapLayout.span,
+        space: getLayoutForProgramId(tokenSwapProgram).span,
         programId: tokenSwapProgram,
       }),
     );
