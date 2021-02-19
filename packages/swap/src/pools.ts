@@ -863,21 +863,52 @@ export class Pool {
     tradeFee: number;
     ownerFee: number;
     withdrawFee: number;
+    hostFee?: number;
   } {
-    return {
-      tradeFee: divideBnToNumber(
-        new BN(this._decoded.tradeFeeNumerator, 'le'),
-        new BN(this._decoded.tradeFeeDenominator, 'le'),
-      ),
-      ownerFee: divideBnToNumber(
-        new BN(this._decoded.ownerTradeFeeNumerator, 'le'),
-        new BN(this._decoded.ownerTradeFeeDenominator, 'le'),
-      ),
-      withdrawFee: divideBnToNumber(
-        new BN(this._decoded.ownerWithdrawFeeNumerator, 'le'),
-        new BN(this._decoded.ownerWithdrawFeeDenominator, 'le'),
-      ),
-    };
+    if (this.programVersion !== 2) {
+      return {
+        tradeFee: divideBnToNumber(
+          new BN(this._decoded.tradeFeeNumerator, 'le'),
+          new BN(this._decoded.tradeFeeDenominator, 'le'),
+        ),
+        ownerFee: divideBnToNumber(
+          new BN(this._decoded.ownerTradeFeeNumerator, 'le'),
+          new BN(this._decoded.ownerTradeFeeDenominator, 'le'),
+        ),
+        withdrawFee: divideBnToNumber(
+          new BN(this._decoded.ownerWithdrawFeeNumerator, 'le'),
+          new BN(this._decoded.ownerWithdrawFeeDenominator, 'le'),
+        ),
+      };
+    } else {
+      let withdrawalFee;
+      if (
+        this._decoded.fees.ownerWithdrawFeeNumerator != 0 &&
+        this._decoded.fees.ownerWithdrawFeeDenominator != 0
+      ) {
+        withdrawalFee = divideBnToNumber(
+          new BN(this._decoded.fees.ownerWithdrawFeeNumerator, 'le'),
+          new BN(this._decoded.fees.ownerWithdrawFeeDenominator, 'le'),
+        );
+      } else {
+        withdrawalFee = 0;
+      }
+      return {
+        tradeFee: divideBnToNumber(
+          new BN(this._decoded.fees.tradeFeeNumerator, 'le'),
+          new BN(this._decoded.fees.tradeFeeDenominator, 'le'),
+        ),
+        ownerFee: divideBnToNumber(
+          new BN(this._decoded.fees.ownerTradeFeeNumerator, 'le'),
+          new BN(this._decoded.fees.ownerTradeFeeDenominator, 'le'),
+        ),
+        withdrawFee: withdrawalFee,
+        hostFee: divideBnToNumber(
+          new BN(this._decoded.fees.hostFeeNumerator, 'le'),
+          new BN(this._decoded.fees.hostFeeDenominator, 'le'),
+        )
+      };
+    }
   }
 }
 
