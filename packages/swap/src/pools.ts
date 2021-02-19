@@ -22,19 +22,18 @@ import {
   getProgramVersion,
   parseMintData,
   parseTokenAccount,
-  PROGRAM_ID,
   SWAP_PROGRAM_OWNER_FEE_ADDRESS,
   swapInstruction,
   TOKEN_PROGRAM_ID,
-  TokenSwapLayout,
   withdrawInstruction,
   WRAPPED_SOL_MINT,
+  LATEST_VERSION,
+  getLayoutForProgramId,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
 import assert from 'assert';
 import BN from 'bn.js';
-
 export class Pool {
   private _decoded: any;
   private _programId: PublicKey;
@@ -64,15 +63,15 @@ export class Pool {
     this._poolAccount = poolAccount;
     this._programId = programId;
     this._tokenMints = [
-      new PublicKey(decoded.mintA),
-      new PublicKey(decoded.mintB),
+      decoded.mintA,
+      decoded.mintB,
     ];
     this._holdingAccounts = [
-      new PublicKey(decoded.tokenAccountA),
-      new PublicKey(decoded.tokenAccountB),
+      decoded.tokenAccountA,
+      decoded.tokenAccountB,
     ];
-    this._poolTokenMint = new PublicKey(decoded.tokenPool);
-    this._feeAccount = new PublicKey(decoded.feeAccount);
+    this._poolTokenMint = decoded.tokenPool;
+    this._feeAccount = decoded.feeAccount;
     this._skipPreflight = skipPreflight;
     this._commitment = commitment;
     this._mintAccountsCache = {};
@@ -89,7 +88,8 @@ export class Pool {
       await connection.getAccountInfo(address),
       'Pool not found',
     );
-    const decoded = TokenSwapLayout.decode(account.data);
+    const layout = getLayoutForProgramId(programId);
+    const decoded = layout.decode(account.data);
     return new Pool(decoded, address, programId, options);
   }
 
@@ -103,6 +103,10 @@ export class Pool {
 
   get programVersion(): number {
     return getProgramVersion(this._programId);
+  }
+
+  get isLatest(): boolean {
+    return getProgramVersion(this._programId) === LATEST_VERSION;
   }
 
   async cached<T>(
@@ -237,21 +241,23 @@ export class Pool {
       `Token account for mint ${accountB.info.mint.toBase58()} not provided`,
     );
 
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        poolAccount.pubkey,
-        authority,
-        ownerAddress,
-        [],
-        liquidityAmount,
-      ),
-    );
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanUpInstructions,
+      ownerAddress,
+      ownerAddress,
+      liquidityAmount,
+      this.isLatest ? undefined : authority);
+
+    if(this.isLatest) {
+      signers.push(transferAuthority);
+    }
 
     instructions.push(
       withdrawInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         this._poolTokenMint,
         this._feeAccount,
         poolAccount.pubkey,
@@ -401,32 +407,32 @@ export class Pool {
     }
 
     // create approval for transfer transactions
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        fromKeyA,
-        authority,
-        ownerAddress,
-        [],
-        amount0,
-      ),
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKeyA,
+      ownerAddress,
+      amount0,
+      this.isLatest ? undefined : authority,
     );
+    if(this.isLatest) {
+      signers.push(transferAuthority);
+    }
 
-    instructions.push(
-      Token.createApproveInstruction(
-        TOKEN_PROGRAM_ID,
-        fromKeyB,
-        authority,
-        ownerAddress,
-        [],
-        amount1,
-      ),
+    approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKeyB,
+      ownerAddress,
+      amount1,
+      this.isLatest ? transferAuthority.publicKey : authority,
     );
 
     instructions.push(
       depositInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         fromKeyA,
         fromKeyB,
         this._holdingAccounts[0],
@@ -535,29 +541,32 @@ export class Pool {
       toAccount = tokenOut.tokenAccount;
     }
 
-    // create approval for transfer transactions
-    const approveInstruction = Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      fromAccount,
-      authority,
-      ownerAddress,
-      [],
-      amountIn,
-    );
-    instructions.push(approveInstruction);
+  // create approval for transfer transactions
+  const transferAuthority = approveTransfer(
+    instructions,
+    cleanupInstructions,
+    fromAccount,
+    ownerAddress,
+    amountIn,
+    this.isLatest ? undefined : authority,
+  );
+  if(this.isLatest) {
+    signers.push(transferAuthority);
+  }
 
     // swap
     instructions.push(
       swapInstruction(
         this._poolAccount,
         authority,
+        transferAuthority.publicKey,
         fromAccount,
         holdingA,
         holdingB,
         toAccount,
         this._poolTokenMint,
         this._feeAccount,
-        PROGRAM_ID,
+        this._programId,
         TOKEN_PROGRAM_ID,
         amountIn,
         minAmountOut,
@@ -608,6 +617,7 @@ export class Pool {
 
   static async makeInitializePoolTransaction<T extends PublicKey | Account>(
     connection: Connection,
+    tokenSwapProgram: PublicKey,
     owner: T,
     componentMints: PublicKey[],
     sourceTokenAccounts: {
@@ -627,6 +637,7 @@ export class Pool {
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const initializeAccountsInstructions: TransactionInstruction[] = [];
     const initializeAccountsSigners: Account[] = [];
+    const version = getProgramVersion(tokenSwapProgram);
 
     const liquidityTokenMintAccount = new Account();
     initializeAccountsInstructions.push(
@@ -645,7 +656,7 @@ export class Pool {
     const tokenSwapAccount = new Account();
     const [authority, nonce] = await PublicKey.findProgramAddress(
       [tokenSwapAccount.publicKey.toBuffer()],
-      PROGRAM_ID,
+      tokenSwapProgram,
     );
 
     // create mint for pool liquidity token
@@ -712,10 +723,10 @@ export class Pool {
         fromPubkey: ownerAddress,
         newAccountPubkey: tokenSwapAccount.publicKey,
         lamports: await connection.getMinimumBalanceForRentExemption(
-          TokenSwapLayout.span,
+          getLayoutForProgramId(tokenSwapProgram).span,
         ),
-        space: TokenSwapLayout.span,
-        programId: PROGRAM_ID,
+        space: getLayoutForProgramId(tokenSwapProgram).span,
+        programId: tokenSwapProgram,
       }),
     );
 
@@ -762,15 +773,9 @@ export class Pool {
         feeAccount.publicKey,
         depositorAccount.publicKey,
         TOKEN_PROGRAM_ID,
-        PROGRAM_ID,
+        tokenSwapProgram,
         nonce,
-        options.curveType,
-        options.tradeFeeNumerator,
-        options.tradeFeeDenominator,
-        options.ownerTradeFeeNumerator,
-        options.ownerTradeFeeDenominator,
-        options.ownerWithdrawFeeNumerator,
-        options.ownerWithdrawFeeDenominator,
+        options,
       ),
     );
     initializePoolSigners.push(tokenSwapAccount);
@@ -789,6 +794,7 @@ export class Pool {
 
   static async initializePool(
     connection: Connection,
+    tokenSwapProgram: PublicKey,
     owner: Account,
     componentMints: PublicKey[],
     sourceTokenAccounts: {
@@ -808,6 +814,7 @@ export class Pool {
       initializePoolSigners,
     } = await Pool.makeInitializePoolTransaction(
       connection,
+      tokenSwapProgram,
       owner,
       componentMints,
       sourceTokenAccounts,
@@ -919,6 +926,39 @@ export const getTokenAccount = async (
     info: accountInfo,
   };
 };
+
+export const approveTransfer = (
+  instructions: TransactionInstruction[],
+  cleanupInstructions: TransactionInstruction[],
+  account: PublicKey,
+  owner: PublicKey,
+  amount: number,
+
+  // if delegate is not passed ephemeral transfer authority is used
+  delegate?: PublicKey,
+)  => {
+  const transferAuthority = new Account();
+  instructions.push(
+    Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      account,
+      delegate ?? transferAuthority.publicKey,
+      owner,
+      [],
+      amount
+    )
+  );
+
+  cleanupInstructions.push(
+    Token.createRevokeInstruction(
+      TOKEN_PROGRAM_ID,
+      account,
+      owner,
+      []),
+  );
+
+  return transferAuthority;
+}
 
 export const createTokenAccount = (
   owner: PublicKey,

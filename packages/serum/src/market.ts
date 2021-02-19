@@ -363,9 +363,10 @@ export class Market {
       feeDiscountPubkey,
     }: OrderParams,
   ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction<
-      Account
-    >(connection, {
+    const {
+      transaction,
+      signers,
+    } = await this.makePlaceOrderTransaction<Account>(connection, {
       owner,
       payer,
       side,
