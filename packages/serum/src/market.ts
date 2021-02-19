@@ -1383,7 +1383,11 @@ export class Orderbook {
     ]);
   }
 
-  *[Symbol.iterator](): Generator<Order> {
+  [Symbol.iterator]() {
+    return this.items(false);
+  }
+
+  *items(descending = false): Generator<Order> {
     for (const {
       key,
       ownerSlot,
@@ -1391,7 +1395,7 @@ export class Orderbook {
       quantity,
       feeTier,
       clientOrderId,
-    } of this.slab) {
+    } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       yield {
         orderId: key,
