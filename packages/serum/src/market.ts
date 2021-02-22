@@ -161,7 +161,7 @@ export class Market {
     return _MARKET_STATE_LAYOUT_V2;
   }
 
-  static async findAddressByMints(
+  static async findAccountsByMints(
     connection: Connection,
     baseMintAddress: PublicKey,
     quoteMintAddress: PublicKey,
