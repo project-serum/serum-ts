@@ -233,12 +233,6 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
     },
     { field: 'Period count', value: vesting.account.periodCount.toString() },
     {
-      field: 'Created at timestamp',
-      value: `${new Date(
-        vesting.account.createdTs.toNumber() * 1000,
-      ).toLocaleString()} (${vesting.account.createdTs.toString()})`,
-    },
-    {
       field: 'Start timestamp',
       value: `${new Date(
         vesting.account.startTs.toNumber() * 1000,
