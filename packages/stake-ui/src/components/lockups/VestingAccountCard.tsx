@@ -6,6 +6,7 @@ import { useSnackbar } from 'notistack';
 import { FixedScaleAxis, IChartOptions, Interpolation } from 'chartist';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Card from '@material-ui/core/Card';
+import ListItemIcon from '@material-ui/core/ListItemIcon';
 import CardContent from '@material-ui/core/CardContent';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
@@ -16,6 +17,7 @@ import Table from '@material-ui/core/Table';
 import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableRow from '@material-ui/core/TableRow';
+import Collapse from '@material-ui/core/Collapse';
 import { PublicKey, SYSVAR_CLOCK_PUBKEY } from '@solana/web3.js';
 import { TokenInstructions } from '@project-serum/serum';
 import { ProgramAccount, State as StoreState } from '../../store/reducer';
@@ -25,6 +27,7 @@ import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccounts
 import { withTx } from '../../components/common/Notification';
 import { ActionType } from '../../store/actions';
 import { toDisplay, toDisplayLabel } from '../../utils/tokens';
+import { getImage } from '../../components/common/RegistrarSelect';
 import {
   vestingSigner,
   availableForWithdrawal as _availableForWithdrawal,
@@ -51,6 +54,8 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
         : undefined,
     };
   });
+  const [expanded, setExpanded] = useState(false);
+  const [hover, setHover] = useState(false);
 
   // Whitelisted mints only for now.
   const isCustomMint = false;
@@ -257,17 +262,24 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
         ? vesting.account.realizor.metadata.toString()
         : 'None',
     },
+    {
+      field: 'Grantor',
+      value: vesting.account.grantor.toString(),
+    },
   ];
 
   return (
     <Card
       key={vesting.publicKey.toString()}
+      onMouseOver={() => setHover(true)}
+      onMouseOut={() => setHover(false)}
       style={{
         marginTop: '24px',
+        cursor: hover ? 'pointer' : 'default',
       }}
     >
-      <CardContent>
-        <ListItem>
+      <CardContent style={{ paddingBottom: '16px' }}>
+        <ListItem onClick={() => setExpanded(!expanded)}>
           <div
             style={{
               width: '100%',
@@ -275,6 +287,12 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
               justifyContent: 'space-between',
             }}
           >
+            <ListItemIcon>
+              {getImage(vesting.account.mint, {
+                marginRight: '16px',
+                width: '56px',
+              })}
+            </ListItemIcon>
             <ListItemText
               primary={
                 <Link
@@ -292,12 +310,12 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             />
             <div
               style={{
-                maxWidth: '155px',
                 marginTop: '6px',
                 color: 'rgba(0, 0, 0, 0.54)',
                 display: 'flex',
                 justifyContent: 'space-between',
                 flexDirection: 'column',
+                maxWidth: '200px',
               }}
             >
               <Typography
@@ -309,113 +327,107 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             </div>
           </div>
         </ListItem>
-        <Typography></Typography>
-        {vestingDates.length <= 15 ? (
-          <ChartistGraph
-            data={{
-              labels: vestingDates,
-              series: [cumulativeVesting],
-            }}
-            options={
-              {
-                axisY: {
-                  type: FixedScaleAxis,
-                  low: 0,
-                  high: cumulativeVesting[cumulativeVesting.length - 1],
-                  ticks: cumulativeVesting,
-                },
-                lineSmooth: Interpolation.step(),
-                height: 400,
-              } as IChartOptions
-            }
-            type={'Line'}
-          />
-        ) : (
-          <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
-            {/* TOOD: graphs for vesting accounts with a lot of periods. */}A
-            graph isn't available for this account.
-          </div>
-        )}
-        <div>
-          {isCustomMint && (
-            <div
-              style={{
-                padding: '15px',
+        <Collapse in={expanded} timeout="auto" unmountOnExit>
+          <Typography></Typography>
+          {vestingDates.length <= 15 ? (
+            <ChartistGraph
+              data={{
+                labels: vestingDates,
+                series: [cumulativeVesting],
               }}
-            >
-              <b>
-                Note: custom mints (i.e. not SRM/MSRM) display raw token amounts
-                without decimals.
-              </b>
+              options={
+                {
+                  axisY: {
+                    type: FixedScaleAxis,
+                    low: 0,
+                    high: cumulativeVesting[cumulativeVesting.length - 1],
+                    ticks: cumulativeVesting,
+                  },
+                  lineSmooth: Interpolation.step(),
+                  height: 400,
+                } as IChartOptions
+              }
+              type={'Line'}
+            />
+          ) : (
+            <div style={{ textAlign: 'center', fontWeight: 'bold' }}>
+              {/* TOOD: graphs for vesting accounts with a lot of periods. */}A
+              graph isn't available for this account.
             </div>
           )}
-          <Table>
-            <TableBody>
-              {rows.map(r => {
-                return (
-                  <TableRow>
-                    <TableCell>{r.field}</TableCell>
-                    <TableCell align="right">
-                      {r.value === null ? (
-                        <CircularProgress
-                          style={{ height: '20px', width: '20px', padding: 0 }}
-                        />
-                      ) : (
-                        r.value
-                      )}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          <div style={{ display: 'flex', marginTop: '15px' }}>
-            <OwnedTokenAccountsSelect
-              mint={vesting.account.mint}
-              onChange={(f: PublicKey) => setWithdrawalAccount(f)}
-            />
-            <div style={{ marginLeft: '20px', width: '191px' }}>
-              <Button
-                style={{ fontSize: '12px' }}
-                color="primary"
-                disabled={!withdrawEnabled}
-                variant="contained"
-                onClick={() =>
-                  withdraw().catch(err => {
-                    let msg = err.toString();
-                    if (
-                      msg &&
-                      msg.split('custom program error: 0x78').length === 2
-                    ) {
-                      msg = 'Unrealized rewards. Please unstake';
-                    }
-                    enqueueSnackbar(
-                      `Error withdrawing from vesting account: ${err.toString()}`,
-                      {
-                        variant: 'error',
-                      },
-                    );
-                  })
-                }
+          <div>
+            {isCustomMint && (
+              <div
+                style={{
+                  padding: '15px',
+                }}
               >
-                Unlock tokens
-              </Button>
+                <b>
+                  Note: custom mints (i.e. not SRM/MSRM) display raw token
+                  amounts without decimals.
+                </b>
+              </div>
+            )}
+            <Table>
+              <TableBody>
+                {rows.map(r => {
+                  return (
+                    <TableRow>
+                      <TableCell>{r.field}</TableCell>
+                      <TableCell align="right">
+                        {r.value === null ? (
+                          <CircularProgress
+                            style={{
+                              height: '20px',
+                              width: '20px',
+                              padding: 0,
+                            }}
+                          />
+                        ) : (
+                          r.value
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            <div style={{ display: 'flex', marginTop: '15px' }}>
+              <OwnedTokenAccountsSelect
+                mint={vesting.account.mint}
+                onChange={(f: PublicKey) => setWithdrawalAccount(f)}
+              />
+              <div style={{ marginLeft: '20px', width: '191px' }}>
+                <Button
+                  style={{ fontSize: '12px' }}
+                  color="primary"
+                  disabled={!withdrawEnabled}
+                  variant="contained"
+                  onClick={() =>
+                    withdraw().catch(err => {
+                      let msg = err.toString();
+                      if (
+                        msg &&
+                        msg.split('custom program error: 0x78').length === 2
+                      ) {
+                        msg = 'Unrealized rewards. Please unstake';
+                      }
+                      enqueueSnackbar(
+                        `Error withdrawing from vesting account: ${err.toString()}`,
+                        {
+                          variant: 'error',
+                        },
+                      );
+                    })
+                  }
+                >
+                  Unlock tokens
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
+        </Collapse>
       </CardContent>
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'row-reverse',
-          marginBottom: '16px',
-          marginRight: '16px',
-        }}
-      >
-        <Typography color="textSecondary">
-          Granted by {vesting.account.grantor.toString()}
-        </Typography>
-      </div>
     </Card>
   );
 }
