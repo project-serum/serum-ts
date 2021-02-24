@@ -3,9 +3,9 @@ import { useSelector } from 'react-redux';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
 import Typography from '@material-ui/core/Typography';
-import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Container from '@material-ui/core/Container';
+import List from '@material-ui/core/List';
 import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import NewVestingButton from './NewVesting';
@@ -24,6 +24,7 @@ export default function Vestings() {
       network: state.common.network,
     };
   });
+
   return (
     <Container fixed maxWidth="md">
       <div style={{ width: '100%' }}>
@@ -72,7 +73,7 @@ export default function Vestings() {
           </Typography>
           <List
             disablePadding
-            style={{ width: '656px', marginLeft: 'auto', marginRight: 'auto' }}
+            style={{ marginLeft: 'auto', marginRight: 'auto' }}
           >
             {vestingAccounts.map(v => (
               <VestingAccountCard network={network} vesting={v} />
@@ -81,7 +82,6 @@ export default function Vestings() {
               <Card
                 style={{
                   marginTop: '24px',
-                  width: '656px',
                 }}
               >
                 <CardContent>

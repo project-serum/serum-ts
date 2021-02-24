@@ -146,13 +146,13 @@ function registrarToDisplayLabel(
   return registrar.publicKey.toString();
 }
 
-function getImage(mint: PublicKey) {
+export function getImage(mint: PublicKey, style?: any) {
   let token = TOKENS.mainnet.filter(t => t.mintAddress === mint.toString());
   if (token.length === 1 && token[0].icon) {
     return (
       <img
         alt="Token Icon"
-        style={{ marginRight: '10px', height: '25px' }}
+        style={ style ?? { marginRight: '10px', height: '25px' }}
         src={token[0].icon}
       />
     );
