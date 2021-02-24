@@ -19,6 +19,10 @@ export const SETTLE_FUNDS_QUOTE_WALLET_INDEX = 6;
 export const NEW_ORDER_OPEN_ORDERS_INDEX = 1;
 export const NEW_ORDER_OWNER_INDEX = 4;
 
+// NOTE: Update these if the position of arguments for the newOrder instruction changes
+export const NEW_ORDER_V3_OPEN_ORDERS_INDEX = 1;
+export const NEW_ORDER_V3_OWNER_INDEX = 7;
+
 export const INSTRUCTION_LAYOUT = new VersionedLayout(
   0,
   union(u32('instruction')),
@@ -71,7 +75,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
     u64('maxBaseQuantity'),
     u64('maxQuoteQuantity'),
     selfTradeBehaviorLayout('selfTradeBehavior'),
-    orderTypeLayout('ordertype'),
+    orderTypeLayout('orderType'),
     u64('clientId'),
     u16('limit'),
   ]),
