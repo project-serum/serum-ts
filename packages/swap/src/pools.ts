@@ -34,6 +34,7 @@ import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
 import assert from 'assert';
 import BN from 'bn.js';
+
 export class Pool {
   private _decoded: any;
   private _programId: PublicKey;
@@ -107,6 +108,10 @@ export class Pool {
 
   get isLatest(): boolean {
     return getProgramVersion(this._programId) === LATEST_VERSION;
+  }
+
+  get poolTokenMint(): PublicKey {
+    return this._poolTokenMint;
   }
 
   async cached<T>(
@@ -244,7 +249,7 @@ export class Pool {
     const transferAuthority = approveTransfer(
       instructions,
       cleanUpInstructions,
-      ownerAddress,
+      poolAccount.pubkey,
       ownerAddress,
       liquidityAmount,
       this.isLatest ? undefined : authority);
@@ -838,6 +843,66 @@ export class Pool {
       connection,
       initializePoolTransaction,
       [owner, ...initializePoolSigners],
+      skipPreflight,
+      commitment,
+    );
+  }
+
+  async removeLiquidity(
+    connection: Connection,
+    owner: Account,
+    liquidityAmount: number,
+    poolAccount: TokenAccount,
+    tokenAccounts: TokenAccount[],
+    skipPreflight = true,
+    commitment: Commitment = 'single',
+  ): Promise<string> {
+    const {
+      transaction,
+      signers,
+    } = await this.makeRemoveLiquidityTransaction(
+      connection,
+      owner,
+      liquidityAmount,
+      poolAccount,
+      tokenAccounts
+    );
+    return await sendTransaction(
+      connection,
+      transaction,
+      [owner, ...signers],
+      skipPreflight,
+      commitment,
+    );
+  }
+
+  async addLiquidity(
+    connection: Connection,
+    owner: Account,
+    sourceTokenAccounts: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number; // note this is raw amount, not decimal
+    }[],
+    poolTokenAccount?: PublicKey,
+    slippageTolerance?: number,
+    skipPreflight = true,
+    commitment: Commitment = 'single'
+  ): Promise<string> {
+    const {
+      transaction,
+      signers
+    } = await this.makeAddLiquidityTransaction(
+      connection,
+      owner,
+      sourceTokenAccounts,
+      poolTokenAccount,
+      slippageTolerance
+    );
+    return await sendTransaction(
+      connection,
+      transaction,
+      [owner, ...signers],
       skipPreflight,
       commitment,
     );
