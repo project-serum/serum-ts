@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/swap",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "description": "Serum Swap",
   "main": "lib/index.js",
   "types": "lib/src/index.d.ts",
