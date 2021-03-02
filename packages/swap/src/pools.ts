@@ -20,7 +20,6 @@ import {
   DEFAULT_LIQUIDITY_TOKEN_PRECISION,
   depositInstruction,
   getProgramVersion,
-  parseMintData,
   parseTokenAccount,
   SWAP_PROGRAM_OWNER_FEE_ADDRESS,
   swapInstruction,
@@ -29,11 +28,13 @@ import {
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
   getLayoutForProgramId,
+  deserializeMint,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
 import assert from 'assert';
 import BN from 'bn.js';
+
 export class Pool {
   private _decoded: any;
   private _programId: PublicKey;
@@ -62,14 +63,8 @@ export class Pool {
     this._decoded = decoded;
     this._poolAccount = poolAccount;
     this._programId = programId;
-    this._tokenMints = [
-      decoded.mintA,
-      decoded.mintB,
-    ];
-    this._holdingAccounts = [
-      decoded.tokenAccountA,
-      decoded.tokenAccountB,
-    ];
+    this._tokenMints = [decoded.mintA, decoded.mintB];
+    this._holdingAccounts = [decoded.tokenAccountA, decoded.tokenAccountB];
     this._poolTokenMint = decoded.tokenPool;
     this._feeAccount = decoded.feeAccount;
     this._skipPreflight = skipPreflight;
@@ -107,6 +102,10 @@ export class Pool {
 
   get isLatest(): boolean {
     return getProgramVersion(this._programId) === LATEST_VERSION;
+  }
+
+  get poolTokenMint(): PublicKey {
+    return this._poolTokenMint;
   }
 
   async cached<T>(
@@ -244,12 +243,13 @@ export class Pool {
     const transferAuthority = approveTransfer(
       instructions,
       cleanUpInstructions,
-      ownerAddress,
+      poolAccount.pubkey,
       ownerAddress,
       liquidityAmount,
-      this.isLatest ? undefined : authority);
+      this.isLatest ? undefined : authority,
+    );
 
-    if(this.isLatest) {
+    if (this.isLatest) {
       signers.push(transferAuthority);
     }
 
@@ -415,7 +415,7 @@ export class Pool {
       amount0,
       this.isLatest ? undefined : authority,
     );
-    if(this.isLatest) {
+    if (this.isLatest) {
       signers.push(transferAuthority);
     }
 
@@ -541,18 +541,18 @@ export class Pool {
       toAccount = tokenOut.tokenAccount;
     }
 
-  // create approval for transfer transactions
-  const transferAuthority = approveTransfer(
-    instructions,
-    cleanupInstructions,
-    fromAccount,
-    ownerAddress,
-    amountIn,
-    this.isLatest ? undefined : authority,
-  );
-  if(this.isLatest) {
-    signers.push(transferAuthority);
-  }
+    // create approval for transfer transactions
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromAccount,
+      ownerAddress,
+      amountIn,
+      this.isLatest ? undefined : authority,
+    );
+    if (this.isLatest) {
+      signers.push(transferAuthority);
+    }
 
     // swap
     instructions.push(
@@ -843,6 +843,60 @@ export class Pool {
     );
   }
 
+  async removeLiquidity(
+    connection: Connection,
+    owner: Account,
+    liquidityAmount: number,
+    poolAccount: TokenAccount,
+    tokenAccounts: TokenAccount[],
+    skipPreflight = true,
+    commitment: Commitment = 'single',
+  ): Promise<string> {
+    const { transaction, signers } = await this.makeRemoveLiquidityTransaction(
+      connection,
+      owner,
+      liquidityAmount,
+      poolAccount,
+      tokenAccounts,
+    );
+    return await sendTransaction(
+      connection,
+      transaction,
+      [owner, ...signers],
+      skipPreflight,
+      commitment,
+    );
+  }
+
+  async addLiquidity(
+    connection: Connection,
+    owner: Account,
+    sourceTokenAccounts: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number; // note this is raw amount, not decimal
+    }[],
+    poolTokenAccount?: PublicKey,
+    slippageTolerance?: number,
+    skipPreflight = true,
+    commitment: Commitment = 'single',
+  ): Promise<string> {
+    const { transaction, signers } = await this.makeAddLiquidityTransaction(
+      connection,
+      owner,
+      sourceTokenAccounts,
+      poolTokenAccount,
+      slippageTolerance,
+    );
+    return await sendTransaction(
+      connection,
+      transaction,
+      [owner, ...signers],
+      skipPreflight,
+      commitment,
+    );
+  }
+
   async getHoldings(
     connection: Connection,
   ): Promise<{ account: PublicKey; mint: PublicKey; holding: u64 }[]> {
@@ -906,7 +960,7 @@ export class Pool {
         hostFee: divideBnToNumber(
           new BN(this._decoded.fees.hostFeeNumerator, 'le'),
           new BN(this._decoded.fees.hostFeeDenominator, 'le'),
-        )
+        ),
       };
     }
   }
@@ -938,7 +992,7 @@ export const getMintAccount = async (
   if (info === null) {
     throw new Error('Failed to find mint account');
   }
-  return parseMintData(info.data);
+  return deserializeMint(info.data);
 };
 
 export const getTokenAccount = async (
@@ -967,7 +1021,7 @@ export const approveTransfer = (
 
   // if delegate is not passed ephemeral transfer authority is used
   delegate?: PublicKey,
-)  => {
+) => {
   const transferAuthority = new Account();
   instructions.push(
     Token.createApproveInstruction(
@@ -976,20 +1030,16 @@ export const approveTransfer = (
       delegate ?? transferAuthority.publicKey,
       owner,
       [],
-      amount
-    )
+      amount,
+    ),
   );
 
   cleanupInstructions.push(
-    Token.createRevokeInstruction(
-      TOKEN_PROGRAM_ID,
-      account,
-      owner,
-      []),
+    Token.createRevokeInstruction(TOKEN_PROGRAM_ID, account, owner, []),
   );
 
   return transferAuthority;
-}
+};
 
 export const createTokenAccount = (
   owner: PublicKey,
