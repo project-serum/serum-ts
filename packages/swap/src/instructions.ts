@@ -18,6 +18,7 @@ import {
 } from '@solana/spl-token';
 import BN from 'bn.js';
 import { CurveType, PoolConfig } from './types';
+import BufferLayout from 'buffer-layout';
 
 export { TokenSwap } from '@solana/spl-token-swap';
 
@@ -187,7 +188,6 @@ export const createInitSwapInstruction = (
       nu64('tradeFeeDenominator'),
       nu64('ownerTradeFeeNumerator'),
       nu64('ownerTradeFeeDenominator'),
-      ,
       nu64('ownerWithdrawFeeNumerator'),
       nu64('ownerWithdrawFeeDenominator'),
       nu64('hostFeeNumerator'),

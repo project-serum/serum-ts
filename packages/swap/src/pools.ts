@@ -627,6 +627,10 @@ export class Pool {
     }[],
     options: PoolConfig,
     liquidityTokenPrecision = DEFAULT_LIQUIDITY_TOKEN_PRECISION,
+    accounts?: {
+      liquidityTokenMint?: Account;
+      tokenSwapPoolAddress?: Account;
+    },
   ): Promise<{
     initializeAccountsTransaction: Transaction;
     initializeAccountsSigners: Account[];
@@ -639,7 +643,9 @@ export class Pool {
     const initializeAccountsSigners: Account[] = [];
     const version = getProgramVersion(tokenSwapProgram);
 
-    const liquidityTokenMintAccount = new Account();
+    const liquidityTokenMintAccount = accounts?.liquidityTokenMint
+      ? accounts.liquidityTokenMint
+      : new Account();
     initializeAccountsInstructions.push(
       SystemProgram.createAccount({
         fromPubkey: ownerAddress,
@@ -653,7 +659,9 @@ export class Pool {
     );
     initializeAccountsSigners.push(liquidityTokenMintAccount);
 
-    const tokenSwapAccount = new Account();
+    const tokenSwapAccount = accounts?.tokenSwapPoolAddress
+      ? accounts.tokenSwapPoolAddress
+      : new Account();
     const [authority, nonce] = await PublicKey.findProgramAddress(
       [tokenSwapAccount.publicKey.toBuffer()],
       tokenSwapProgram,
