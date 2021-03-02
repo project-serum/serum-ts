@@ -375,7 +375,6 @@ function DropVendorForm(props: DropVendorFormProps) {
     onClick,
     isSendEnabled,
   } = props;
-
   const mintOptions: { label: string; publicKey: PublicKey }[] = Object.keys(
     network.mints,
   ).map(label => {

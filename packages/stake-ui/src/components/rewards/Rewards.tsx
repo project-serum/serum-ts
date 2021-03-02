@@ -95,6 +95,16 @@ export default function Rewards() {
           <DropRewardButton />
         </div>
       </div>
+      <div>
+        <Typography>
+          When rewards are dropped, one must prove one was staked during the
+          time of drop. This means sending a transaction to the staking program
+          to <b>process</b> the reward. For <b>unlocked</b> rewards, select the
+          token address to transfer the reward to. For <b>locked</b> rewards, a
+          locked vesting account will be created and realized to the staker upon
+          unstaking. See the Lockup tab.
+        </Typography>
+      </div>
       <Paper>
         <RewardsList rewards={rewards} />
       </Paper>

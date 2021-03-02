@@ -50,8 +50,8 @@ export default function ClaimRewardButton(props: ClaimRewardButtonProps) {
   const clickHandler = async (): Promise<void> => {
     notification.withTx(
       snack,
-      `Claiming vendor reward ${rli!.vendor!.publicKey.toString()}`,
-      'Reward claimed',
+      `Processing vendor reward ${rli!.vendor!.publicKey.toString()}`,
+      'Reward processed',
       async () => {
         const vendor = await registryClient.account.rewardVendor(
           rli.vendor!.publicKey,
@@ -191,7 +191,7 @@ export default function ClaimRewardButton(props: ClaimRewardButtonProps) {
             })
           }
         >
-          Claim Reward
+          Process Reward
         </Button>
       </div>
     </>

@@ -25,6 +25,7 @@ export default function OwnedTokenAccountsSelect(p: Props) {
       ota => ota.account.mint.toString() === mint.toString(),
     );
   });
+
   const [fromAccount, setFromAccount] = useState('');
   return (
     <Select
@@ -57,10 +58,12 @@ export default function OwnedTokenAccountsSelect(p: Props) {
                 }}
               >
                 <div>{`${ownedTokenAccount.publicKey}`}</div>
-                <div style={{ float: 'right', color: '#ccc' }}>{`${toDisplay(
-                  ownedTokenAccount.account.amount,
-                  decimals ?? 0,
-                )}`}</div>
+                {decimals && (
+                  <div style={{ float: 'right', color: '#ccc' }}>{`${toDisplay(
+                    ownedTokenAccount.account.amount,
+                    decimals ?? 0,
+                  )}`}</div>
+                )}
               </div>
             </MenuItem>
           );

@@ -43,7 +43,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { lockupClient, registryClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
   const dispatch = useDispatch();
-  const { accounts, member } = useSelector((state: StoreState) => {
+  const { accounts, member, mintAccount } = useSelector((state: StoreState) => {
     return {
       accounts: state.accounts,
       member: state.registry.member
@@ -52,6 +52,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             account: state.accounts[state.registry.member.toString()],
           }
         : undefined,
+      mintAccount: state.accounts[vesting.account.mint.toString()],
     };
   });
   const [expanded, setExpanded] = useState(false);
@@ -394,6 +395,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             </Table>
             <div style={{ display: 'flex', marginTop: '15px' }}>
               <OwnedTokenAccountsSelect
+                decimals={mintAccount ? mintAccount.decimals : undefined}
                 mint={vesting.account.mint}
                 onChange={(f: PublicKey) => setWithdrawalAccount(f)}
               />

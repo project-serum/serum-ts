@@ -152,7 +152,7 @@ export function getImage(mint: PublicKey, style?: any) {
     return (
       <img
         alt="Token Icon"
-        style={ style ?? { marginRight: '10px', height: '25px' }}
+        style={style ?? { marginRight: '10px', height: '25px' }}
         src={token[0].icon}
       />
     );
