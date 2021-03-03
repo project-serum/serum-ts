@@ -80,7 +80,7 @@ export default function Footer() {
       <div style={{ marginLeft: 'auto', marginRight: 'auto', display: 'flex' }}>
         <FooterButton
           href={
-            'https://github.com/project-serum/serum-dex/blob/master/docs/staking.md'
+            'https://github.com/project-serum/anchor/blob/master/examples/lockup/docs/staking.md'
           }
           label={'Technical Documentation'}
         />
