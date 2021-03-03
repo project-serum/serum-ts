@@ -141,7 +141,11 @@ function MyNodeBanner(props: MyNodeBannerProps) {
     const signers: Account[] = [];
     const allTxs = [mainTx, lockedTx, { tx, signers }];
     // @ts-ignore
-    let txSigs = await registryClient.provider.sendAll(allTxs);
+    let txSigs = await registryClient.provider.sendAll(allTxs, {
+      commitment: 'recent',
+      preflightCommitment: 'recent',
+      skipPreflight: true,
+    });
     console.log('Accounts created with transactions:', txSigs);
 
     const memberAccount = await registryClient.account.member(member);

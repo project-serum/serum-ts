@@ -26,7 +26,8 @@ export default function OwnedTokenAccountsSelect(p: Props) {
     );
   });
 
-  const [fromAccount, setFromAccount] = useState(ownedTokenAccounts.length > 0 ? ownedTokenAccounts[0].publicKey.toString() : '');
+  const [fromAccount, setFromAccount] = useState('');
+
   return (
     <Select
       style={style}
