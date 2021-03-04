@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import BN from 'bn.js';
 import { useSnackbar } from 'notistack';
 import {
   Account,
@@ -217,6 +218,13 @@ function PoolCard(props: PoolCardProps) {
     mint.account.decimals,
   );
 
+  const cost = poolAmount
+    ? toDisplay(
+        registrarAccount.stakeRate.mul(new BN(poolAmount)),
+        mint.account.decimals,
+      )
+    : 0;
+
   return (
     <Card
       style={{
@@ -245,6 +253,22 @@ function PoolCard(props: PoolCardProps) {
             marginBottom: '16px',
           }}
         >
+          <Typography>
+            Please enter the amount of pool tokens you would like to purchase in
+            the form below. Upon pressing <b>stake</b> you will create new pool
+            tokens at a fixed price, adding to the amount of pool tokens
+            outstanding.
+          </Typography>
+          <br />
+          <Typography>
+            Unstaking works similarly, except one must incur an unbonding period
+            where funds will be not be able to be retrieved until the unbonding
+            period ends. For SRM, this is one week. Other staking pools may be
+            configured differently. At the end of the unbonding period, click
+            the blue checkbox next to your pending transfer. If the checkbox is
+            grey, your unbonding period has not yet completed.
+          </Typography>
+          <br />
           <Typography style={{ fontWeight: 'bold' }}>
             Total pool tokens outstanding
           </Typography>
@@ -253,6 +277,12 @@ function PoolCard(props: PoolCardProps) {
             Price per pool token
           </Typography>
           <Typography>{pricePerShare.toString()}</Typography>
+          <Typography style={{ fontWeight: 'bold' }}>
+            Your total cost
+          </Typography>
+          <Typography>
+            {cost} {toDisplayLabel(mint.publicKey)}
+          </Typography>
         </div>
         <div>
           <div style={{ marginBottom: '10px' }}>
