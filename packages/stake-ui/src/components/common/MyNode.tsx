@@ -405,6 +405,7 @@ function DepositDialog(props: DepositDialogProps) {
             ).publicKey;
             const relayAccounts = [
               {
+                // @ts-ignore
                 pubkey: await registryClient.state.address(),
                 isWritable: false,
                 isSigner: false,
@@ -427,6 +428,7 @@ function DepositDialog(props: DepositDialogProps) {
               {
                 accounts: {
                   transfer: {
+                    // @ts-ignore
                     lockup: await lockupClient.state.address(),
                     beneficiary: registryClient.provider.wallet.publicKey,
                     whitelistedProgram: registryClient.programId,
@@ -569,6 +571,7 @@ function WithdrawDialog(props: WithdrawDialogProps) {
             ).publicKey;
             const relayAccounts = [
               {
+                // @ts-ignore
                 pubkey: await registryClient.state.address(),
                 isWritable: false,
                 isSigner: false,
@@ -584,6 +587,7 @@ function WithdrawDialog(props: WithdrawDialogProps) {
             const tx = await lockupClient.rpc.whitelistDeposit(relayData, {
               accounts: {
                 transfer: {
+                  // @ts-ignore
                   lockup: await lockupClient.state.address(),
                   beneficiary: registryClient.provider.wallet.publicKey,
                   whitelistedProgram: registryClient.programId,

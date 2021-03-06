@@ -89,6 +89,7 @@ export default function ClaimRewardButton(props: ClaimRewardButtonProps) {
             vendoredVestingSigner.nonce,
             {
               accounts: {
+                // @ts-ignore
                 registry: await registryClient.state.address(),
                 lockupProgram: lockupClient.programId,
                 cmn: {

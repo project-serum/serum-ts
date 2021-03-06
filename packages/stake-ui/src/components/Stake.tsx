@@ -7,6 +7,11 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from '@solana/web3.js';
+import Table from '@material-ui/core/Table';
+import TableHead from '@material-ui/core/TableHead';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableRow from '@material-ui/core/TableRow';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Switch from '@material-ui/core/Switch';
@@ -166,19 +171,22 @@ export default function Stake() {
   };
 
   return (
-    <div style={{ display: 'flex', width: '100%' }}>
-      <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
-        <PoolCard
-          title={'Stake Pool'}
-          create={createPool}
-          redeem={redeemPool}
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'flex', width: '100%' }}>
+        <div style={{ flex: 1, marginTop: '24px', marginBottom: '24px' }}>
+          <PoolCard
+            title={'Stake Pool'}
+            create={createPool}
+            redeem={redeemPool}
+          />
+        </div>
+        <RedemptionList
+          style={{
+            marginBottom: '24px',
+          }}
         />
       </div>
-      <RedemptionList
-        style={{
-          marginBottom: '24px',
-        }}
-      />
+      <AllPendingTransfers />
     </div>
   );
 }
@@ -433,7 +441,7 @@ function RedemptionList(props: RedemptionListProps) {
               paddingBottom: '12px',
             }}
           >
-            <Typography style={{}}>Pending Transfers</Typography>
+            <Typography style={{}}>Your Pending Transfers</Typography>
             <Typography style={{ fontSize: '12px' }} color="textSecondary">
               Click the checkmark to complete a transfer on or after the "end"
               date.
@@ -657,5 +665,98 @@ function PendingWithdrawalButton(props: PendingWithdrawalButtonProps) {
         <CheckCircleIcon style={{ color, fontSize: '20px' }} />
       </IconButton>
     </div>
+  );
+}
+
+function AllPendingTransfers() {
+  const { registryClient } = useWallet();
+  const { registrar, registrarAccount, mintAccount } = useSelector(
+    (state: StoreState) => {
+      const registrarAccount =
+        state.accounts[state.registry.registrar.toString()];
+      return {
+        registrar: state.registry.registrar,
+        registrarAccount,
+        mintAccount: state.accounts[registrarAccount.mint.toString()],
+      };
+    },
+  );
+  const [pendingTransfers, setPendingTransfers] = useState<null | any>(null);
+  useEffect(() => {
+    const fetchAll = async () => {
+      let transfers = await registryClient.account.pendingWithdrawal.all();
+      transfers = transfers
+        .filter((pw: any) => pw.account.burned === false)
+        .filter((pw: any) => pw.account.registrar.equals(registrar))
+        .sort((a, b) => {
+          if (a.account.startTs < b.account.startTs) {
+            return 1;
+          } else if (a.account.startTs > b.account.startTs) {
+            return -1;
+          } else {
+            return 0;
+          }
+        });
+      setPendingTransfers(transfers);
+    };
+    fetchAll();
+  }, [registryClient, registrar]);
+
+  return (
+    <Card style={{ maxHeight: '900px', overflow: 'auto' }}>
+      <Typography
+        variant="h5"
+        style={{ padding: '16px', borderBottom: 'solid 1pt #ccc' }}
+      >
+        All pending transfers
+      </Typography>
+      {pendingTransfers !== null ? (
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Member Account</TableCell>
+              <TableCell>Amount</TableCell>
+              <TableCell>Pool</TableCell>
+              <TableCell>Locked</TableCell>
+              <TableCell>Start</TableCell>
+              <TableCell>End</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {pendingTransfers.map((pw: any) => (
+              <TableRow>
+                <TableCell>{pw.account.member.toString()}</TableCell>
+                <TableCell>
+                  {toDisplay(
+                    pw.account.amount.toString(),
+                    mintAccount.decimals,
+                  )}
+                </TableCell>
+                <TableCell>
+                  {pw.account.amount.div(registrarAccount.stakeRate).toString()}
+                </TableCell>
+                <TableCell>{pw.account.locked.toString()}</TableCell>
+                <TableCell>
+                  {new Date(pw.account.startTs.toNumber() * 1000).toString()}
+                </TableCell>
+                <TableCell>
+                  {new Date(pw.account.endTs.toNumber() * 1000).toString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      ) : (
+        <div style={{ padding: '24px' }}>
+          <CircularProgress
+            style={{
+              display: 'block',
+              marginLeft: 'auto',
+              marginRight: 'auto',
+            }}
+          />
+        </div>
+      )}
+    </Card>
   );
 }
