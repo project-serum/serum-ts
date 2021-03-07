@@ -2561,10 +2561,10 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
-"@project-serum/anchor@^0.2.1":
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.2.1.tgz#fbfdac980d863cb44b4e3b8f55254f2bc1f386a8"
-  integrity sha512-RwYVK7c6tgJESotVt8P4pQs9WtF/m905SHwMfmIsbdIYH9sIzf3SBPbreRwndwjCOSv3demc9w29FYshD0W1Hg==
+"@project-serum/anchor@^0.2.2-beta.2":
+  version "0.2.2-beta.2"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.2.2-beta.2.tgz#5429f42b8098776def4dfbcc4946a1aac534c696"
+  integrity sha512-W5QvDbUTyE61Blz8eO2InjAgTBaEufdh52HJGBsaW716Q1aVKhnBGH3nQ4TTZGIasYdQLZR5I7RDcgq3t2CSLg==
   dependencies:
     "@project-serum/borsh" "^0.1.0"
     "@solana/web3.js" "^0.90.4"
@@ -9434,6 +9434,11 @@ jquery@^3.4.1:
   version "3.5.1"
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.5.1.tgz#d7b4d08e1bfdb86ad2f1a3d039ea17304717abb5"
   integrity sha512-XwIBPqcMn57FxfT+Go5pzySnm4KWkT1Tv7gjrpT1srtf8Weynl6R273VJ5GjkRb51IzMp5nbaPjJXMWeju2MKg==
+
+js-base64@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/js-base64/-/js-base64-3.6.0.tgz#773e1de628f4f298d65a7e9842c50244751f5756"
+  integrity sha512-wVdUBYQeY2gY73RIlPrysvpYx+2vheGo8Y1SNQv/BzHToWpAZzJU7Z6uheKMAe+GLSBig5/Ps2nxg/8tRB73xg==
 
 js-sha256@^0.9.0:
   version "0.9.0"
