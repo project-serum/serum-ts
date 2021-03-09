@@ -3,6 +3,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
+import Card from '@material-ui/core/Card';
+import CardContent from '@material-ui/core/CardContent';
 import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
@@ -80,6 +82,18 @@ export default function Rewards() {
 
   return (
     <div style={{ width: '100%', marginTop: '24px' }}>
+      {nextReward && (
+        <Card style={{ marginBottom: '24px' }}>
+          <CardContent>
+            <Typography variant="h6">
+              You were staked during a previous reward. To prove eligibility,
+              click the "Process" button until you've processed <b>all</b>{' '}
+              eligible rewards. For unlocked rewards, don't forget to select the
+              address you wish to send your stake reward to.
+            </Typography>
+          </CardContent>
+        </Card>
+      )}
       <div
         style={{
           marginBottom: '10px',
@@ -95,7 +109,7 @@ export default function Rewards() {
           <DropRewardButton />
         </div>
       </div>
-      <div>
+      <div style={{ marginBottom: '16px' }}>
         <Typography>
           When rewards are dropped, one must prove one was staked during the
           time of drop. This means sending a transaction to the staking program
