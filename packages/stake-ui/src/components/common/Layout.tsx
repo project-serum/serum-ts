@@ -122,9 +122,11 @@ function RiskDisclosureForm({ onConsent }: { onConsent: () => void }) {
             color="textSecondary"
             variant="h4"
           >
-            This program may be subject to security vulnerabilities that may
-            lead to losing tokens. By using this program, you agree to bear the
-            risks associated with such vulnerabilities.
+            No statement or warranty is provided in relation to the utility of
+            this program, the safety of its code or its suitability for your use,
+            and by using it, you agree to bear any risk associated with such
+            potential vulnerabilities, including, but not limited to the
+            potential loss of tokens.
           </Typography>
         </div>
       </div>
