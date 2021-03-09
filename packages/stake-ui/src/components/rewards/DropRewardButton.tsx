@@ -124,7 +124,7 @@ function DropUnlockedForm(props: DropUnlockedFormProps) {
   const isSendEnabled =
     mint !== null &&
     depositor !== null &&
-    rewardDisplayAmount !== null &&
+    rewardDisplayAmount !== null && rewardDisplayAmount >= 100 &&
     expiryTs !== null;
 
   const sendUnlockedReward = async () => {
@@ -248,7 +248,7 @@ function DropLockedForm(props: DropLockedFormProps) {
     endTs !== null &&
     mint !== null &&
     depositor !== null &&
-    rewardDisplayAmount !== null &&
+    rewardDisplayAmount !== null && rewardDisplayAmount >= 100 &&
     expiryTs !== null;
 
   const sendLockedRewards = async () => {

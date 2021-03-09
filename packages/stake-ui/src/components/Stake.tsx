@@ -684,10 +684,9 @@ function AllPendingTransfers() {
   const [pendingTransfers, setPendingTransfers] = useState<null | any>(null);
   useEffect(() => {
     const fetchAll = async () => {
-      let transfers = await registryClient.account.pendingWithdrawal.all();
+      let transfers = await registryClient.account.pendingWithdrawal.all(registrar.toBuffer());
       transfers = transfers
         .filter((pw: any) => pw.account.burned === false)
-        .filter((pw: any) => pw.account.registrar.equals(registrar))
         .sort((a, b) => {
           if (a.account.startTs < b.account.startTs) {
             return 1;
