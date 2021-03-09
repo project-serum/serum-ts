@@ -1,8 +1,9 @@
-import React, { PropsWithChildren } from 'react';
+import React, { useState, PropsWithChildren } from 'react';
 import { useSelector } from 'react-redux';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import LinearProgress from '@material-ui/core/LinearProgress';
+import Button from '@material-ui/core/Button';
 import { State as StoreState, BootstrapState } from '../../store/reducer';
 import Header from './Header';
 import Footer from './Footer';
@@ -17,6 +18,7 @@ export default function Layout(props: PropsWithChildren<Props>) {
         state.common.bootstrapState === BootstrapState.Bootstrapped,
     };
   });
+  const [refresh, setRefresh] = useState(false);
   return (
     <div
       style={{
@@ -45,10 +47,19 @@ export default function Layout(props: PropsWithChildren<Props>) {
           marginBottom: '30px', // Compensates for the fixed position footer.
         }}
       >
-        {!isAppReady ? (
-          <DisconnectedSplash />
+        {window.localStorage.getItem('consent') ? (
+          !isAppReady ? (
+            <DisconnectedSplash />
+          ) : (
+            <div style={{ width: '100%' }}>{props.children}</div>
+          )
         ) : (
-          <div style={{ width: '100%' }}>{props.children}</div>
+          <RiskDisclosureForm
+            onConsent={() => {
+              window.localStorage.setItem('consent', 'true');
+              setRefresh(!refresh);
+            }}
+          />
         )}
       </div>
       <Footer />
@@ -90,6 +101,41 @@ const useStyles = makeStyles(theme => ({
     },
   },
 }));
+
+function RiskDisclosureForm({ onConsent }: { onConsent: () => void }) {
+  return (
+    <div
+      style={{
+        flex: '1',
+        display: 'flex',
+        justifyContent: 'center',
+        flexDirection: 'column',
+        textAlign: 'center',
+      }}
+    >
+      <div style={{ width: '100%', display: 'flex' }}>
+        <div
+          style={{ display: 'flex', marginLeft: 'auto', marginRight: 'auto' }}
+        >
+          <Typography
+            style={{ marginBottom: '16px', maxWidth: '1000px' }}
+            color="textSecondary"
+            variant="h4"
+          >
+            This program may be subject to security vulnerabilities that may
+            lead to losing tokens. By using this program, you agree to bear the
+            risks associated with such vulnerabilities.
+          </Typography>
+        </div>
+      </div>
+      <div style={{ display: 'flex', marginLeft: 'auto', marginRight: 'auto' }}>
+        <Button variant="contained" color="primary" onClick={onConsent}>
+          I agree
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 function DisconnectedSplash() {
   const classes = useStyles();
