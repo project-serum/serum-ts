@@ -79,27 +79,6 @@ const idl: Idl = {
       ],
     },
     {
-      name: 'deleteTransaction',
-      accounts: [
-        {
-          name: 'multisig',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'transaction',
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: 'owner',
-          isMut: false,
-          isSigner: true,
-        },
-      ],
-      args: [],
-    },
-    {
       name: 'approve',
       accounts: [
         {
@@ -206,6 +185,10 @@ const idl: Idl = {
             name: 'nonce',
             type: 'u8',
           },
+          {
+            name: 'ownerSetSeqno',
+            type: 'u32',
+          },
         ],
       },
     },
@@ -243,6 +226,10 @@ const idl: Idl = {
           {
             name: 'didExecute',
             type: 'bool',
+          },
+          {
+            name: 'ownerSetSeqno',
+            type: 'u32',
           },
         ],
       },
@@ -296,6 +283,17 @@ const idl: Idl = {
       name: 'UnableToDelete',
       msg: 'Cannot delete a transaction the owner did not create.',
     },
+    {
+      code: 105,
+      name: 'AlreadyExecuted',
+      msg: 'The given transaction has already been executed.',
+    },
+    {
+      code: 106,
+      name: 'InvalidThreshold',
+      msg: 'Threshold must be less than or equal to the number of owners.',
+    },
   ],
 };
+
 export default idl;

@@ -112,6 +112,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
   const [showAddTransactionDialog, setShowAddTransactionDialog] = useState(
     false,
   );
+  const [forceRefresh, setForceRefresh] = useState(false);
   useEffect(() => {
     multisigClient.account
       .multisig(multisig)
@@ -125,10 +126,16 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
   }, [multisig, multisigClient.account]);
   useEffect(() => {
     multisigClient.account.transaction.all(multisig.toBuffer()).then(txs => {
-      console.log('all txs', txs);
       setTransactions(txs);
     });
-  }, [multisigClient.account.transaction, multisig]);
+  }, [multisigClient.account.transaction, multisig, forceRefresh]);
+  useEffect(() => {
+    multisigClient.account.multisig
+      .subscribe(multisig)
+      .on('change', account => {
+        setMultisigAccount(account);
+      });
+  }, [multisigClient, multisig]);
   return (
     <Container fixed maxWidth="md" style={{ marginBottom: '16px' }}>
       <div>
@@ -202,6 +209,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
               ) : (
                 transactions.map((tx: any) => (
                   <TxListItem
+                    key={tx.publicKey.toString()}
                     multisig={multisig}
                     multisigAccount={multisigAccount}
                     tx={tx}
@@ -216,6 +224,7 @@ export function MultisigInstance({ multisig }: { multisig: PublicKey }) {
         multisig={multisig}
         open={showAddTransactionDialog}
         onClose={() => setShowAddTransactionDialog(false)}
+        didAddTransaction={() => setForceRefresh(!forceRefresh)}
       />
       {multisigAccount && (
         <SignerDialog
@@ -380,14 +389,22 @@ function TxListItem({
   const { enqueueSnackbar } = useSnackbar();
   const { multisigClient } = useWallet();
   const [open, setOpen] = useState(false);
+  const [txAccount, setTxAccount] = useState(tx.account);
+  useEffect(() => {
+    multisigClient.account.transaction
+      .subscribe(tx.publicKey)
+      .on('change', account => {
+        setTxAccount(account);
+      });
+  }, [multisigClient, multisig, tx.publicKey]);
   const rows = [
     {
       field: 'Program ID',
-      value: tx.account.programId.toString(),
+      value: txAccount.programId.toString(),
     },
     {
       field: 'Did execute',
-      value: tx.account.didExecute.toString(),
+      value: txAccount.didExecute.toString(),
     },
     {
       field: 'Instruction data',
@@ -402,24 +419,28 @@ function TxListItem({
             textAlign: 'left',
           }}
         >
-          {encodeBase64(tx.account.data)}
+          {encodeBase64(txAccount.data)}
         </code>
       ),
     },
     {
       field: 'Multisig',
-      value: tx.account.multisig.toString(),
+      value: txAccount.multisig.toString(),
     },
     {
       field: 'Transaction account',
       value: tx.publicKey.toString(),
+    },
+    {
+      field: 'Owner set seqno',
+      value: txAccount.ownerSetSeqno.toString(),
     },
   ];
   const msAccountRows = multisigAccount.owners.map(
     (owner: PublicKey, idx: number) => {
       return {
         field: owner.toString(),
-        value: tx.account.signers[idx] ? <CheckIcon /> : <RemoveIcon />,
+        value: txAccount.signers[idx] ? <CheckIcon /> : <RemoveIcon />,
       };
     },
   );
@@ -446,19 +467,13 @@ function TxListItem({
       [multisig.toBuffer()],
       multisigClient.programId,
     );
-    console.log(
-      'executing',
-      multisig.toString(),
-      multisigSigner.toString(),
-      tx.publicKey.toString(),
-    );
     await multisigClient.rpc.executeTransaction({
       accounts: {
         multisig,
         multisigSigner,
         transaction: tx.publicKey,
       },
-      remainingAccounts: tx.account.accounts
+      remainingAccounts: txAccount.accounts
         .map((t: any) => {
           if (t.pubkey.equals(multisigSigner)) {
             return { ...t, isSigner: false };
@@ -466,7 +481,7 @@ function TxListItem({
           return t;
         })
         .concat({
-          pubkey: tx.account.programId,
+          pubkey: txAccount.programId,
           isWritable: false,
           isSigner: false,
         }),
@@ -480,7 +495,7 @@ function TxListItem({
       <ListItem button onClick={() => setOpen(!open)}>
         <ListItemIcon>{icon(tx, multisigClient)}</ListItemIcon>
         {ixLabel(tx, multisigClient)}
-        {tx.account.didExecute && (
+        {txAccount.didExecute && (
           <CheckCircleIcon style={{ marginRight: '16px' }} />
         )}
         {open ? <ExpandLess /> : <ExpandMore />}
@@ -554,19 +569,30 @@ function TxListItem({
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {msAccountRows.map((r: any) => (
-                    <TableRow>
-                      <TableCell>{r.field}</TableCell>
-                      <TableCell align="right">{r.value}</TableCell>
-                    </TableRow>
-                  ))}
+                  {txAccount.ownerSetSeqno === multisigAccount.ownerSetSeqno &&
+                    msAccountRows.map((r: any) => (
+                      <TableRow>
+                        <TableCell>{r.field}</TableCell>
+                        <TableCell align="right">{r.value}</TableCell>
+                      </TableRow>
+                    ))}
                 </TableBody>
               </Table>
+              {txAccount.ownerSetSeqno !== multisigAccount.ownerSetSeqno && (
+                <div style={{ marginTop: '16px' }}>
+                  <Typography
+                    color="textSecondary"
+                    style={{ textAlign: 'center' }}
+                  >
+                    The owner set has changed since this transaction was created
+                  </Typography>
+                </div>
+              )}
             </CardContent>
           </Card>
           <Card style={{ marginTop: '16px' }}>
             <CardContent>
-              <AccountsList accounts={tx.account.accounts} />
+              <AccountsList accounts={txAccount.accounts} />
             </CardContent>
           </Card>
         </div>
@@ -696,10 +722,12 @@ function AddTransactionDialog({
   multisig,
   open,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   open: boolean;
   onClose: () => void;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   return (
     <Dialog open={open} fullWidth onClose={onClose} maxWidth="md">
@@ -715,9 +743,21 @@ function AddTransactionDialog({
           transaction.
         </DialogContentText>
         <List disablePadding>
-          <ProgramUpdateListItem multisig={multisig} onClose={onClose} />
-          <MultisigSetOwnersListItem multisig={multisig} onClose={onClose} />
-          <ChangeThresholdListItem multisig={multisig} onClose={onClose} />
+          <ProgramUpdateListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
+          <MultisigSetOwnersListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
+          <ChangeThresholdListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
         </List>
       </DialogContent>
     </Dialog>
@@ -727,9 +767,11 @@ function AddTransactionDialog({
 function ChangeThresholdListItem({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -742,7 +784,11 @@ function ChangeThresholdListItem({
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <ChangeThresholdListItemDetails multisig={multisig} onClose={onClose} />
+        <ChangeThresholdListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
       </Collapse>
     </>
   );
@@ -751,9 +797,11 @@ function ChangeThresholdListItem({
 function ChangeThresholdListItemDetails({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [threshold, setThreshold] = useState(2);
   const { multisigClient } = useWallet();
@@ -807,6 +855,7 @@ function ChangeThresholdListItemDetails({
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
+    didAddTransaction(transaction.publicKey);
     onClose();
   };
   return (
@@ -838,9 +887,11 @@ function ChangeThresholdListItemDetails({
 function MultisigSetOwnersListItem({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -853,7 +904,11 @@ function MultisigSetOwnersListItem({
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <SetOwnersListItemDetails multisig={multisig} onClose={onClose} />
+        <SetOwnersListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
       </Collapse>
     </>
   );
@@ -862,9 +917,11 @@ function MultisigSetOwnersListItem({
 function SetOwnersListItemDetails({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const { multisigClient } = useWallet();
   // @ts-ignore
@@ -923,6 +980,7 @@ function SetOwnersListItemDetails({
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
+    didAddTransaction(transaction.publicKey);
     onClose();
   };
   return (
@@ -975,9 +1033,11 @@ function SetOwnersListItemDetails({
 function ProgramUpdateListItem({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [open, setOpen] = useState(false);
   return (
@@ -990,7 +1050,11 @@ function ProgramUpdateListItem({
         {open ? <ExpandLess /> : <ExpandMore />}
       </ListItem>
       <Collapse in={open} timeout="auto" unmountOnExit>
-        <UpgradeProgramListItemDetails multisig={multisig} onClose={onClose} />
+        <UpgradeProgramListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
       </Collapse>
     </>
   );
@@ -1003,9 +1067,11 @@ const BPF_LOADER_UPGRADEABLE_PID = new PublicKey(
 function UpgradeProgramListItemDetails({
   multisig,
   onClose,
+  didAddTransaction,
 }: {
   multisig: PublicKey;
   onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
 }) {
   const [programId, setProgramId] = useState<null | string>(null);
   const [buffer, setBuffer] = useState<null | string>(null);
@@ -1078,6 +1144,7 @@ function UpgradeProgramListItemDetails({
       variant: 'success',
       action: <ViewTransactionOnExplorerButton signature={tx} />,
     });
+    didAddTransaction(transaction.publicKey);
     onClose();
   };
 
