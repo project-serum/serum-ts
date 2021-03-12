@@ -5,6 +5,7 @@ import { encode as encodeBase64 } from 'js-base64';
 import Container from '@material-ui/core/Container';
 import AppBar from '@material-ui/core/AppBar';
 import GavelIcon from '@material-ui/icons/Gavel';
+import DescriptionIcon from '@material-ui/icons/Description';
 import Paper from '@material-ui/core/Paper';
 import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
 import CheckIcon from '@material-ui/icons/Check';
@@ -48,8 +49,10 @@ import {
   SYSVAR_RENT_PUBKEY,
   SYSVAR_CLOCK_PUBKEY,
 } from '@solana/web3.js';
+import * as anchor from '@project-serum/anchor';
 import { useWallet } from '../common/WalletProvider';
 import { ViewTransactionOnExplorerButton } from '../common/Notification';
+import * as idl from '../../utils/idl';
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   const history = useHistory();
@@ -287,7 +290,6 @@ function NewMultisigDialog({
       multisigClient.programId,
     );
     const owners = participants.map(p => new PublicKey(p));
-    console.log('owners', owners, nonce);
     const tx = await multisigClient.rpc.createMultisig(
       owners,
       new BN(threshold),
@@ -639,6 +641,11 @@ function ixLabel(tx: any, multisigClient: any) {
       );
     }
   }
+  if (idl.IDL_TAG.equals(tx.account.data.slice(0, 8))) {
+    return (
+      <ListItemText primary="Upgrade IDL" secondary={tx.publicKey.toString()} />
+    );
+  }
   return <ListItemText primary={tx.publicKey.toString()} />;
 }
 
@@ -744,6 +751,11 @@ function AddTransactionDialog({
         </DialogContentText>
         <List disablePadding>
           <ProgramUpdateListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
+          <IdlUpgradeListItem
             didAddTransaction={didAddTransaction}
             multisig={multisig}
             onClose={onClose}
@@ -1030,6 +1042,140 @@ function SetOwnersListItemDetails({
   );
 }
 
+function IdlUpgradeListItem({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ListItem button onClick={() => setOpen(open => !open)}>
+        <ListItemIcon>
+          <DescriptionIcon />
+        </ListItemIcon>
+        <ListItemText primary={'Upgrade IDL'} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItem>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <UpgradeIdlListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
+      </Collapse>
+    </>
+  );
+}
+
+function UpgradeIdlListItemDetails({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [programId, setProgramId] = useState<null | string>(null);
+  const [buffer, setBuffer] = useState<null | string>(null);
+
+  const { multisigClient } = useWallet();
+  const { enqueueSnackbar } = useSnackbar();
+  const createTransactionAccount = async () => {
+    enqueueSnackbar('Creating transaction', {
+      variant: 'info',
+    });
+    const programAddr = new PublicKey(programId as string);
+    const bufferAddr = new PublicKey(buffer as string);
+    const idlAddr = await anchor.utils.idlAddress(programAddr);
+    const [multisigSigner] = await PublicKey.findProgramAddress(
+      [multisig.toBuffer()],
+      multisigClient.programId,
+    );
+    const data = idl.encodeInstruction({ setBuffer: {} });
+    const accs = [
+      {
+        pubkey: bufferAddr,
+        isWritable: true,
+        isSigner: false,
+      },
+      { pubkey: idlAddr, isWritable: true, isSigner: false },
+      { pubkey: multisigSigner, isWritable: true, isSigner: false },
+    ];
+    const txSize = 1000; // TODO: tighter bound.
+    const transaction = new Account();
+    const tx = await multisigClient.rpc.createTransaction(
+      programAddr,
+      accs,
+      data,
+      {
+        accounts: {
+          multisig,
+          transaction: transaction.publicKey,
+          proposer: multisigClient.provider.wallet.publicKey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [transaction],
+        instructions: [
+          await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            txSize,
+          ),
+        ],
+      },
+    );
+    enqueueSnackbar('Transaction created', {
+      variant: 'success',
+      action: <ViewTransactionOnExplorerButton signature={tx} />,
+    });
+    didAddTransaction(transaction.publicKey);
+    onClose();
+  };
+
+  return (
+    <div
+      style={{
+        background: '#f1f0f0',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+      }}
+    >
+      <TextField
+        fullWidth
+        style={{ marginTop: '16px' }}
+        label="Program ID"
+        value={programId}
+        onChange={e => setProgramId(e.target.value as string)}
+      />
+      <TextField
+        style={{ marginTop: '16px' }}
+        fullWidth
+        label="New IDL buffer"
+        value={buffer}
+        onChange={e => setBuffer(e.target.value as string)}
+      />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: '16px',
+          paddingBottom: '16px',
+        }}
+      >
+        <Button onClick={() => createTransactionAccount()}>
+          Create upgrade
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 function ProgramUpdateListItem({
   multisig,
   onClose,
@@ -1206,6 +1352,9 @@ function icon(tx, multisigClient) {
     if (setOwnersSighash.equals(tx.account.data.slice(0, 8))) {
       return <SupervisorAccountIcon />;
     }
+  }
+  if (idl.IDL_TAG.equals(tx.account.data.slice(0, 8))) {
+    return <DescriptionIcon />;
   }
   return <ReceiptIcon />;
 }
