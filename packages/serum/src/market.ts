@@ -161,6 +161,29 @@ export class Market {
     return _MARKET_STATE_LAYOUT_V2;
   }
 
+  static async findAccountsByMints(
+    connection: Connection,
+    baseMintAddress: PublicKey,
+    quoteMintAddress: PublicKey,
+    programId: PublicKey,
+  ) {
+    const filters = [
+      {
+        memcmp: {
+          offset: this.getLayout(programId).offsetOf('baseMint'),
+          bytes: baseMintAddress.toBase58(),
+        },
+      },
+      {
+        memcmp: {
+          offset: Market.getLayout(programId).offsetOf('quoteMint'),
+          bytes: quoteMintAddress.toBase58(),
+        },
+      },
+    ];
+    return getFilteredProgramAccounts(connection, programId, filters);
+  }
+
   static async load(
     connection: Connection,
     address: PublicKey,
