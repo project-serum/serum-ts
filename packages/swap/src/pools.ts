@@ -197,7 +197,11 @@ export class Pool {
       const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
         AccountLayout.span,
       );
-      const { account, instructions, cleanUpInstructions } = createTokenAccount(
+      const {
+        account,
+        instructions: createWrappedSolInstructions,
+        cleanUpInstructions: removeWrappedSolInstructions,
+      } = createTokenAccount(
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
@@ -205,8 +209,8 @@ export class Pool {
       );
       tokenAccountA = account.publicKey;
       signers.push(account);
-      instructions.concat(instructions);
-      cleanUpInstructions.concat(cleanUpInstructions);
+      instructions.push(...createWrappedSolInstructions);
+      cleanUpInstructions.push(...removeWrappedSolInstructions)
     } else {
       tokenAccountA = tokenAccounts.find(a =>
         a.info.mint.equals(accountA.info.mint),
@@ -216,7 +220,11 @@ export class Pool {
       const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
         AccountLayout.span,
       );
-      const { account, instructions, cleanUpInstructions } = createTokenAccount(
+      const {
+        account,
+        instructions: createWrappedSolInstructions,
+        cleanUpInstructions: removeWrappedSolInstructions,
+      } = createTokenAccount(
         ownerAddress,
         ownerAddress,
         WRAPPED_SOL_MINT,
@@ -224,8 +232,8 @@ export class Pool {
       );
       tokenAccountB = account.publicKey;
       signers.push(account);
-      instructions.concat(instructions);
-      cleanUpInstructions.concat(cleanUpInstructions);
+      instructions.push(...createWrappedSolInstructions);
+      cleanUpInstructions.push(...removeWrappedSolInstructions)
     } else {
       tokenAccountB = tokenAccounts.find(a =>
         a.info.mint.equals(accountB.info.mint),
