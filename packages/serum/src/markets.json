@@ -1176,7 +1176,7 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   },
   {
-    "address": "77quYg4MGneUdjgXCunt9GgM1usmrxKY31twEy3WHwcS",
+    "address": "GZ3WBFsqntmERPwumFEYgrX2B7J7G11MzNZAy7Hje27X",
     "deprecated": false,
     "name": "USDT/USDC",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
@@ -1186,5 +1186,11 @@
     "deprecated": false,
     "name": "OXY/USDT",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
-  }
+  },
+    {
+    "name": "OXY/WUSDT",
+    "address": "HdBhZrnrxpje39ggXnTb6WuTWVvj5YKcSHwYGQCRsVj",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
 ]
