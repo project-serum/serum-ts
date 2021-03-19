@@ -1188,9 +1188,9 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   },
   {
-    "name": "OXY/WUSDT",
-    "deprecated": false,
     "address": "HdBhZrnrxpje39ggXnTb6WuTWVvj5YKcSHwYGQCRsVj",
+    "deprecated": false,
+    "name": "OXY/WUSDT",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
