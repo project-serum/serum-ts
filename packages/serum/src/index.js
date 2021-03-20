@@ -18,3 +18,4 @@ export {
   EVENT_QUEUE_LAYOUT,
 } from './queue';
 export * as TokenInstructions from './token-instructions';
+export * from './error';
