@@ -684,7 +684,9 @@ function AllPendingTransfers() {
   const [pendingTransfers, setPendingTransfers] = useState<null | any>(null);
   useEffect(() => {
     const fetchAll = async () => {
-      let transfers = await registryClient.account.pendingWithdrawal.all(registrar.toBuffer());
+      let transfers = await registryClient.account.pendingWithdrawal.all(
+        registrar.toBuffer(),
+      );
       transfers = transfers
         .filter((pw: any) => pw.account.burned === false)
         .sort((a, b) => {
@@ -695,7 +697,7 @@ function AllPendingTransfers() {
           } else {
             return 0;
           }
-				});
+        });
       setPendingTransfers(transfers);
     };
     fetchAll();
@@ -732,7 +734,7 @@ function AllPendingTransfers() {
                   )}
                 </TableCell>
                 <TableCell>
- {pw.account.amount.div(registrarAccount.stakeRate).toString()}
+                  {pw.account.amount.div(registrarAccount.stakeRate).toString()}
                 </TableCell>
                 <TableCell>{pw.account.locked.toString()}</TableCell>
                 <TableCell>
