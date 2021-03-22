@@ -2,8 +2,8 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
-import { TOKENS } from '@project-serum/tokens';
-import { PublicKey } from '@solana/web3.js';
+import { TokenInfo } from '@solana/spl-token-registry';
+import { useTokenInfos } from '../../utils/tokens';
 import { State as StoreState, ProgramAccount } from '../../store/reducer';
 import { Network } from '../../store/config';
 import * as bootstrap from './BootstrapProvider';
@@ -77,6 +77,8 @@ export default function RegistrarSelect() {
     },
   );
   const dispatch = useDispatch();
+  const tokenInfos = useTokenInfos();
+
   return (
     <Select
       style={{ width: '294px', height: '36px' }}
@@ -112,7 +114,7 @@ export default function RegistrarSelect() {
                     justifyContent: 'center',
                   }}
                 >
-                  {getImage(registrar.account.mint)}
+                  {getImage(tokenInfos.get(registrar.account.mint.toString()))}
                 </div>
                 <div
                   style={{
@@ -146,14 +148,13 @@ function registrarToDisplayLabel(
   return registrar.publicKey.toString();
 }
 
-export function getImage(mint: PublicKey, style?: any) {
-  let token = TOKENS.mainnet.filter(t => t.mintAddress === mint.toString());
-  if (token.length === 1 && token[0].icon) {
+export function getImage(token?: TokenInfo, style?: any) {
+  if (token) {
     return (
       <img
         alt="Token Icon"
         style={style ?? { marginRight: '10px', height: '25px' }}
-        src={token[0].icon}
+        src={token.logoURI}
       />
     );
   } else {

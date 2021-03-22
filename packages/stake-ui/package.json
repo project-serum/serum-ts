@@ -10,6 +10,7 @@
     "@project-serum/common": "^0.0.1-beta.3",
     "@project-serum/sol-wallet-adapter": "^0.1.4",
     "@project-serum/tokens": "0.0.7",
+    "@solana/spl-token-registry": "^0.2.41",
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",

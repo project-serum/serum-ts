@@ -123,9 +123,9 @@ function RiskDisclosureForm({ onConsent }: { onConsent: () => void }) {
             variant="h4"
           >
             No statement or warranty is provided in relation to the utility of
-            this program, the safety of its code or its suitability for your use,
-            and by using it, you agree to bear any risk associated with such
-            potential vulnerabilities, including, but not limited to the
+            this program, the safety of its code or its suitability for your
+            use, and by using it, you agree to bear any risk associated with
+            such potential vulnerabilities, including, but not limited to the
             potential loss of tokens.
           </Typography>
         </div>

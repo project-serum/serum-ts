@@ -26,8 +26,8 @@ import { useWallet } from '../common/WalletProvider';
 import OwnedTokenAccountsSelect from '../../components/common/OwnedTokenAccountsSelect';
 import { withTx } from '../../components/common/Notification';
 import { ActionType } from '../../store/actions';
-import { toDisplay, toDisplayLabel } from '../../utils/tokens';
 import { getImage } from '../../components/common/RegistrarSelect';
+import { useTokenInfos, toDisplay, toDisplayLabel } from '../../utils/tokens';
 import {
   vestingSigner,
   availableForWithdrawal as _availableForWithdrawal,
@@ -42,6 +42,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
   const { vesting, network } = props;
   const { lockupClient, registryClient } = useWallet();
   const { enqueueSnackbar } = useSnackbar();
+  const tokenInfos = useTokenInfos();
   const dispatch = useDispatch();
   const { accounts, member, mintAccount } = useSelector((state: StoreState) => {
     return {
@@ -289,7 +290,7 @@ export default function VestingAccountCard(props: VestingAccountCardProps) {
             }}
           >
             <ListItemIcon>
-              {getImage(vesting.account.mint, {
+              {getImage(tokenInfos.get(vesting.account.mint.toString()), {
                 marginRight: '16px',
                 width: '56px',
               })}
