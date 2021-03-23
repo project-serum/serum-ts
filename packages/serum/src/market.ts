@@ -552,6 +552,7 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = undefined,
+      selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
     cacheDurationMs = 0,
     feeDiscountPubkeyCacheDurationMs = 0,
@@ -666,6 +667,7 @@ export class Market {
       clientId,
       openOrdersAddressKey: openOrdersAddress,
       feeDiscountPubkey: useFeeDiscountPubkey,
+      selfTradeBehavior,
     });
     transaction.add(placeOrderInstruction);
 
