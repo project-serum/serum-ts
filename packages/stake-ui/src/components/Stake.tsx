@@ -232,7 +232,6 @@ function PoolCard(props: PoolCardProps) {
         mint.account.decimals,
       )
     : 0;
-
   return (
     <Card
       style={{
@@ -271,10 +270,9 @@ function PoolCard(props: PoolCardProps) {
           <Typography>
             Unstaking works similarly, except one must incur an unbonding period
             where funds will be not be able to be retrieved until the unbonding
-            period ends. For SRM, this is one week. Other staking pools may be
-            configured differently. At the end of the unbonding period, click
-            the blue checkbox next to your pending transfer. If the checkbox is
-            grey, your unbonding period has not yet completed.
+            period ends. At the end of the unbonding period, click the blue
+            checkbox next to your pending transfer. If the checkbox is grey,
+            your unbonding period has not yet completed.
           </Typography>
           <br />
           <Typography style={{ fontWeight: 'bold' }}>
@@ -290,6 +288,15 @@ function PoolCard(props: PoolCardProps) {
           </Typography>
           <Typography>
             {cost} {toDisplayLabel(mint.publicKey)}
+          </Typography>
+          <Typography style={{ fontWeight: 'bold' }}>
+            Unbonding period (days)
+          </Typography>
+          <Typography>
+            {(
+              registrarAccount.withdrawalTimelock /
+              (60 * 60 * 24.0)
+            ).toString()}
           </Typography>
         </div>
         <div>
