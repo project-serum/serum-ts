@@ -156,7 +156,7 @@ export function getLayoutForProgramId(programId: PublicKey): Structure {
 }
 
 export const createInitSwapInstruction = (
-  tokenSwapAccount: Account,
+  tokenSwapAccount: PublicKey,
   authority: PublicKey,
   tokenAccountA: PublicKey,
   tokenAccountB: PublicKey,
@@ -169,7 +169,7 @@ export const createInitSwapInstruction = (
   config: PoolConfig,
 ): TransactionInstruction => {
   const keys = [
-    { pubkey: tokenSwapAccount.publicKey, isSigner: false, isWritable: true },
+    { pubkey: tokenSwapAccount, isSigner: false, isWritable: true },
     { pubkey: authority, isSigner: false, isWritable: false },
     { pubkey: tokenAccountA, isSigner: false, isWritable: false },
     { pubkey: tokenAccountB, isSigner: false, isWritable: false },

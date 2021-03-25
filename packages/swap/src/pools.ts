@@ -28,7 +28,7 @@ import {
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
   getLayoutForProgramId,
-  deserializeMint,
+  deserializeMint, PROGRAM_ID,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
@@ -639,6 +639,7 @@ export class Pool {
       liquidityTokenMint?: Account;
       tokenSwapPoolAddress?: Account;
     },
+    seed?: string,
   ): Promise<{
     initializeAccountsTransaction: Transaction;
     initializeAccountsSigners: Account[];
@@ -649,7 +650,6 @@ export class Pool {
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const initializeAccountsInstructions: TransactionInstruction[] = [];
     const initializeAccountsSigners: Account[] = [];
-    const version = getProgramVersion(tokenSwapProgram);
 
     const liquidityTokenMintAccount = accounts?.liquidityTokenMint
       ? accounts.liquidityTokenMint
@@ -666,12 +666,22 @@ export class Pool {
       }),
     );
     initializeAccountsSigners.push(liquidityTokenMintAccount);
+    let tokenSwapAccountPubkey;
+    let tokenSwapAccountSigner;
+    if (accounts?.tokenSwapPoolAddress) {
+      tokenSwapAccountPubkey = accounts.tokenSwapPoolAddress.publicKey;
+      tokenSwapAccountSigner = accounts.tokenSwapPoolAddress;
+    } else if (seed) {
+      // Only works when owner is of type Account
+      tokenSwapAccountSigner = owner;
+      tokenSwapAccountPubkey = await PublicKey.createWithSeed(ownerAddress, seed, tokenSwapProgram);
+    } else {
+      tokenSwapAccountSigner = new Account();
+      tokenSwapAccountPubkey = tokenSwapAccountSigner.pubkey;
+    }
 
-    const tokenSwapAccount = accounts?.tokenSwapPoolAddress
-      ? accounts.tokenSwapPoolAddress
-      : new Account();
     const [authority, nonce] = await PublicKey.findProgramAddress(
-      [tokenSwapAccount.publicKey.toBuffer()],
+      [tokenSwapAccountPubkey.toBuffer()],
       tokenSwapProgram,
     );
 
@@ -734,17 +744,29 @@ export class Pool {
     const initializePoolInstructions: TransactionInstruction[] = [];
     const cleanupInstructions: TransactionInstruction[] = [];
 
-    initializePoolInstructions.push(
-      SystemProgram.createAccount({
+    let initializeTokenSwapAccountInstruction;
+    if (seed) {
+      initializeTokenSwapAccountInstruction = SystemProgram.createAccountWithSeed({
         fromPubkey: ownerAddress,
-        newAccountPubkey: tokenSwapAccount.publicKey,
+        basePubkey: ownerAddress,
+        newAccountPubkey: tokenSwapAccountPubkey,
+        seed: seed,
+        lamports: accountRentExempt,
+        space: getLayoutForProgramId(tokenSwapAccountPubkey).span,
+        programId: getLayoutForProgramId(tokenSwapAccountPubkey).span,
+      });
+    } else {
+      initializeTokenSwapAccountInstruction = SystemProgram.createAccount({
+        fromPubkey: ownerAddress,
+        newAccountPubkey: tokenSwapAccountPubkey,
         lamports: await connection.getMinimumBalanceForRentExemption(
           getLayoutForProgramId(tokenSwapProgram).span,
         ),
         space: getLayoutForProgramId(tokenSwapProgram).span,
         programId: tokenSwapProgram,
-      }),
-    );
+      })
+    }
+    initializePoolInstructions.push(initializeTokenSwapAccountInstruction);
 
     sourceTokenAccounts.forEach(({ mint, tokenAccount, amount }) => {
       let wrappedAccount: PublicKey;
@@ -781,7 +803,7 @@ export class Pool {
 
     initializePoolInstructions.push(
       createInitSwapInstruction(
-        tokenSwapAccount,
+        tokenSwapAccountPubkey,
         authority,
         holdingAccounts[sourceTokenAccounts[0].mint.toBase58()].publicKey,
         holdingAccounts[sourceTokenAccounts[1].mint.toBase58()].publicKey,
@@ -794,7 +816,7 @@ export class Pool {
         options,
       ),
     );
-    initializePoolSigners.push(tokenSwapAccount);
+    initializePoolSigners.push(tokenSwapAccountSigner);
     const initializePoolTransaction = new Transaction();
     initializePoolTransaction.add(
       ...initializePoolInstructions,
