@@ -155,8 +155,36 @@ export function getLayoutForProgramId(programId: PublicKey): Structure {
   return TokenSwapLayoutLegacyV0;
 }
 
+export function getCreateInitSwapInstructionV2Layout(config: PoolConfig): Structure {
+    const fields = [
+    u8('instruction'),
+    u8('nonce'),
+    nu64('tradeFeeNumerator'),
+    nu64('tradeFeeDenominator'),
+    nu64('ownerTradeFeeNumerator'),
+    nu64('ownerTradeFeeDenominator'),
+    nu64('ownerWithdrawFeeNumerator'),
+    nu64('ownerWithdrawFeeDenominator'),
+    nu64('hostFeeNumerator'),
+    nu64('hostFeeDenominator'),
+    u8('curveType'),
+  ] as any[];
+
+  if (config.curveType === CurveType.ConstantProductWithOffset) {
+    fields.push(nu64('token_b_offset'));
+    fields.push(blob(24, 'padding'));
+  } else if (config.curveType === CurveType.ConstantPrice) {
+    fields.push(nu64('token_b_price'));
+    fields.push(blob(24, 'padding'));
+  } else {
+    fields.push(blob(32, 'padding'));
+  }
+
+  return struct(fields);
+}
+
 export const createInitSwapInstruction = (
-  tokenSwapAccount: Account,
+  tokenSwapAccount: PublicKey,
   authority: PublicKey,
   tokenAccountA: PublicKey,
   tokenAccountB: PublicKey,
@@ -169,7 +197,7 @@ export const createInitSwapInstruction = (
   config: PoolConfig,
 ): TransactionInstruction => {
   const keys = [
-    { pubkey: tokenSwapAccount.publicKey, isSigner: false, isWritable: true },
+    { pubkey: tokenSwapAccount, isSigner: false, isWritable: true },
     { pubkey: authority, isSigner: false, isWritable: false },
     { pubkey: tokenAccountA, isSigner: false, isWritable: false },
     { pubkey: tokenAccountB, isSigner: false, isWritable: false },
@@ -181,32 +209,7 @@ export const createInitSwapInstruction = (
 
   let data = Buffer.alloc(1024);
   if (getProgramVersion(swapProgramId) === LATEST_VERSION) {
-    const fields = [
-      u8('instruction'),
-      u8('nonce'),
-      nu64('tradeFeeNumerator'),
-      nu64('tradeFeeDenominator'),
-      nu64('ownerTradeFeeNumerator'),
-      nu64('ownerTradeFeeDenominator'),
-      nu64('ownerWithdrawFeeNumerator'),
-      nu64('ownerWithdrawFeeDenominator'),
-      nu64('hostFeeNumerator'),
-      nu64('hostFeeDenominator'),
-      u8('curveType'),
-    ] as any[];
-
-    if (config.curveType === CurveType.ConstantProductWithOffset) {
-      fields.push(nu64('token_b_offset'));
-      fields.push(blob(24, 'padding'));
-    } else if (config.curveType === CurveType.ConstantPrice) {
-      fields.push(nu64('token_b_price'));
-      fields.push(blob(24, 'padding'));
-    } else {
-      fields.push(blob(32, 'padding'));
-    }
-
-    const commandDataLayout = struct(fields);
-
+    const commandDataLayout = getCreateInitSwapInstructionV2Layout(config);
     const { fees, ...rest } = config;
 
     const encodeLength = commandDataLayout.encode(
