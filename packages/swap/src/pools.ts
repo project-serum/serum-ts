@@ -623,6 +623,9 @@ export class Pool {
     );
   }
 
+  /**
+   * Note: for seed param, this must be <= 32 characters for the txn to succeed
+   */
   static async makeInitializePoolTransaction<T extends PublicKey | Account>(
     connection: Connection,
     tokenSwapProgram: PublicKey,
@@ -751,9 +754,11 @@ export class Pool {
         basePubkey: ownerAddress,
         newAccountPubkey: tokenSwapAccountPubkey,
         seed: seed,
-        lamports: accountRentExempt,
-        space: getLayoutForProgramId(tokenSwapAccountPubkey).span,
-        programId: getLayoutForProgramId(tokenSwapAccountPubkey).span,
+        lamports: await connection.getMinimumBalanceForRentExemption(
+          getLayoutForProgramId(tokenSwapProgram).span
+        ),
+        space: getLayoutForProgramId(tokenSwapProgram).span,
+        programId: tokenSwapProgram,
       });
     } else {
       initializeTokenSwapAccountInstruction = SystemProgram.createAccount({
