@@ -188,5 +188,10 @@
     "tokenSymbol": "MAPS",
     "mintAddress": "MAPS41MDahZ9QdKXhVa4dWB9RuyfV4XqhyAZ8XcYepb",
     "tokenName": "MAPS"
+  },
+  {
+    "tokenSymbol": "COPE",
+    "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
+    "tokenName": "COPE"
   }
 ]
