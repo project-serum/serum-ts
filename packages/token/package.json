@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/token",
-  "version": "0.0.1-alpha.2",
+  "version": "0.0.1-alpha.3",
   "description": "Utilities for interacting with SPL Tokens",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
