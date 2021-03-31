@@ -1204,5 +1204,11 @@
     "address": "GZ3WBFsqntmERPwumFEYgrX2B7J7G11MzNZAy7Hje27X",
     "deprecated": false,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
+  {
+    "name": "COPE/USDC",
+    "address": "7MpMwArporUHEGW7quUpkPZp5L5cHPs9eKUfKCdaPHq2",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
