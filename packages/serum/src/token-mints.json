@@ -138,5 +138,21 @@
   {
     "address": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "name": "COPE"
+  },
+  {
+    "address": "dK83wTVypEpa1pqiBbHY3MNuUnT3ADUZM4wk9VZXZEc",
+    "name": "AAVE"
+  },
+  {
+    "address": "DgHK9mfhMtUwwv54GChRrU54T2Em5cuszq2uMuen1ZVE",
+    "name": "CEL"
+  },
+  {
+    "address": "7ncCLJpP3MNww17LW8bRvx8odQQnubNtfNZBL5BgAEHW",
+    "name": "RSR"
+  },
+  {
+    "address": "6ry4WBDvAwAnrYJVv6MCog4J8zx6S3cPgSqnTsDZ73AR",
+    "name": "TRYB"
   }
 ]
