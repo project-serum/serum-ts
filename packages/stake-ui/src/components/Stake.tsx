@@ -269,7 +269,7 @@ function PoolCard(props: PoolCardProps) {
           <br />
           <Typography>
             Unstaking works similarly, except one must incur an unbonding period
-            where funds will be not be able to be retrieved until the unbonding
+            where funds will not be able to be retrieved until the unbonding
             period ends. At the end of the unbonding period, click the blue
             checkbox next to your pending transfer. If the checkbox is grey,
             your unbonding period has not yet completed.

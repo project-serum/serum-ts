@@ -2561,17 +2561,18 @@
     schema-utils "^2.6.5"
     source-map "^0.7.3"
 
-"@project-serum/anchor@^0.2.2-beta.3":
-  version "0.2.2-beta.3"
-  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.2.2-beta.3.tgz#760b937c24b6ecd46639631c1facd88d22b4fb2b"
-  integrity sha512-GOecSaR1ZLKwHv8h+ie7BuppTVIRitfn0IMVq6hNG/SSMabweZhuwYRQfSQLCCFkkekRt0soqE4TVskr2PF2AA==
+"@project-serum/anchor@^0.3.1-beta.2":
+  version "0.3.1-beta.2"
+  resolved "https://registry.yarnpkg.com/@project-serum/anchor/-/anchor-0.3.1-beta.2.tgz#a3ad8b8f55f356bfc2d40d07418779df8f26deff"
+  integrity sha512-Yfz3muTu0NNunQpIqFZAEZcx9t9OPJrf0S52j2q6JU1mHOSruM2gZaHRKlZ1KPTxhGVJOkhR+s6L/t/JtCMQzQ==
   dependencies:
     "@project-serum/borsh" "^0.1.0"
-    "@solana/web3.js" "^0.90.4"
+    "@solana/web3.js" "^1.1.0"
     "@types/bn.js" "^4.11.6"
     "@types/bs58" "^4.0.1"
     "@types/crypto-hash" "^1.1.2"
     "@types/pako" "^1.0.1"
+    base64-js "^1.5.1"
     bn.js "^5.1.2"
     bs58 "^4.0.1"
     buffer-layout "^1.2.0"
@@ -2673,7 +2674,7 @@
     dotenv "8.2.0"
     mkdirp "1.0.4"
 
-"@solana/web3.js@0.90.0", "@solana/web3.js@^0.86.1", "@solana/web3.js@^0.90.0", "@solana/web3.js@^0.90.4":
+"@solana/web3.js@0.90.0", "@solana/web3.js@^0.86.1", "@solana/web3.js@^0.90.0", "@solana/web3.js@^1.1.0":
   version "0.90.0"
   resolved "https://registry.yarnpkg.com/@solana/web3.js/-/web3.js-0.90.0.tgz#e7043af04426f1af6404ea1664b5715970a06ea2"
   integrity sha512-bBWEBLbU26we/gcLMfAxg2V/r1Y1WiPAfVcWV8vJDd9EsRt56I9bt6fATUaHhKgfmQQtxBdxCiz9LCm3WrPQEQ==
@@ -4291,7 +4292,7 @@ base-x@^3.0.2, base-x@^3.0.6:
   dependencies:
     safe-buffer "^5.0.1"
 
-base64-js@^1.0.2:
+base64-js@^1.0.2, base64-js@^1.5.1:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/base64-js/-/base64-js-1.5.1.tgz#1b1b440160a5bf7ad40b650f095963481903930a"
   integrity sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==
