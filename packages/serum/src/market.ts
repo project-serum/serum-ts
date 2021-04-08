@@ -386,10 +386,9 @@ export class Market {
       feeDiscountPubkey,
     }: OrderParams,
   ) {
-    const {
-      transaction,
-      signers,
-    } = await this.makePlaceOrderTransaction<Account>(connection, {
+    const { transaction, signers } = await this.makePlaceOrderTransaction<
+      Account
+    >(connection, {
       owner,
       payer,
       side,
@@ -552,6 +551,7 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = undefined,
+      feeRate = 0,
       selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
     cacheDurationMs = 0,
@@ -667,6 +667,7 @@ export class Market {
       clientId,
       openOrdersAddressKey: openOrdersAddress,
       feeDiscountPubkey: useFeeDiscountPubkey,
+      feeRate,
       selfTradeBehavior,
     });
     transaction.add(placeOrderInstruction);
@@ -697,6 +698,7 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = null,
+      feeRate = 0,
       selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
   ): TransactionInstruction {
@@ -748,7 +750,9 @@ export class Market {
         limitPrice: this.priceNumberToLots(price),
         maxBaseQuantity: this.baseSizeNumberToLots(size),
         maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
-          this.baseSizeNumberToLots(size).mul(this.priceNumberToLots(price)),
+          this.baseSizeNumberToLots(size).mul(
+            this.priceNumberToLots(price * (1 + feeRate)),
+          ),
         ),
         orderType,
         clientId,
@@ -1165,6 +1169,7 @@ export interface OrderParams<T = Account> {
   openOrdersAddressKey?: PublicKey;
   openOrdersAccount?: Account;
   feeDiscountPubkey?: PublicKey | null;
+  feeRate?: number;
   selfTradeBehavior?:
     | 'decrementTake'
     | 'cancelProvide'
