@@ -23,7 +23,7 @@ import {
 } from '@solana/web3.js';
 import { decodeEventQueue, decodeRequestQueue } from './queue';
 import { Buffer } from 'buffer';
-import { getFeeTier, supportsSrmFeeDiscounts } from './fees';
+import { getFeeRates, getFeeTier, supportsSrmFeeDiscounts } from './fees';
 import {
   closeAccount,
   initializeAccount,
@@ -567,7 +567,8 @@ export class Market {
     const transaction = new Transaction();
     const signers: Account[] = [];
 
-    // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
+    // Fetch an SRM fee discount key and rate if the market supports discounts and it is not supplied
+    let possibleFeeRate = feeRate;
     let useFeeDiscountPubkey: PublicKey | null;
     if (feeDiscountPubkey) {
       useFeeDiscountPubkey = feeDiscountPubkey;
@@ -575,13 +576,14 @@ export class Market {
       feeDiscountPubkey === undefined &&
       this.supportsSrmFeeDiscounts
     ) {
-      useFeeDiscountPubkey = (
-        await this.findBestFeeDiscountKey(
-          connection,
-          ownerAddress,
-          feeDiscountPubkeyCacheDurationMs,
-        )
-      ).pubkey;
+      const bestFeeDiscount = await this.findBestFeeDiscountKey(
+        connection,
+        ownerAddress,
+        feeDiscountPubkeyCacheDurationMs,
+      );
+      useFeeDiscountPubkey = bestFeeDiscount.pubkey;
+      const { taker } = getFeeRates(bestFeeDiscount.feeTier);
+      possibleFeeRate = orderType === 'postOnly' ? 0 : taker;
     } else {
       useFeeDiscountPubkey = null;
     }
@@ -667,7 +669,7 @@ export class Market {
       clientId,
       openOrdersAddressKey: openOrdersAddress,
       feeDiscountPubkey: useFeeDiscountPubkey,
-      feeRate,
+      feeRate: possibleFeeRate,
       selfTradeBehavior,
     });
     transaction.add(placeOrderInstruction);
