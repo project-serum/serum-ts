@@ -751,7 +751,7 @@ export class Market {
         maxBaseQuantity: this.baseSizeNumberToLots(size),
         maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
           this.baseSizeNumberToLots(size).mul(
-            this.priceNumberToLots(price * (1 + feeRate)),
+            this.priceNumberToLotsRoundUp(price * (1 + feeRate)),
           ),
         ),
         orderType,
@@ -1097,6 +1097,18 @@ export class Market {
   priceNumberToLots(price: number): BN {
     return new BN(
       Math.round(
+        (price *
+          Math.pow(10, this._quoteSplTokenDecimals) *
+          this._decoded.baseLotSize.toNumber()) /
+          (Math.pow(10, this._baseSplTokenDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
+      ),
+    );
+  }
+
+  priceNumberToLotsRoundUp(price: number): BN {
+    return new BN(
+      Math.ceil(
         (price *
           Math.pow(10, this._quoteSplTokenDecimals) *
           this._decoded.baseLotSize.toNumber()) /
