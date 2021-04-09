@@ -1195,6 +1195,18 @@ export class Market {
     );
   }
 
+  priceNumberToLotsRoundUp(price: number): BN {
+    return new BN(
+      Math.ceil(
+        (price *
+          Math.pow(10, this._quoteSplTokenDecimals) *
+          this._decoded.baseLotSize.toNumber()) /
+          (Math.pow(10, this._baseSplTokenDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
+      ),
+    );
+  }
+
   baseSplSizeToNumber(size: BN) {
     return divideBnToNumber(size, this._baseSplTokenMultiplier);
   }
