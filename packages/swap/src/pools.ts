@@ -48,7 +48,6 @@ export class Pool {
   private _mintAccountsCache: {
     [publickKey: string]: { value: MintInfo; ts: number };
   };
-
   private _tokenAccountsCache: {
     [publickKey: string]: { value: TokenAccount; ts: number };
   };
@@ -100,12 +99,28 @@ export class Pool {
     return getProgramVersion(this._programId);
   }
 
+  get programId(): PublicKey {
+    return this._programId;
+  }
+
   get isLatest(): boolean {
     return getProgramVersion(this._programId) === LATEST_VERSION;
   }
 
   get poolTokenMint(): PublicKey {
     return this._poolTokenMint;
+  }
+
+  get holdingAccounts(): PublicKey[] {
+    return this._holdingAccounts;
+  }
+
+  get tokenMints(): PublicKey[] {
+    return this._tokenMints;
+  }
+
+  get feeAccount(): PublicKey {
+    return this._feeAccount;
   }
 
   async cached<T>(
