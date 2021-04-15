@@ -485,8 +485,8 @@ export class Pool {
       amount: number; // note this is raw amount, not decimal
     },
     poolTokenAccount?: PublicKey,
-    slippageTolerance = 0.005
   ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
+    assert(this._decoded.curve.constantPrice, 'Only implemented for constant price pools');
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const instructions: TransactionInstruction[] = [];
@@ -519,21 +519,14 @@ export class Pool {
     const reserve1 = accountB.info.amount.toNumber();
     const supply = poolMint.supply.toNumber();
 
-
-    let liquidity
-    if (this._decoded.curve.constantPrice) {
-      let price;
-      if (sourceTokenAccount.mint.equals(this.tokenMints[1])) {
-        price = this._decoded.curve.constantPrice.token_b_price;
-      } else {
-        price = 1;
-      }
-      liquidity = (sourceTokenAccount.amount * price * supply) / (reserve0 * price + reserve1);
+    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price
+    let price;
+    if (sourceTokenAccount.mint.equals(this.tokenMints[1])) {
+      price = tokenBPrice;
     } else {
-      liquidity = Math.min(
-        (sourceTokenAccount.amount * (1 - slippageTolerance) * supply) / reserve0,
-      );
+      price = 1;
     }
+    const liquidity = (sourceTokenAccount.amount * price * supply) / (reserve0 + reserve1 * tokenBPrice);
 
     let fromKey: PublicKey;
     if (sourceTokenAccount.mint.equals(WRAPPED_SOL_MINT)) {
@@ -601,10 +594,9 @@ export class Pool {
         TOKEN_PROGRAM_ID,
         sourceTokenAccount.amount,
         liquidity,
-        isLatest,
+        this.isLatest,
       ),
     );
-    //todo: add deposit one side txn
 
     const transaction = new Transaction();
     transaction.add(...instructions);
