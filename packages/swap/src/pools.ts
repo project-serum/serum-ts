@@ -28,7 +28,7 @@ import {
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
   getLayoutForProgramId,
-  deserializeMint, PROGRAM_ID,
+  deserializeMint, PROGRAM_ID, depositExactOneInstruction,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
@@ -469,6 +469,142 @@ export class Pool {
         amount1,
       ),
     );
+
+    const transaction = new Transaction();
+    transaction.add(...instructions);
+    transaction.add(...cleanupInstructions);
+    return { transaction, signers, payer: owner };
+  }
+
+  async makeAddSingleSidedLiquidityTransaction<T extends PublicKey>(
+    connection: Connection,
+    owner: T,
+    sourceTokenAccount: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number; // note this is raw amount, not decimal
+    },
+    poolTokenAccount?: PublicKey,
+    slippageTolerance = 0.005
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
+    const instructions: TransactionInstruction[] = [];
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const signers: Account[] = [];
+    const poolMint = await this.getCachedMintAccount(
+      connection,
+      this._poolTokenMint,
+      360000,
+    );
+    if (!poolMint.mintAuthority) {
+      throw new Error('Mint doesnt have authority');
+    }
+    const authority = poolMint.mintAuthority;
+
+    const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
+      AccountLayout.span,
+    );
+    const accountA = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[0],
+    );
+    const accountB = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[1],
+    );
+
+    const reserve0 = accountA.info.amount.toNumber();
+    const reserve1 = accountB.info.amount.toNumber();
+    const supply = poolMint.supply.toNumber();
+
+
+    let liquidity
+    if (this._decoded.curve.constantPrice) {
+      let price;
+      if (sourceTokenAccount.mint.equals(this.tokenMints[1])) {
+        price = this._decoded.curve.constantPrice.token_b_price;
+      } else {
+        price = 1;
+      }
+      liquidity = (sourceTokenAccount.amount * price * supply) / (reserve0 * price + reserve1);
+    } else {
+      liquidity = Math.min(
+        (sourceTokenAccount.amount * (1 - slippageTolerance) * supply) / reserve0,
+      );
+    }
+
+    let fromKey: PublicKey;
+    if (sourceTokenAccount.mint.equals(WRAPPED_SOL_MINT)) {
+      const {
+        account,
+        instructions: createWrappedSolInstructions,
+        cleanUpInstructions: removeWrappedSolInstructions,
+      } = createTokenAccount(
+        ownerAddress,
+        ownerAddress,
+        WRAPPED_SOL_MINT,
+        sourceTokenAccount.amount + accountRentExempt,
+      );
+      fromKey = account.publicKey;
+      signers.push(account);
+      instructions.push(...createWrappedSolInstructions);
+      cleanupInstructions.push(...removeWrappedSolInstructions);
+    } else {
+      fromKey = sourceTokenAccount.tokenAccount;
+    }
+
+    let toAccount: PublicKey;
+    if (!poolTokenAccount) {
+      const {
+        account,
+        instructions: createToAccountInstructions,
+        cleanUpInstructions: cleanupCreateToAccountInstructions,
+      } = createTokenAccount(
+        ownerAddress,
+        ownerAddress,
+        this._poolTokenMint,
+        accountRentExempt,
+      );
+      toAccount = account.publicKey;
+      signers.push(account);
+      instructions.push(...createToAccountInstructions);
+      cleanupInstructions.push(...cleanupCreateToAccountInstructions);
+    } else {
+      toAccount = poolTokenAccount;
+    }
+
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKey,
+      ownerAddress,
+      sourceTokenAccount.amount,
+      this.isLatest ? undefined : authority,
+    );
+    if (this.isLatest) {
+      signers.push(transferAuthority);
+    }
+
+    instructions.push(
+      depositExactOneInstruction(
+        this._poolAccount,
+        authority,
+        transferAuthority.publicKey,
+        sourceTokenAccount.tokenAccount,
+        this._holdingAccounts[0],
+        this._holdingAccounts[1],
+        this._poolTokenMint,
+        toAccount,
+        this._programId,
+        TOKEN_PROGRAM_ID,
+        sourceTokenAccount.amount,
+        liquidity,
+        isLatest,
+      ),
+    );
+    //todo: add deposit one side txn
 
     const transaction = new Transaction();
     transaction.add(...instructions);
