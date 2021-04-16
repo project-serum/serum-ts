@@ -28,7 +28,7 @@ import {
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
   getLayoutForProgramId,
-  deserializeMint, PROGRAM_ID,
+  deserializeMint, PROGRAM_ID, depositExactOneInstruction, withdrawExactOneInstruction,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
@@ -467,6 +467,235 @@ export class Pool {
         liquidity,
         amount0,
         amount1,
+      ),
+    );
+
+    const transaction = new Transaction();
+    transaction.add(...instructions);
+    transaction.add(...cleanupInstructions);
+    return { transaction, signers, payer: owner };
+  }
+
+  async makeAddSingleSidedLiquidityTransaction<T extends PublicKey>(
+    connection: Connection,
+    owner: T,
+    sourceTokenAccount: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number; // note this is raw amount, not decimal
+    },
+    poolTokenAccount?: PublicKey,
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
+    assert(this._decoded.curve.constantPrice, 'Only implemented for constant price pools');
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
+    const instructions: TransactionInstruction[] = [];
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const signers: Account[] = [];
+    const poolMint = await this.getCachedMintAccount(
+      connection,
+      this._poolTokenMint,
+      0,
+    );
+    if (!poolMint.mintAuthority) {
+      throw new Error('Mint doesnt have authority');
+    }
+    const authority = poolMint.mintAuthority;
+
+    const accountRentExempt = await connection.getMinimumBalanceForRentExemption(
+      AccountLayout.span,
+    );
+    const accountA = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[0],
+    );
+    const accountB = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[1],
+    );
+
+    const reserve0 = accountA.info.amount.toNumber();
+    const reserve1 = accountB.info.amount.toNumber();
+    const supply = poolMint.supply.toNumber();
+
+    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price
+    let price;
+    if (sourceTokenAccount.mint.equals(this.tokenMints[1])) {
+      price = tokenBPrice;
+    } else {
+      price = 1;
+    }
+    const sourceAmountPostFees = sourceTokenAccount.amount - Math.max(1,
+      ((sourceTokenAccount.amount / 2) * this._decoded.fees.tradeFeeNumerator) / this._decoded.fees.tradeFeeDenominator
+    )
+    const liquidity = Math.floor((sourceAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice));
+
+    let fromKey: PublicKey;
+    if (sourceTokenAccount.mint.equals(WRAPPED_SOL_MINT)) {
+      const {
+        account,
+        instructions: createWrappedSolInstructions,
+        cleanUpInstructions: removeWrappedSolInstructions,
+      } = createTokenAccount(
+        ownerAddress,
+        ownerAddress,
+        WRAPPED_SOL_MINT,
+        sourceTokenAccount.amount + accountRentExempt,
+      );
+      fromKey = account.publicKey;
+      signers.push(account);
+      instructions.push(...createWrappedSolInstructions);
+      cleanupInstructions.push(...removeWrappedSolInstructions);
+    } else {
+      fromKey = sourceTokenAccount.tokenAccount;
+    }
+
+    let toAccount: PublicKey;
+    if (!poolTokenAccount) {
+      const {
+        account,
+        instructions: createToAccountInstructions,
+        cleanUpInstructions: cleanupCreateToAccountInstructions,
+      } = createTokenAccount(
+        ownerAddress,
+        ownerAddress,
+        this._poolTokenMint,
+        accountRentExempt,
+      );
+      toAccount = account.publicKey;
+      signers.push(account);
+      instructions.push(...createToAccountInstructions);
+      cleanupInstructions.push(...cleanupCreateToAccountInstructions);
+    } else {
+      toAccount = poolTokenAccount;
+    }
+
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      fromKey,
+      ownerAddress,
+      sourceTokenAccount.amount,
+      this.isLatest ? undefined : authority,
+    );
+    if (this.isLatest) {
+      signers.push(transferAuthority);
+    }
+
+    instructions.push(
+      depositExactOneInstruction(
+        this._poolAccount,
+        authority,
+        transferAuthority.publicKey,
+        sourceTokenAccount.tokenAccount,
+        this._holdingAccounts[0],
+        this._holdingAccounts[1],
+        this._poolTokenMint,
+        toAccount,
+        this._programId,
+        TOKEN_PROGRAM_ID,
+        sourceTokenAccount.amount,
+        liquidity,
+        this.isLatest,
+      ),
+    );
+
+    const transaction = new Transaction();
+    transaction.add(...instructions);
+    transaction.add(...cleanupInstructions);
+    return { transaction, signers, payer: owner };
+  }
+
+  async makeWithdrawSingleSidedLiquidityTransaction<T extends PublicKey>(
+    connection: Connection,
+    owner: T,
+    destinationTokenAccount: {
+      mint: PublicKey;
+      tokenAccount: PublicKey;
+      amount: number; // note this is raw amount, not decimal
+    },
+    poolTokenAccount: PublicKey,
+  ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
+    assert(this._decoded.curve.constantPrice, 'Only implemented for constant price pools');
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
+    const instructions: TransactionInstruction[] = [];
+    const cleanupInstructions: TransactionInstruction[] = [];
+
+    const signers: Account[] = [];
+    const poolMint = await this.getCachedMintAccount(
+      connection,
+      this._poolTokenMint,
+      0,
+    );
+    if (!poolMint.mintAuthority) {
+      throw new Error('Mint doesnt have authority');
+    }
+    const authority = poolMint.mintAuthority;
+
+    const accountA = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[0],
+    );
+    const accountB = await this.getCachedTokenAccount(
+      connection,
+      this._holdingAccounts[1],
+    );
+
+    const reserve0 = accountA.info.mint.equals(destinationTokenAccount.mint) ?
+      accountA.info.amount.toNumber() - destinationTokenAccount.amount :
+      accountA.info.amount.toNumber();
+    const reserve1 = accountB.info.mint.equals(destinationTokenAccount.mint) ?
+      accountB.info.amount.toNumber() - destinationTokenAccount.amount :
+      accountB.info.amount.toNumber();
+    const supply = poolMint.supply.toNumber();
+
+    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price
+    let price;
+    if (destinationTokenAccount.mint.equals(this.tokenMints[1])) {
+      price = tokenBPrice;
+    } else {
+      price = 1;
+    }
+    const destinationAmountPostFees = destinationTokenAccount.amount - Math.max(1,
+      ((destinationTokenAccount.amount / 2) * this._decoded.fees.tradeFeeNumerator) / this._decoded.fees.tradeFeeDenominator
+    )
+    const liquidityPreWithdrawalFee = Math.ceil(
+      (destinationAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice)
+    );
+    const liquidity = liquidityPreWithdrawalFee + liquidityPreWithdrawalFee * (
+      this._decoded.fees.ownerWithdrawFeeNumerator / this._decoded.fees.ownerWithdrawFeeDenominator
+    )
+
+    const transferAuthority = approveTransfer(
+      instructions,
+      cleanupInstructions,
+      poolTokenAccount,
+      ownerAddress,
+      liquidity,
+      this.isLatest ? undefined : authority,
+    );
+    if (this.isLatest) {
+      signers.push(transferAuthority);
+    }
+
+    instructions.push(
+      withdrawExactOneInstruction(
+        this._poolAccount,
+        authority,
+        transferAuthority.publicKey,
+        this._poolTokenMint,
+        poolTokenAccount,
+        this._holdingAccounts[0],
+        this._holdingAccounts[1],
+        destinationTokenAccount.tokenAccount,
+        this.feeAccount,
+        this._programId,
+        TOKEN_PROGRAM_ID,
+        destinationTokenAccount.amount,
+        liquidity,
+        this.isLatest,
       ),
     );
 
