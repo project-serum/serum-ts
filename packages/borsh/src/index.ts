@@ -257,3 +257,19 @@ export function rustEnum<T>(
   );
   return unionLayout;
 }
+
+export function array<T>(
+  elementLayout: Layout<T>,
+  length: number,
+  property?: string,
+): Layout<T[]> {
+  const layout: Layout<{ values: T[] }> = struct([
+    seq(elementLayout, length, 'values'),
+  ]);
+  return new WrappedLayout(
+    layout,
+    ({ values }) => values,
+    values => ({ values }),
+    property,
+  );
+}
