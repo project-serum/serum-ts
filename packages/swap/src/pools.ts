@@ -526,8 +526,9 @@ export class Pool {
     } else {
       price = 1;
     }
-    const sourceAmountPostFees = sourceTokenAccount.amount - Math.max(1,
-      ((sourceTokenAccount.amount / 2) * this._decoded.fees.tradeFeeNumerator) / this._decoded.fees.tradeFeeDenominator
+    const sourceAmountPostFees = sourceTokenAccount.amount - (
+      Math.max(1, sourceTokenAccount.amount / 2) *
+      this._decoded.fees.tradeFeeNumerator / this._decoded.fees.tradeFeeDenominator
     )
     const liquidity = Math.floor((sourceAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice));
 
@@ -658,15 +659,21 @@ export class Pool {
     } else {
       price = 1;
     }
-    const destinationAmountPostFees = destinationTokenAccount.amount - Math.max(1,
-      ((destinationTokenAccount.amount / 2) * this._decoded.fees.tradeFeeNumerator) / this._decoded.fees.tradeFeeDenominator
+    const destinationAmountPostFees = destinationTokenAccount.amount - (
+      Math.max(1, destinationTokenAccount.amount / 2) *
+      this._decoded.fees.tradeFeeNumerator / this._decoded.fees.tradeFeeDenominator
     )
     const liquidityPreWithdrawalFee = Math.ceil(
       (destinationAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice)
     );
-    const liquidity = liquidityPreWithdrawalFee + liquidityPreWithdrawalFee * (
-      this._decoded.fees.ownerWithdrawFeeNumerator / this._decoded.fees.ownerWithdrawFeeDenominator
-    )
+    let liquidity = liquidityPreWithdrawalFee;
+    if (this._decoded.fees.ownerWithdrawFeeDenominator > 0) {
+      liquidity += liquidityPreWithdrawalFee * (
+        this._decoded.fees.ownerWithdrawFeeNumerator / this._decoded.fees.ownerWithdrawFeeDenominator
+      )
+    } else {
+      liquidity += 1
+    }
 
     const transferAuthority = approveTransfer(
       instructions,
