@@ -106,7 +106,7 @@ export default function Rewards() {
         </Typography>
         <div style={{ display: 'flex' }}>
           {nextReward && <ClaimRewardButton rli={nextReward} />}
-          <DropRewardButton />
+          {localStorage.getItem('private') && <DropRewardButton />}
         </div>
       </div>
       <div style={{ marginBottom: '16px' }}>
