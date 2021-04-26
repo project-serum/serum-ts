@@ -186,7 +186,7 @@ function RewardListItemDetails(props: RewardListItemDetailsProps) {
           Reward queue cursor: {vendor.account.rewardEventQCursor.toString()}
         </li>
       </ul>
-      {(vendor.account.expiryTs.toNumber() <= Date.now()/1000) && (
+      {(vendor.account.expiryTs.toNumber() <= Date.now()/1000) && registryClient.provider.wallet.publicKey.equals(vendor.account.expiryReceiver) && (
         <div style={{ display: 'flex', flexDirection: 'row-reverse' }}>
           <Button
             color="primary"
