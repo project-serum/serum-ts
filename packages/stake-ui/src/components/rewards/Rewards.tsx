@@ -66,7 +66,7 @@ export default function Rewards() {
 
   // All rewards to display.
   const rewards = events
-    .map((m: any, idx: any) => RewardListItemViewModel.fromMessage(ctx, m, idx))
+    .map((m: any) => RewardListItemViewModel.fromMessage(ctx, m))
     .reverse();
 
   // Next reward to claim.

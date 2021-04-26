@@ -67,23 +67,23 @@ export const networks: Networks = {
 
     srmFaucet: null,
     msrmFaucet: null,
+    multisigProgramId: new PublicKey(
+      '9z7Pq56To96qbVLzuBcf47Lc7u8uUWZh6k5rhcaTsDjz',
+    ),
 
     registryProgramId: new PublicKey(
-      'HutezizsH6GE42X1Gk9i5dBrpeCexsjRtxtGBGL9TnXP',
-    ),
-    multisigProgramId: new PublicKey(
-      '2xLp25wHRsHZCWD2oNDhptzTnDCh97YNGjY7wGyxQMCC',
+      '65aMavjMw3EhmWKVCkGn1Uj2SqZ3XY4coJhYM1BVJTHw',
     ),
     lockupProgramId: new PublicKey(
-      '6RPATY1CcWgiMZiJzA61fbKSDJTVsQqSr8gdS4vwC68i',
+      'bRGMWZz4mzJ8NG8csn5QNTbJDv2973QSvppbfcAboje',
     ),
     registrars: {
-      token1: new PublicKey('GCnZCNut5SYiLCBMgaSSqU6tDPBdNbQnCmpS5YNHTpbo'),
-      token2: new PublicKey('7HnUrnCPwuGxiVALRWpbUvg1qhhX6KUbS1sg92YPTatr'),
+      token1: new PublicKey('EqbwcuvPWLZ5fav58HrieHmJEqTm6RPu5bmn5bBQJ3mu'),
+      token2: new PublicKey('2rDWuS6yVFQ3jYx1nQq7gs3HgzWLJcUwm9sTUBWuXuyK'),
     },
     mints: {
-      token1: new PublicKey('EVWmQkGL1AtYbyEG9NvyRN6MhvBaCrvs3Yw4vfsAYTKM'),
-      token2: new PublicKey('Hw7xpY3gatekvs9P3uvicauE3RRQcB7xLtuH8RkQdB3i'),
+      token1: new PublicKey('Ep6ASaHQ4gKiN3gWNRKYttZEQ7b82seMk9HWc5JNBJZP'),
+      token2: new PublicKey('5vWxJthWbCFuNSZj1qcP9WoU8E6UG3DUfeAoPvYoN8PQ'),
     },
   },
 
