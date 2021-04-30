@@ -587,7 +587,7 @@ export class Market {
     }
 
     let openOrdersAddress: PublicKey;
-    if (openOrdersAccounts.length === 0) {
+    if (openOrdersAccounts.length === 0 || (openOrdersAccount && !openOrdersAccounts.find(acct => acct.address.equals(openOrdersAccount.publicKey)))) {
       let account;
       if (openOrdersAccount) {
         account = openOrdersAccount;
