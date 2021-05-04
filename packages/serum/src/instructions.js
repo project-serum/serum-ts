@@ -8,7 +8,11 @@ import {
   u64,
   VersionedLayout,
 } from './layout';
-import { SYSVAR_RENT_PUBKEY, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import {
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+  PublicKey,
+} from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 // NOTE: Update these if the position of arguments for the settleFunds instruction changes
@@ -91,6 +95,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   struct([u64('clientId')]),
   'cancelOrderByClientIdV2',
 );
+INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -119,7 +124,9 @@ export class DexInstructions {
     quoteDustThreshold,
     programId,
   }) {
-    let rentSysvar = new PublicKey('SysvarRent111111111111111111111111111111111');
+    let rentSysvar = new PublicKey(
+      'SysvarRent111111111111111111111111111111111',
+    );
     return new TransactionInstruction({
       keys: [
         { pubkey: market, isSigner: false, isWritable: true },
@@ -434,6 +441,28 @@ export class DexInstructions {
       programId,
       data: encodeInstruction({
         settleFunds: {},
+      }),
+    });
+  }
+
+  static closeOpenOrders({
+    openOrders,
+    owner,
+    destination,
+    market,
+    programId,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: destination, isSigner: false, isWritable: true },
+        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+      ],
+      programId,
+      data: encodeInstruction({
+        closeOpenOrders: {},
       }),
     });
   }
