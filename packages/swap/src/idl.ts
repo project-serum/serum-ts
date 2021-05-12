@@ -6,6 +6,68 @@ export const IDL: Idl = {
   name: 'swap',
   instructions: [
     {
+      name: 'initAccount',
+      accounts: [
+        {
+          name: 'openOrders',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'authority',
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: 'market',
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: 'dexProgram',
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: 'rent',
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
+      name: 'closeAccount',
+      accounts: [
+        {
+          name: 'openOrders',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'authority',
+          isMut: false,
+          isSigner: true,
+        },
+        {
+          name: 'destination',
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: 'market',
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: 'dexProgram',
+          isMut: false,
+          isSigner: false,
+        },
+      ],
+      args: [],
+    },
+    {
       name: 'swap',
       accounts: [
         {
@@ -106,8 +168,10 @@ export const IDL: Idl = {
           type: 'u64',
         },
         {
-          name: 'minExpectedSwapAmount',
-          type: 'u64',
+          name: 'minExchangeRate',
+          type: {
+            defined: 'ExchangeRate',
+          },
         },
       ],
     },
@@ -266,8 +330,10 @@ export const IDL: Idl = {
           type: 'u64',
         },
         {
-          name: 'minExpectedSwapAmount',
-          type: 'u64',
+          name: 'minExchangeRate',
+          type: {
+            defined: 'ExchangeRate',
+          },
         },
       ],
     },
@@ -287,6 +353,30 @@ export const IDL: Idl = {
         ],
       },
     },
+    {
+      name: 'ExchangeRate',
+      type: {
+        kind: 'struct',
+        fields: [
+          {
+            name: 'rate',
+            type: 'u64',
+          },
+          {
+            name: 'fromDecimals',
+            type: 'u8',
+          },
+          {
+            name: 'quoteDecimals',
+            type: 'u8',
+          },
+          {
+            name: 'strict',
+            type: 'bool',
+          },
+        ],
+      },
+    },
   ],
   events: [
     {
@@ -298,8 +388,10 @@ export const IDL: Idl = {
           index: false,
         },
         {
-          name: 'min_expected_swap_amount',
-          type: 'u64',
+          name: 'min_exchange_rate',
+          type: {
+            defined: 'ExchangeRate',
+          },
           index: false,
         },
         {
@@ -309,6 +401,11 @@ export const IDL: Idl = {
         },
         {
           name: 'to_amount',
+          type: 'u64',
+          index: false,
+        },
+        {
+          name: 'quote_amount',
           type: 'u64',
           index: false,
         },
@@ -350,6 +447,11 @@ export const IDL: Idl = {
       code: 101,
       name: 'SlippageExceeded',
       msg: 'Slippage tolerance exceeded',
+    },
+    {
+      code: 102,
+      name: 'ZeroSwap',
+      msg: 'No tokens received when swapping',
     },
   ],
 };

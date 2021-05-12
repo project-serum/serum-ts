@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "docs": "typedoc --out ../../docs/borsh --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
+    "docs": "typedoc --excludePrivate --out ../../docs/borsh src/index.ts --includeVersion --readme none",
     "test": "",
     "clean": "rm -rf dist",
     "prepare": "run-s clean build"

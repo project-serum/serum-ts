@@ -1,4 +1,4 @@
-# Serum Swap
+# Swap
 
 [![Build Status](https://travis-ci.com/project-serum/serum-ts.svg?branch=master)](https://travis-ci.com/project-serum/serum-ts)
 [![npm (scoped)](https://img.shields.io/npm/v/@project-serum/swap)](https://www.npmjs.com/package/@project-serum/swap)
@@ -14,13 +14,13 @@ The Solana program can be found [here](https://github.com/project-serum/swap).
 Using npm:
 
 ```
-npm install @solana/web3.js @project-serum/swap
+npm install @project-serum/swap
 ```
 
 Using yarn:
 
 ```
-yarn add @solana/web3.js @project-serum/swap
+yarn add @project-serum/swap
 ```
 
 ## API Reference
