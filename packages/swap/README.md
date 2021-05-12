@@ -24,4 +24,4 @@ yarn add @solana/web3.js @project-serum/serum-swap
 
 ## API Reference
 
-[API Reference](https://project-serum.github.io/serum-ts/serum-swap/classes/swap.html).
+[API Reference](https://project-serum.github.io/serum-ts/swap/classes/swap.html).
