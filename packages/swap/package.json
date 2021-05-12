@@ -1,7 +1,7 @@
 {
   "name": "@project-serum/swap",
   "version": "0.1.0-alpha.1",
-  "description": "Client for swapping on the serum dex",
+  "description": "Client for swapping on the Serum DEX",
   "license": "MIT",
   "repository": "project-serum/serum-ts",
   "main": "lib/index.js",
