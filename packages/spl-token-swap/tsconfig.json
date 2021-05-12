@@ -1,0 +1,15 @@
+{
+  "extends": "@tsconfig/node12/tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./lib",
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": true,
+    "declarationMap": true,
+    "noImplicitAny": false,
+    "resolveJsonModule": true,
+    "sourceMap": true
+  },
+  "include": ["./src/**/*"],
+  "exclude": ["./src/**/*.test.js", "node_modules", "**/node_modules"]
+}

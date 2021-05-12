@@ -34,7 +34,8 @@
 | [`@project-serum/common`](/packages/common)           | [![npm](https://img.shields.io/npm/v/@project-serum/common.svg)](https://www.npmjs.com/package/@project-serum/common)           | Common utilities |
 | [`@project-serum/serum`](/packages/serum)                 | [![npm](https://img.shields.io/npm/v/@project-serum/serum.svg)](https://www.npmjs.com/package/@project-serum/serum)                 | Library for interacting with the Serum DEX |
 | [`@project-serum/pool`](/packages/pool)             | [![npm](https://img.shields.io/npm/v/@project-serum/pool.svg)](https://www.npmjs.com/package/@project-serum/pool)             | Client for interacting with Pools |
-| [`@project-serum/swap`](/packages/swap)                 | [![npm](https://img.shields.io/npm/v/@project-serum/swap.svg)](https://www.npmjs.com/package/@project-serum/swap)                 | Client for interacting with the Swap Program |
+| [`@project-serum/spl-token-swap`](/packages/spl-token-swap) | [![npm](https://img.shields.io/npm/v/@project-serum/spl-token-swap.svg)](https://www.npmjs.com/package/@project-serum/spl-token-swap)                 | Client for interacting with the SPL Token Swap Program |
+| [`@project-serum/swap`](/packages/swap)                 | [![npm](https://img.shields.io/npm/v/@project-serum/swap.svg)](https://www.npmjs.com/package/@project-serum/swap)                 | Client for swapping on the Serum DEX |
 | [`@project-serum/tokens`](/packages/tokens)                 | [![npm](https://img.shields.io/npm/v/@project-serum/tokens.svg)](https://www.npmjs.com/package/@project-serum/tokens)                 | Solana token addresses |
 
 ## Contributing
