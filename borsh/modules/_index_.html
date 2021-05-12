@@ -80,7 +80,9 @@
 						<section class="tsd-index-section ">
 							<h3>Functions</h3>
 							<ul class="tsd-index-list">
+								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_index_.html#array" class="tsd-kind-icon">array</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#bool" class="tsd-kind-icon">bool</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#i128" class="tsd-kind-icon">i128</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#i64" class="tsd-kind-icon">i64</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_index_.html#option" class="tsd-kind-icon">option</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#publickey" class="tsd-kind-icon">public<wbr>Key</a></li>
@@ -88,6 +90,7 @@
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#str" class="tsd-kind-icon">str</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_index_.html#struct" class="tsd-kind-icon">struct</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter"><a href="_index_.html#tagged" class="tsd-kind-icon">tagged</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#u128" class="tsd-kind-icon">u128</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#u32" class="tsd-kind-icon">u32</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#u64" class="tsd-kind-icon">u64</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-module"><a href="_index_.html#u8" class="tsd-kind-icon">u8</a></li>
@@ -100,6 +103,41 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Functions</h2>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+					<a name="array" class="tsd-anchor"></a>
+					<h3>array</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<li class="tsd-signature tsd-kind-icon">array&lt;T&gt;<span class="tsd-signature-symbol">(</span>elementLayout<span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span>, length<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, property<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L261">packages/borsh/src/index.ts:261</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-type-parameters-title">Type parameters</h4>
+							<ul class="tsd-type-parameters">
+								<li>
+									<h4>T</h4>
+								</li>
+							</ul>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>elementLayout: <a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">&gt;</span></h5>
+								</li>
+								<li>
+									<h5>length: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> property: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">T</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="bool" class="tsd-anchor"></a>
 					<h3>bool</h3>
@@ -110,7 +148,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L151">packages/borsh/src/index.ts:151</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L159">packages/borsh/src/index.ts:159</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -124,6 +162,29 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="i128" class="tsd-anchor"></a>
+					<h3>i128</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">i128<span class="tsd-signature-symbol">(</span>property<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L70">packages/borsh/src/index.ts:70</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> property: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="i64" class="tsd-anchor"></a>
 					<h3>i64</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
@@ -133,7 +194,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L62">packages/borsh/src/index.ts:62</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L62">packages/borsh/src/index.ts:62</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -156,7 +217,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L144">packages/borsh/src/index.ts:144</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L152">packages/borsh/src/index.ts:152</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -188,7 +249,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L96">packages/borsh/src/index.ts:96</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L104">packages/borsh/src/index.ts:104</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -211,7 +272,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L242">packages/borsh/src/index.ts:242</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L250">packages/borsh/src/index.ts:250</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -243,7 +304,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L229">packages/borsh/src/index.ts:229</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L237">packages/borsh/src/index.ts:237</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -266,7 +327,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/types/buffer-layout/index.d.ts#L57">types/buffer-layout/index.d.ts:57</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/types/buffer-layout/index.d.ts#L57">types/buffer-layout/index.d.ts:57</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -301,7 +362,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L185">packages/borsh/src/index.ts:185</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L193">packages/borsh/src/index.ts:193</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -327,6 +388,29 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
+					<a name="u128" class="tsd-anchor"></a>
+					<h3>u128</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
+						<li class="tsd-signature tsd-kind-icon">u128<span class="tsd-signature-symbol">(</span>property<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L66">packages/borsh/src/index.ts:66</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> property: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="../interfaces/_index_.layout.html" class="tsd-signature-type">Layout</a><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-module">
 					<a name="u32" class="tsd-anchor"></a>
 					<h3>u32</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-module">
@@ -336,7 +420,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/types/buffer-layout/index.d.ts#L30">types/buffer-layout/index.d.ts:30</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/types/buffer-layout/index.d.ts#L30">types/buffer-layout/index.d.ts:30</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -359,7 +443,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L58">packages/borsh/src/index.ts:58</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L58">packages/borsh/src/index.ts:58</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -382,7 +466,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/types/buffer-layout/index.d.ts#L27">types/buffer-layout/index.d.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/types/buffer-layout/index.d.ts#L27">types/buffer-layout/index.d.ts:27</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -405,7 +489,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L168">packages/borsh/src/index.ts:168</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L176">packages/borsh/src/index.ts:176</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-type-parameters-title">Type parameters</h4>
@@ -437,7 +521,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/b53bfa9/packages/borsh/src/index.ts#L215">packages/borsh/src/index.ts:215</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/641f289/packages/borsh/src/index.ts#L223">packages/borsh/src/index.ts:223</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -471,8 +555,14 @@
 					<li class=" tsd-kind-interface tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="../interfaces/_index_.layout.html" class="tsd-kind-icon">Layout</a>
 					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
+						<a href="_index_.html#array" class="tsd-kind-icon">array</a>
+					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_index_.html#bool" class="tsd-kind-icon">bool</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_index_.html#i128" class="tsd-kind-icon">i128</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_index_.html#i64" class="tsd-kind-icon">i64</a>
@@ -494,6 +584,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module tsd-has-type-parameter">
 						<a href="_index_.html#tagged" class="tsd-kind-icon">tagged</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-module">
+						<a href="_index_.html#u128" class="tsd-kind-icon">u128</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-module">
 						<a href="_index_.html#u32" class="tsd-kind-icon">u32</a>
