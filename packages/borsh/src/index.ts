@@ -10,7 +10,7 @@ import {
 } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-export { u8, u32, u16, struct } from 'buffer-layout';
+export { u8, s8 as i8, u16, s16 as i16, u32, s32 as i32, struct } from 'buffer-layout';
 
 export interface Layout<T> {
   span: number;
