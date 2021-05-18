@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useSnackbar } from 'notistack';
 import Typography from '@material-ui/core/Typography';
 import Paper from '@material-ui/core/Paper';
 import Card from '@material-ui/core/Card';
 import CardContent from '@material-ui/core/CardContent';
+import * as anchor from '@project-serum/anchor';
 import { useWallet } from '../../components/common/WalletProvider';
 import { State as StoreState } from '../../store/reducer';
 import { ActionType } from '../../store/actions';
@@ -35,34 +36,45 @@ export default function Rewards() {
       network: state.common.network,
     };
   });
-  const { rewardEventQueue, accounts } = ctx;
+  const { rewardEventQueue } = ctx;
 
-  const events = rewardEvents(rewardEventQueue.account);
+  const events = useMemo(() => rewardEvents(rewardEventQueue.account), [
+    rewardEventQueue.account,
+  ]);
 
-  // Load any reward vendor accounts that hasn't been loaded already.
   useEffect(() => {
-    events.forEach(m => {
-      const vendor = accounts[m.vendor.toString()];
-      if (!vendor) {
-        registryClient.account
-          .rewardVendor(m.vendor)
-          .then((account: any) => {
-            dispatch({
-              type: ActionType.AccountAdd,
-              item: {
-                account: { publicKey: m.vendor, account },
-              },
-            });
-          })
-          .catch((err: any) => {
-            console.error(err);
-            snack.enqueueSnackbar(`Error fetching reward vendor`, {
-              variant: 'error',
-            });
+    (async () => {
+      // TODO: need to chop up the calls here, for reward vendors > 100 entires.
+      const accounts = await anchor.utils.getMultipleAccounts(
+        registryClient.provider.connection,
+        events.map(m => m.vendor),
+      );
+      accounts.forEach(a => {
+        if (a === null) {
+          snack.enqueueSnackbar(`RPC node returned invalid vendor account`, {
+            variant: 'error',
           });
-      }
-    });
-  });
+          return;
+        }
+        const account = registryClient.coder.accounts.decode(
+          'RewardVendor',
+          a.account.data,
+        );
+        dispatch({
+          type: ActionType.AccountAdd,
+          item: {
+            account: { publicKey: a.publicKey, account },
+          },
+        });
+      });
+    })();
+  }, [
+    events,
+    dispatch,
+    snack,
+    registryClient.coder.accounts,
+    registryClient.provider.connection,
+  ]);
 
   // All rewards to display.
   const rewards = events
