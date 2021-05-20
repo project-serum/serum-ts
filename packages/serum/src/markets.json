@@ -1204,5 +1204,11 @@
     "address": "7MpMwArporUHEGW7quUpkPZp5L5cHPs9eKUfKCdaPHq2",
     "deprecated": false,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
+  {
+    "name": "SDOGE/USDC",
+    "address": "9aruV2p8cRWxybx6wMsJwPFqeN7eQVPR74RrxdM3DNdu",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
