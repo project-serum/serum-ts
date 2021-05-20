@@ -1204,5 +1204,11 @@
     "address": "7MpMwArporUHEGW7quUpkPZp5L5cHPs9eKUfKCdaPHq2",
     "deprecated": false,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
+  {
+    "name": "ROPE/USDC",
+    "address": "7TbVP3sm8quUkaFmyeBoKBNhXMTXSfrEPniR9CQvr2Yr",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
