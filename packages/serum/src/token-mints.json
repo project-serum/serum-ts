@@ -137,7 +137,7 @@
   },
   {
     "address": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
-    "name": "COPE"
+    "name": "xCOPE"
   },
   {
     "address": "dK83wTVypEpa1pqiBbHY3MNuUnT3ADUZM4wk9VZXZEc",
@@ -154,5 +154,9 @@
   {
     "address": "6ry4WBDvAwAnrYJVv6MCog4J8zx6S3cPgSqnTsDZ73AR",
     "name": "TRYB"
+  },
+  {
+    "address": "DSVavCzWA2eC7gbRC5L3B6Av3Wh4hM8Wn2kS6MhUTqJQ",
+    "name": "COPE"
   }
 ]
