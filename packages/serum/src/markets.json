@@ -1214,12 +1214,18 @@
   {
     "name": "MER/USDC",
     "address": "HhvDWug3ftYNx5148ZmrQxzvEmohN2pKVNiRT4TVoekF",
-    "deprecated": false,
+    "deprecated": true,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   },
   {
     "name": "MER/USDT",
     "address": "6HwcY27nbeb933UkEcxqJejtjWLfNQFWkGCjAVNes6g7",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
+  {
+    "name": "MER/USDC",
+    "address": "G4LcexdCzzJUKZfqyVDQFzpkjhB1JoCNL8Kooxi9nJz5",
     "deprecated": false,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
