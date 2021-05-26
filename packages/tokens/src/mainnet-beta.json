@@ -190,8 +190,13 @@
     "tokenName": "MAPS"
   },
   {
-    "tokenSymbol": "COPE",
+    "tokenSymbol": "xCOPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
+    "tokenName": "xCOPE"
+  },
+  {
+    "tokenSymbol": "COPE",
+    "mintAddress": "8HGyAAB1yoM1ttS7pXjHMa3dukTFGQggnFFH3hJZgzQh",
     "tokenName": "COPE"
   }
 ]
