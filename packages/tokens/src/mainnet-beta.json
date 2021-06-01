@@ -190,8 +190,15 @@
     "tokenName": "MAPS"
   },
   {
-    "tokenSymbol": "COPE",
+    "tokenSymbol": "XCOPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
+    "tokenName": "XCOPE"
+    "icon": "https://raw.githubusercontent.com/cyriimm/COPE/main/COPE_LOGO.png"
+  },
+  {
+    "tokenSymbol": "COPE",
+    "mintAddress": "8HGyAAB1yoM1ttS7pXjHMa3dukTFGQggnFFH3hJZgzQh",
     "tokenName": "COPE"
+    "icon": "https://raw.githubusercontent.com/cyriimm/COPE/main/COPE_LOGO.png"
   }
 ]
