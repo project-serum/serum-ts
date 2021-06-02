@@ -193,5 +193,11 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "BOP",
+    "mintAddress": "BLwTnYKqf7u4qjgZrrsKeNs2EzWkMLqVCu6j8iHyrNA3",
+    "tokenName": "Boring Protocol",
+    "icon": "https://raw.githubusercontent.com/boringprotocol/website/main/src/assets/images/boring.png"
   }
 ]
