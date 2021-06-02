@@ -1233,6 +1233,6 @@
     "name": "BOP/USDC",
     "address": "7MmPwD1K56DthW14P1PnWZ4zPCbPWemGs3YggcT1KzsM",
     "deprecated": false,
-    "programID": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
