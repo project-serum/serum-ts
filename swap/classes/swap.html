@@ -3,8 +3,8 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Swap | @project-serum/swap - v0.1.0-alpha.2</title>
-	<meta name="description" content="Documentation for @project-serum/swap - v0.1.0-alpha.2">
+	<title>Swap | @project-serum/swap - v0.1.0-alpha.20</title>
+	<meta name="description" content="Documentation for @project-serum/swap - v0.1.0-alpha.20">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
 	<script async src="../assets/js/search.js" id="search-script"></script>
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">@project-serum/swap - v0.1.0-alpha.2</a>
+					<a href="../index.html" class="title">@project-serum/swap - v0.1.0-alpha.20</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -52,7 +52,7 @@
 		<div class="container">
 			<ul class="tsd-breadcrumb">
 				<li>
-					<a href="../index.html">@project-serum/swap - v0.1.0-alpha.2</a>
+					<a href="../index.html">@project-serum/swap - v0.1.0-alpha.20</a>
 				</li>
 				<li>
 					<a href="swap.html">Swap</a>
@@ -72,10 +72,9 @@
 							<h1>Swap</h1>
 						</a>
 					</div>
-					<p>A module to swap tokens across USD(x) quoted markets on the Serum DEX,
-						providing a thin wrapper around an
-						<a href="https://github.com/project-serum/anchor">Anchor</a> generated client in an
-					attempt to abstract away orderbook details.</p>
+					<p>A module to swap tokens across markets the Serum DEX, providing a thin
+						wrapper around an <a href="https://github.com/project-serum/anchor">Anchor</a> for the
+					sole purpose of * providing a simplified <code>swap</code> API.</p>
 					<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
 						<h2>Usage</h2>
 					</a>
@@ -84,25 +83,27 @@
 					</a>
 					<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">client</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Swap</span><span style="color: #000000">(</span><span style="color: #001080">provider</span><span style="color: #000000">, </span><span style="color: #001080">tokenList</span><span style="color: #000000">)</span>
 </code></pre>
-					<a href="#list-all-token-mints-to-swap" id="list-all-token-mints-to-swap" style="color: inherit; text-decoration: none;">
-						<h3>List all token mints to swap</h3>
-					</a>
-					<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">tokens</span><span style="color: #000000"> = </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">tokens</span><span style="color: #000000">();</span>
-</code></pre>
-					<a href="#get-all-candidate-swap-pairs-for-a-given-token-mint" id="get-all-candidate-swap-pairs-for-a-given-token-mint" style="color: inherit; text-decoration: none;">
-						<h3>Get all candidate swap pairs for a given token mint</h3>
-					</a>
-					<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">swappableTokens</span><span style="color: #000000"> = </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">pairs</span><span style="color: #000000">(</span><span style="color: #001080">usdcPublicKey</span><span style="color: #000000">);</span>
-</code></pre>
-					<a href="#swap-one-token-for-another" id="swap-one-token-for-another" style="color: inherit; text-decoration: none;">
-						<h3>Swap one token for another.</h3>
+					<a href="#swap-one-token-for-another-across-usdx-quoted-markets" id="swap-one-token-for-another-across-usdx-quoted-markets" style="color: inherit; text-decoration: none;">
+						<h3>Swap one token for another across USD(x) quoted markets.</h3>
 					</a>
 					<pre><code class="language-javascript"><span style="color: #AF00DB">await</span><span style="color: #000000"> </span><span style="color: #001080">client</span><span style="color: #000000">.</span><span style="color: #795E26">swap</span><span style="color: #000000">({</span>
 <span style="color: #000000">  </span><span style="color: #001080">fromMint</span><span style="color: #000000">,</span>
 <span style="color: #000000">  </span><span style="color: #001080">toMint</span><span style="color: #000000">,</span>
 <span style="color: #000000">  </span><span style="color: #001080">amount</span><span style="color: #000000">,</span>
-<span style="color: #000000">})</span>
+<span style="color: #000000">  </span><span style="color: #001080">minExchangeRate</span><span style="color: #000000">,</span>
+<span style="color: #000000">});</span>
 </code></pre>
+					<a href="#default-behavior" id="default-behavior" style="color: inherit; text-decoration: none;">
+						<h2>Default Behavior</h2>
+					</a>
+					<p>Some parameters in the swap API are optional. For example, the <code>fromMarket</code>
+						and <code>toMarket</code>, specifying the markets to swap across. In the event that
+						markets are ommitted, the client will swap across USD(x) quoted markets.
+						For more information about default behavior see the <code>SwapParams</code>
+						documentation. For most GUIs, the application likely already knows the
+						markets to swap accross, since one needs that information to calculate
+						exchange rates for the UI. So it&#39;s recommend to pass in most, if not all, the
+					optional parameters explicitly, to prevent unnecessary network requests.</p>
 					<a href="#swap-program-basics" id="swap-program-basics" style="color: inherit; text-decoration: none;">
 						<h2>Swap Program Basics</h2>
 					</a>
@@ -117,12 +118,8 @@
 							swaps two tokens across <strong>two</strong> A/x, B/x markets in the same manner as
 						<code>swap</code>.</li>
 					</ul>
-					<p>When swapping to/from a USD(x) token, the swap client will use the <code>swap</code> API.
-						When swapping to/from a non-USD(x) token, e.g., wBTC for wETH, the swap
-						client will use the <code>swapTransitive</code>API with USD(x) quoted markets to bridge
-					the two tokens.</p>
 					<p>For both APIs, if the number of tokens received from the trade is less than
-					the client provided <code>minExpectedAmount</code>, the transaction aborts.</p>
+					the client provided <code>minExchangeRate</code>, the transaction aborts.</p>
 					<p>Note that if this client package is insufficient, one can always use the
 						Anchor generated client directly, exposing an API mapping one-to-one to
 						these program instructions. See the
@@ -142,20 +139,13 @@
 						<h3>Creating Open Orders Accounts</h3>
 					</a>
 					<p>When the wallet doesn&#39;t have an open orders account already created,
-					the swap client provides two choices.</p>
-					<ol>
-						<li>Explicitly open (and close) the open
-							orders account explicitly via the <a href="swap.html#initaccounts">initAccounts</a>
-						(and <a href="swap.html#closeaccounts">closeAccounts</a>) methods.</li>
-						<li>Automatically create the required accounts by preloading the instructions
-						in the <a href="swap.html#swap-1">swap</a> transaction.</li>
-					</ol>
+						the swap client provides two choices. Automatically create the required
+					accounts by preloading the instructions in the <a href="swap.html#swap-1">swap</a> transaction.</p>
 					<p>Note that if the user is swapping between two non-USD(x) tokens, e.g., wBTC
 						for wETH, then the user needs <em>two</em> open orders accounts on both wBTC/USD(x)
-						and wETH/USD(x) markets. So if one chooses option two <strong>and</strong> needs to
-						create open orders accounts for both markets, then the transaction
-						is broken up into two (and <code>Provider.sendAll</code> is used) to prevent hitting
-					transaction size limits.</p>
+						and wETH/USD(x) markets. In the event both of these open orders accounts are
+						created for the rfirst time, then the transaction is broken up into two
+					(and <code>Provider.sendAll</code> is used) to prevent hitting transaction size limits.</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
@@ -177,14 +167,16 @@
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
+							<h3>Accessors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="swap.html#program" class="tsd-kind-icon">program</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#closeaccounts" class="tsd-kind-icon">close<wbr>Accounts</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#estimate" class="tsd-kind-icon">estimate</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#initaccounts" class="tsd-kind-icon">init<wbr>Accounts</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#pairs" class="tsd-kind-icon">pairs</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#route" class="tsd-kind-icon">route</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#swap-1" class="tsd-kind-icon">swap</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="swap.html#tokens" class="tsd-kind-icon">tokens</a></li>
 							</ul>
 						</section>
 					</div>
@@ -202,7 +194,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L136">index.ts:136</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/49df34c/packages/swap/src/index.ts#L135">index.ts:135</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -226,139 +218,60 @@
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Accessors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="program" class="tsd-anchor"></a>
+					<h3>program</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> program<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Program</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/49df34c/packages/swap/src/index.ts#L124">index.ts:124</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Anchor generated client for the swap program.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Program</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="closeaccounts" class="tsd-anchor"></a>
-					<h3>close<wbr>Accounts</h3>
+					<a name="route" class="tsd-anchor"></a>
+					<h3>route</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">close<wbr>Accounts<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../index.html#closeswapaccountparams" class="tsd-signature-type" data-tsd-kind="Type alias">CloseSwapAccountParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">route<span class="tsd-signature-symbol">(</span>fromMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span>, toMint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L361">index.ts:361</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/49df34c/packages/swap/src/index.ts#L149">index.ts:149</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Sends a transaction to close all accounts required for a swap transaction,
-										i.e., all currently open DEX open orders accounts for the given <code>fromMint</code>
-									<code>toMint</code> swap path.</p>
-								</div>
-								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>if no open orders accounts exist.</p>
-									</dd>
-								</dl>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>params: <a href="../index.html#closeswapaccountparams" class="tsd-signature-type" data-tsd-kind="Type alias">CloseSwapAccountParams</a></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="estimate" class="tsd-anchor"></a>
-					<h3>estimate</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">estimate<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../index.html#swapparams" class="tsd-signature-type" data-tsd-kind="Type alias">SwapParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L518">index.ts:518</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Returns an estimate for the number of <em>to</em>, i.e., output, tokens one would
-										get for the given swap parameters. This is useful to inform the user
-										approximately what will happen if the user executes the swap trade. UIs
-										should use this in conjunction with some bound (e.g. 5%), to prevent users
-									from making unexpected trades.</p>
+									<p>Returns a list of markets to trade across to swap <code>fromMint</code> to <code>toMint</code>.</p>
 								</div>
 							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>params: <a href="../index.html#swapparams" class="tsd-signature-type" data-tsd-kind="Type alias">SwapParams</a></h5>
+									<h5>fromMint: <span class="tsd-signature-type">PublicKey</span></h5>
 								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">BN</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="initaccounts" class="tsd-anchor"></a>
-					<h3>init<wbr>Accounts</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">init<wbr>Accounts<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../index.html#initswapaccountparams" class="tsd-signature-type" data-tsd-kind="Type alias">InitSwapAccountParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L179">index.ts:179</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Sends a transaction to initialize all accounts required for a swap between
-									the two mints. I.e., creates the DEX open orders accounts.</p>
-								</div>
-								<dl class="tsd-comment-tags">
-									<dt>throws</dt>
-									<dd><p>if all open orders accounts already exist.</p>
-									</dd>
-								</dl>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
 								<li>
-									<h5>params: <a href="../index.html#initswapaccountparams" class="tsd-signature-type" data-tsd-kind="Type alias">InitSwapAccountParams</a></h5>
+									<h5>toMint: <span class="tsd-signature-type">PublicKey</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="pairs" class="tsd-anchor"></a>
-					<h3>pairs</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">pairs<span class="tsd-signature-symbol">(</span>mint<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L169">index.ts:169</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Given a token, returns the list of all candidate tokens that can be
-										swapped with the given token. This is important, because, in order for a
-										swap to be available, there must exist a path across a USD(x) quoted
-									market.</p>
-								</div>
-								<p>To swap across alternative quote currencies, one should use the Anchor
-									generated client directly (although it&#39;s recommended to trade
-								across USD(x)) since they tend to be the most liquid.</p>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>mint: <span class="tsd-signature-type">PublicKey</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -366,23 +279,23 @@
 					<a name="swap-1" class="tsd-anchor"></a>
 					<h3>swap</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">swap<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../index.html#swapparams" class="tsd-signature-type" data-tsd-kind="Type alias">SwapParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></li>
+						<li class="tsd-signature tsd-kind-icon">swap<span class="tsd-signature-symbol">(</span>params<span class="tsd-signature-symbol">: </span><a href="../index.html#swapparams" class="tsd-signature-type" data-tsd-kind="Type alias">SwapParams</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L504">index.ts:504</a></li>
+									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/49df34c/packages/swap/src/index.ts#L162">index.ts:162</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
 									<p>Executes a swap against the Serum DEX on Solana. When using one should
 										first use <code>estimate</code> along with a user defined error tolerance to calculate
-										the <code>minExpectedSwapAmount</code>, which provides a lower bound for the number
+										the <code>minExchangeRate</code>, which provides a lower bound for the number
 										of output tokens received when executing the swap. If, for example,
 										swapping on an illiquid market and the output tokens is less than
-										<code>minExpectedSwapAmount</code>, then the transaction will fail in an attempt to
+										<code>minExchangeRate</code>, then the transaction will fail in an attempt to
 									prevent an undesireable outcome.</p>
 								</div>
 							</div>
@@ -392,33 +305,7 @@
 									<h5>params: <a href="../index.html#swapparams" class="tsd-signature-type" data-tsd-kind="Type alias">SwapParams</a></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">&gt;</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="tokens" class="tsd-anchor"></a>
-					<h3>tokens</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">tokens<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/project-serum/serum-ts/blob/5bb3772/packages/swap/src/index.ts#L155">index.ts:155</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Returns a list of all the available tokens that can be swapped. This
-									includes all tokens with USDC or USDT quoted markets.</p>
-								</div>
-								<p>To update the set of swappable tokens, please update the
-									<a href="https://github.com/solana-labs/token-list"><code>@solana/spl-token-registry</code></a>
-								package to list the USD(x) markets available for each token mint.</p>
-							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">PublicKey</span><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Promise</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -442,37 +329,19 @@
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
 								<a href="swap.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="swap.html#closeaccounts" class="tsd-kind-icon">close<wbr>Accounts</a>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="swap.html#program" class="tsd-kind-icon">program</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="swap.html#estimate" class="tsd-kind-icon">estimate</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="swap.html#initaccounts" class="tsd-kind-icon">init<wbr>Accounts</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="swap.html#pairs" class="tsd-kind-icon">pairs</a>
+								<a href="swap.html#route" class="tsd-kind-icon">route</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="swap.html#swap-1" class="tsd-kind-icon">swap</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="swap.html#tokens" class="tsd-kind-icon">tokens</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-type-alias">
-						<a href="../index.html#closeswapaccountparams" class="tsd-kind-icon">Close<wbr>Swap<wbr>Account<wbr>Params</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="../index.html#estimateswapparams" class="tsd-kind-icon">Estimate<wbr>Swap<wbr>Params</a>
-					</li>
-					<li class=" tsd-kind-type-alias">
-						<a href="../index.html#initswapaccountparams" class="tsd-kind-icon">Init<wbr>Swap<wbr>Account<wbr>Params</a>
-					</li>
 					<li class=" tsd-kind-type-alias">
 						<a href="../index.html#swapparams" class="tsd-kind-icon">Swap<wbr>Params</a>
 					</li>
