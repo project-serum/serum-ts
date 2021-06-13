@@ -161,6 +161,9 @@ export class Swap {
    */
   public async swap(params: SwapParams): Promise<Array<TransactionSignature>> {
     const txs = await this.swapTxs(params);
+    if (params.additionalTransactions) {
+      txs.push({ tx: params.additionalTransactions, signers: params.additionalSigners });
+    }
     return this.program.provider.sendAll(txs, params.options);
   }
 
@@ -807,6 +810,15 @@ export type SwapParams = {
 	 * Currently disabled.
    */
   close?: boolean;
+
+  /**
+   * Additional transactions to bundle into the swap transaction
+   */
+  additionalTransactions?: Transaction[];
+  /**
+   * Additional signers to bundle into the swap transaction
+   */
+  additionalSigners?: Account[];
 };
 
 // Side rust enum used for the program's RPC API.
