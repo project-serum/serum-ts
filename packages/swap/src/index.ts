@@ -1,6 +1,7 @@
 import BN from 'bn.js';
 import {
   PublicKey,
+  Signer,
   Transaction,
   TransactionSignature,
   SYSVAR_RENT_PUBKEY,
@@ -160,9 +161,9 @@ export class Swap {
    * prevent an undesireable outcome.
    */
   public async swap(params: SwapParams): Promise<Array<TransactionSignature>> {
-    const txs = await this.swapTxs(params);
+    let txs = await this.swapTxs(params);
     if (params.additionalTransactions) {
-      txs.push({ tx: params.additionalTransactions, signers: params.additionalSigners });
+      txs = txs.concat(params.additionalTransactions);
     }
     return this.program.provider.sendAll(txs, params.options);
   }
@@ -814,11 +815,7 @@ export type SwapParams = {
   /**
    * Additional transactions to bundle into the swap transaction
    */
-  additionalTransactions?: Transaction[];
-  /**
-   * Additional signers to bundle into the swap transaction
-   */
-  additionalSigners?: Account[];
+  additionalTransactions?: Array<{ tx: Transaction; signers: Signer[]; }>
 };
 
 // Side rust enum used for the program's RPC API.
@@ -834,4 +831,4 @@ type ExchangeRate = {
   quoteDecimals: number;
   strict: boolean;
 };
-type SendTxRequest = { tx: Transaction; signers: Array<Account | undefined> };
+type SendTxRequest = { tx: Transaction; signers: Array<Signer | undefined> };
