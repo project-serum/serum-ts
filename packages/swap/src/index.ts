@@ -206,9 +206,19 @@ export class Swap {
 
     // If swapping to/from a USD(x) token, then swap directly on the market.
     if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
+      let coinWallet = toWallet;
+      let pcWallet = fromWallet;
+
+      // Special case USDT/USDC market since the coin is always USDT and
+      // the pc is always USDC.
+      if (toMint.equals(USDC_PUBKEY) || toMint.equals(USDT_PUBKEY)) {
+        coinWallet = toMint.equals(USDC_PUBKEY) ? fromWallet : toWallet;
+        pcWallet = toMint.equals(USDC_PUBKEY) ? toWallet : fromWallet;
+      }
+
       return await this.swapDirectTxs({
-        coinWallet: toWallet,
-        pcWallet: fromWallet,
+        coinWallet,
+        pcWallet,
         baseMint: toMint,
         quoteMint: fromMint,
         side: Side.Bid,
@@ -775,7 +785,7 @@ export type SwapParams = {
    * Market client for the first leg of the swap. Can be given to prevent
    * the client from making unnecessary network requests. It's recommended
    * to use this in most cases. If not given, then swaps across a USD(x) quoted
-	 * market.
+   * market.
    */
   fromMarket?: Market;
 
@@ -783,7 +793,7 @@ export type SwapParams = {
    * Market client for the second leg of the swap. Can be given to prevent
    * the client from making unnecessary network requests. It's recommended
    * to use this in most cases. If not given, then swaps across a USD(x) quoted
-	 * market.
+   * market.
    */
   toMarket?: Market;
 
@@ -808,14 +818,14 @@ export type SwapParams = {
 
   /**
    * True if all new open orders accounts should be automatically closed.
-	 * Currently disabled.
+   * Currently disabled.
    */
   close?: boolean;
 
   /**
    * Additional transactions to bundle into the swap transaction
    */
-  additionalTransactions?: Array<{ tx: Transaction; signers: Signer[]; }>
+  additionalTransactions?: Array<{ tx: Transaction; signers: Signer[] }>;
 };
 
 // Side rust enum used for the program's RPC API.
