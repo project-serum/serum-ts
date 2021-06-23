@@ -208,20 +208,24 @@ export class Swap {
     if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
       let coinWallet = toWallet;
       let pcWallet = fromWallet;
-
+      let side: SideEnum = Side.Bid;
       // Special case USDT/USDC market since the coin is always USDT and
       // the pc is always USDC.
-      if (toMint.equals(USDC_PUBKEY) || toMint.equals(USDT_PUBKEY)) {
-        coinWallet = toMint.equals(USDC_PUBKEY) ? fromWallet : toWallet;
-        pcWallet = toMint.equals(USDC_PUBKEY) ? toWallet : fromWallet;
+      if (toMint.equals(USDC_PUBKEY)) {
+        coinWallet = fromWallet;
+        pcWallet = toWallet;
+        side = Side.Ask;
+      } else if (toMint.equals(USDT_PUBKEY)) {
+        coinWallet = toWallet;
+        pcWallet = fromWallet;
+        side = Side.Bid;
       }
-
       return await this.swapDirectTxs({
         coinWallet,
         pcWallet,
         baseMint: toMint,
         quoteMint: fromMint,
-        side: Side.Bid,
+        side,
         amount,
         minExchangeRate,
         referral,
