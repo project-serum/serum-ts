@@ -27,7 +27,8 @@ import { Market } from '@project-serum/serum';
 
 let connection = new Connection('https://testnet.solana.com');
 let marketAddress = new PublicKey('...');
-let market = await Market.load(connection, marketAddress);
+let programAddress = new PublicKey("...");
+let market = await Market.load(connection, marketAddress, {}, programAddress);
 
 // Fetching orderbooks
 let bids = await market.loadBids(connection);
