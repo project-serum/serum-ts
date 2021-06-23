@@ -168,7 +168,7 @@ export class Swap {
     return this.program.provider.sendAll(txs, params.options);
   }
 
-  private async swapTxs(params: SwapParams): Promise<Array<SendTxRequest>> {
+  public async swapTxs(params: SwapParams): Promise<Array<SendTxRequest>> {
     let {
       fromMint,
       toMint,
@@ -208,23 +208,29 @@ export class Swap {
     if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
       let coinWallet = toWallet;
       let pcWallet = fromWallet;
+      let baseMint = toMint;
+      let quoteMint = fromMint;
       let side: SideEnum = Side.Bid;
       // Special case USDT/USDC market since the coin is always USDT and
       // the pc is always USDC.
       if (toMint.equals(USDC_PUBKEY)) {
         coinWallet = fromWallet;
         pcWallet = toWallet;
+        baseMint = fromMint;
+        quoteMint = toMint;
         side = Side.Ask;
       } else if (toMint.equals(USDT_PUBKEY)) {
         coinWallet = toWallet;
         pcWallet = fromWallet;
+        baseMint = toMint;
+        quoteMint = quoteMint;
         side = Side.Bid;
       }
       return await this.swapDirectTxs({
         coinWallet,
         pcWallet,
-        baseMint: toMint,
-        quoteMint: fromMint,
+        baseMint,
+        quoteMint,
         side,
         amount,
         minExchangeRate,
