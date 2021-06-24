@@ -5,14 +5,16 @@ import {
   Transaction,
   TransactionSignature,
   SYSVAR_RENT_PUBKEY,
+  Keypair,
+  ConfirmOptions,
 } from '@solana/web3.js';
-import { Program, Provider } from '@project-serum/anchor';
-import { TokenListContainer } from '@solana/spl-token-registry';
-import { Account, ConfirmOptions } from '@solana/web3.js';
 import {
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  Token,
 } from '@solana/spl-token';
+import { TokenListContainer } from '@solana/spl-token-registry';
+import { Program, Provider } from '@project-serum/anchor';
 import { Market, OpenOrders } from '@project-serum/serum';
 import { IDL } from './idl';
 import {
@@ -42,36 +44,6 @@ const OPEN_ENABLED = false;
  * A module to swap tokens across markets the Serum DEX, providing a thin
  * wrapper around an [Anchor](https://github.com/project-serum/anchor) client
  * for the purpose of providing a simplified `swap` API.
- *
- * ## Usage
- *
- * ### Create a client
- *
- * ```javascript
- * const client = new Swap(provider, tokenList)
- * ```
- *
- * ### Swap one token for another across USD(x) quoted markets.
- *
- * ```javascript
- * await client.swap({
- *   fromMint,
- *   toMint,
- *   amount,
- *   minExchangeRate,
- * });
- * ```
- *
- * ### Default Behavior
- *
- * Some parameters in the swap API are optional. For example, the `fromMarket`
- * and `toMarket`, specifying the markets to swap across. In the event that
- * markets are ommitted, the client will swap across USD(x) quoted markets.
- * For more information about default behavior see the [[SwapParams]]
- * documentation. For most GUIs, the application likely already knows the
- * markets to swap accross, since one needs that information to calculate
- * exchange rates. So it's recommend to pass in most, if not all, the
- * optional parameters explicitly, to prevent unnecessary network requests.
  *
  * ## Swap Program Basics
  *
@@ -152,13 +124,7 @@ export class Swap {
   }
 
   /**
-   * Executes a swap against the Serum DEX on Solana. When using one should
-   * first use `estimate` along with a user defined error tolerance to calculate
-   * the `minExchangeRate`, which provides a lower bound for the number
-   * of output tokens received when executing the swap. If, for example,
-   * swapping on an illiquid market and the output tokens is less than
-   * `minExchangeRate`, then the transaction will fail in an attempt to
-   * prevent an undesireable outcome.
+   * Executes a swap against the Serum DEX.
    */
   public async swap(params: SwapParams): Promise<Array<TransactionSignature>> {
     let txs = await this.swapTxs(params);
@@ -168,6 +134,9 @@ export class Swap {
     return this.program.provider.sendAll(txs, params.options);
   }
 
+  /**
+   * Returns transactions for swapping on the Serum DEX.
+   */
   public async swapTxs(params: SwapParams): Promise<Array<SendTxRequest>> {
     let {
       fromMint,
@@ -175,6 +144,7 @@ export class Swap {
       quoteWallet,
       fromWallet,
       toWallet,
+      quoteMint,
       fromMarket,
       toMarket,
       amount,
@@ -185,32 +155,14 @@ export class Swap {
       toOpenOrders,
     } = params;
 
-    // If either wallet isn't given, then use the associated token account.
-    // Assumes the accounts are already created.
-    if (!fromWallet) {
-      fromWallet = await getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        fromMint,
-        this.program.provider.wallet.publicKey,
-      );
-    }
-    if (!toWallet) {
-      toWallet = await getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        toMint,
-        this.program.provider.wallet.publicKey,
-      );
-    }
-
     // If swapping to/from a USD(x) token, then swap directly on the market.
-    if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
+    if (isUsdx(fromMint)) {
       let coinWallet = toWallet;
       let pcWallet = fromWallet;
       let baseMint = toMint;
       let quoteMint = fromMint;
       let side: SideEnum = Side.Bid;
+
       // Special case USDT/USDC market since the coin is always USDT and
       // the pc is always USDC.
       if (toMint.equals(USDC_PUBKEY)) {
@@ -226,6 +178,7 @@ export class Swap {
         quoteMint = quoteMint;
         side = Side.Bid;
       }
+
       return await this.swapDirectTxs({
         coinWallet,
         pcWallet,
@@ -239,7 +192,7 @@ export class Swap {
         fromMarket,
         fromOpenOrders,
       });
-    } else if (toMint.equals(USDC_PUBKEY) || toMint.equals(USDT_PUBKEY)) {
+    } else if (isUsdx(toMint)) {
       return await this.swapDirectTxs({
         coinWallet: fromWallet,
         pcWallet: toWallet,
@@ -253,7 +206,10 @@ export class Swap {
         fromMarket,
         fromOpenOrders,
       });
-    } else if (fromMarket !== undefined && toMarket === undefined) {
+    }
+
+    // Direct swap market explicitly given.
+    if (fromMarket !== undefined && toMarket === undefined) {
       return await this.swapDirectTxs({
         coinWallet: fromWallet,
         pcWallet: toWallet,
@@ -270,26 +226,16 @@ export class Swap {
     }
 
     // Neither wallet is a USD stable coin. So perform a transitive swap.
-    if (!quoteWallet) {
-      if (this.swapMarkets.usdcPathExists(fromMint, toMint)) {
-        quoteWallet = await getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          USDC_PUBKEY,
-          this.program.provider.wallet.publicKey,
-        );
-      } else {
-        quoteWallet = await getAssociatedTokenAddress(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          USDT_PUBKEY,
-          this.program.provider.wallet.publicKey,
-        );
-      }
+    if (!quoteMint) {
+      throw new Error('quoteMint must be provided for a transitive swap');
+    }
+    if (!toMarket) {
+      throw new Error('toMarket must be provided for transitive swaps');
     }
     return await this.swapTransitiveTxs({
       fromMint,
       toMint,
+      pcMint: quoteMint,
       fromWallet,
       toWallet,
       pcWallet: quoteWallet,
@@ -317,8 +263,8 @@ export class Swap {
     fromMarket,
     fromOpenOrders,
   }: {
-    coinWallet: PublicKey;
-    pcWallet: PublicKey;
+    coinWallet?: PublicKey;
+    pcWallet?: PublicKey;
     baseMint: PublicKey;
     quoteMint: PublicKey;
     side: SideEnum;
@@ -326,54 +272,63 @@ export class Swap {
     minExchangeRate: ExchangeRate;
     referral?: PublicKey;
     close?: boolean;
-    fromMarket?: Market;
+    fromMarket: Market;
     fromOpenOrders?: PublicKey;
   }): Promise<Array<SendTxRequest>> {
-    const marketAddress = fromMarket
-      ? fromMarket.address
-      : this.swapMarkets.getMarketAddress(quoteMint, baseMint);
-    if (marketAddress === null) {
-      throw new Error('Invalid market');
-    }
-    const marketClient = fromMarket
-      ? fromMarket
-      : await Market.load(
-          this.program.provider.connection,
-          marketAddress,
-          this.program.provider.opts,
-          DEX_PID,
-        );
-    const [vaultSigner] = await getVaultOwnerAndNonce(marketClient.address);
-    let openOrders: PublicKey | undefined;
-    if (fromOpenOrders) {
-      openOrders = fromOpenOrders;
-    } else {
-      openOrders = await (async () => {
-        let openOrders = await OpenOrders.findForMarketAndOwner(
-          this.program.provider.connection,
-          marketClient.address,
-          this.program.provider.wallet.publicKey,
-          DEX_PID,
-        );
-        // If we have an open orders account use it. It doesn't matter which
-        // one we use.
-        return openOrders[0] ? openOrders[0].address : undefined;
-      })();
-    }
+    const [vaultSigner] = await getVaultOwnerAndNonce(fromMarket.address);
+    let openOrders = fromOpenOrders;
     const needsOpenOrders = openOrders === undefined;
 
     const tx = new Transaction();
-    const signers: Account[] = [];
+    const signers: Keypair[] = [];
+
+    // If either wallet isn't given, then create the associated token account.
+    if (!coinWallet) {
+      coinWallet = await getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        baseMint,
+        this.program.provider.wallet.publicKey,
+      );
+      tx.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          baseMint,
+          coinWallet,
+          this.program.provider.wallet.publicKey,
+          this.program.provider.wallet.publicKey,
+        ),
+      );
+    }
+    if (!pcWallet) {
+      pcWallet = await getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        quoteMint,
+        this.program.provider.wallet.publicKey,
+      );
+      tx.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          quoteMint,
+          pcWallet,
+          this.program.provider.wallet.publicKey,
+          this.program.provider.wallet.publicKey,
+        ),
+      );
+    }
 
     // Create the open orders account, if needed.
     if (needsOpenOrders) {
-      const oo = new Account();
+      const oo = Keypair.generate();
       signers.push(oo);
       openOrders = oo.publicKey;
       tx.add(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
-          marketClient.address,
+          fromMarket.address,
           this.program.provider.wallet.publicKey,
           oo.publicKey,
           DEX_PID,
@@ -384,17 +339,17 @@ export class Swap {
       this.program.instruction.swap(side, amount, minExchangeRate, {
         accounts: {
           market: {
-            market: marketClient.address,
+            market: fromMarket.address,
             // @ts-ignore
-            requestQueue: marketClient._decoded.requestQueue,
+            requestQueue: fromMarket._decoded.requestQueue,
             // @ts-ignore
-            eventQueue: marketClient._decoded.eventQueue,
-            bids: marketClient.bidsAddress,
-            asks: marketClient.asksAddress,
+            eventQueue: fromMarket._decoded.eventQueue,
+            bids: fromMarket.bidsAddress,
+            asks: fromMarket.asksAddress,
             // @ts-ignore
-            coinVault: marketClient._decoded.baseVault,
+            coinVault: fromMarket._decoded.baseVault,
             // @ts-ignore
-            pcVault: marketClient._decoded.quoteVault,
+            pcVault: fromMarket._decoded.quoteVault,
             vaultSigner,
             openOrders,
             orderPayerTokenAccount: side.bid ? pcWallet : coinWallet,
@@ -421,7 +376,7 @@ export class Swap {
             openOrders,
             authority: this.program.provider.wallet.publicKey,
             destination: this.program.provider.wallet.publicKey,
-            market: marketClient.address,
+            market: fromMarket.address,
             dexProgram: DEX_PID,
           },
         }),
@@ -434,6 +389,7 @@ export class Swap {
   private async swapTransitiveTxs({
     fromMint,
     toMint,
+    pcMint,
     fromWallet,
     toWallet,
     pcWallet,
@@ -448,98 +404,23 @@ export class Swap {
   }: {
     fromMint: PublicKey;
     toMint: PublicKey;
-    fromWallet: PublicKey;
-    toWallet: PublicKey;
-    pcWallet: PublicKey;
+    pcMint: PublicKey;
+    fromWallet?: PublicKey;
+    toWallet?: PublicKey;
+    pcWallet?: PublicKey;
     amount: BN;
     minExchangeRate: ExchangeRate;
     referral?: PublicKey;
     close?: boolean;
-    fromMarket?: Market;
-    toMarket?: Market;
+    fromMarket: Market;
+    toMarket: Market;
     fromOpenOrders?: PublicKey;
     toOpenOrders?: PublicKey;
   }): Promise<Array<SendTxRequest>> {
-    // Fetch the markets, if needed.
-    let fromMarketAddress: PublicKey, toMarketAddress: PublicKey;
-    let fromMarketClient: Market, toMarketClient: Market;
-    if (fromMarket) {
-      fromMarketAddress = fromMarket.address;
-      fromMarketClient = fromMarket;
-    } else {
-      let fromMarketAddressMaybe = this.swapMarkets.getMarketAddress(
-        USDC_PUBKEY,
-        fromMint,
-      );
-      if (fromMarketAddressMaybe === null) {
-        fromMarketAddressMaybe = this.swapMarkets.getMarketAddress(
-          USDT_PUBKEY,
-          fromMint,
-        );
-        if (fromMarketAddressMaybe === null) {
-          throw new Error('Invalid market');
-        }
-      }
-      fromMarketAddress = fromMarketAddressMaybe;
-
-      fromMarketClient = await Market.load(
-        this.program.provider.connection,
-        fromMarketAddress,
-        this.program.provider.opts,
-        DEX_PID,
-      );
-    }
-    if (toMarket) {
-      toMarketAddress = toMarket.address;
-      toMarketClient = toMarket;
-    } else {
-      let toMarketAddressMaybe = this.swapMarkets.getMarketAddress(
-        USDC_PUBKEY,
-        toMint,
-      );
-      if (toMarketAddressMaybe === null) {
-        toMarketAddressMaybe = this.swapMarkets.getMarketAddress(
-          USDT_PUBKEY,
-          toMint,
-        );
-        if (toMarketAddressMaybe === null) {
-          throw new Error('Invalid market');
-        }
-      }
-      toMarketAddress = toMarketAddressMaybe;
-
-      toMarketClient = await Market.load(
-        this.program.provider.connection,
-        toMarketAddress,
-        this.program.provider.opts,
-        DEX_PID,
-      );
-    }
-    // Fetch the open orders accounts, if needed.
-    if (!fromOpenOrders) {
-      const acc = await OpenOrders.findForMarketAndOwner(
-        this.program.provider.connection,
-        fromMarketClient.address,
-        this.program.provider.wallet.publicKey,
-        DEX_PID,
-      )[0];
-      fromOpenOrders = acc ? acc.address : undefined;
-    }
-    if (!toOpenOrders) {
-      const acc = await OpenOrders.findForMarketAndOwner(
-        this.program.provider.connection,
-        toMarketClient.address,
-        this.program.provider.wallet.publicKey,
-        DEX_PID,
-      )[0];
-      toOpenOrders = acc ? acc.address : undefined;
-    }
-    // If the open orders are still undefined, then they don't exist.
+    // If the open orders are undefined, assume they don't exist.
     const fromNeedsOpenOrders = fromOpenOrders === undefined;
     const toNeedsOpenOrders = toOpenOrders === undefined;
 
-    // Now that we have all the accounts, build the transaction.
-    //
     // In the event the transaction would be over the transaction size limit,
     // we break up the transaction into multiple and use `Provider.sendAll`
     // as a workaround, providing a single user flow for the swap action.
@@ -550,17 +431,71 @@ export class Swap {
     // this, it's recommended to use the anchor generated client directly,
     // instead of the client here.
     let openOrdersTransaction: Transaction | undefined = undefined;
-    const openOrdersSigners: Account[] = [];
+    const openOrdersSigners: Keypair[] = [];
     const swapTransaction: Transaction = new Transaction();
-    const swapSigners: Account[] = [];
+    const swapSigners: Keypair[] = [];
     let closeTransaction: Transaction | undefined = undefined;
-    const closeSigners: Account[] = [];
+    const closeSigners: Keypair[] = [];
 
     // Calculate the vault signers for each market.
-    const [fromVaultSigner] = await getVaultOwnerAndNonce(
-      fromMarketClient.address,
-    );
-    const [toVaultSigner] = await getVaultOwnerAndNonce(toMarketClient.address);
+    const [fromVaultSigner] = await getVaultOwnerAndNonce(fromMarket.address);
+    const [toVaultSigner] = await getVaultOwnerAndNonce(toMarket.address);
+
+    // If token accounts aren't given, create them.
+    if (!fromWallet) {
+      fromWallet = await getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        fromMint,
+        this.program.provider.wallet.publicKey,
+      );
+      swapTransaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          fromMint,
+          fromWallet,
+          this.program.provider.wallet.publicKey,
+          this.program.provider.wallet.publicKey,
+        ),
+      );
+    }
+    if (!toWallet) {
+      toWallet = await getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        toMint,
+        this.program.provider.wallet.publicKey,
+      );
+      swapTransaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          toMint,
+          toWallet,
+          this.program.provider.wallet.publicKey,
+          this.program.provider.wallet.publicKey,
+        ),
+      );
+    }
+    if (!pcWallet) {
+      pcWallet = await getAssociatedTokenAddress(
+        ASSOCIATED_TOKEN_PROGRAM_ID,
+        TOKEN_PROGRAM_ID,
+        pcMint,
+        this.program.provider.wallet.publicKey,
+      );
+      swapTransaction.add(
+        Token.createAssociatedTokenAccountInstruction(
+          ASSOCIATED_TOKEN_PROGRAM_ID,
+          TOKEN_PROGRAM_ID,
+          pcMint,
+          pcWallet,
+          this.program.provider.wallet.publicKey,
+          this.program.provider.wallet.publicKey,
+        ),
+      );
+    }
 
     // Add instructions to create open orders, if needed.
     //
@@ -568,12 +503,12 @@ export class Swap {
     // split out the create open orders instructions into their own transaction.
     if (fromNeedsOpenOrders && toNeedsOpenOrders) {
       openOrdersTransaction = new Transaction();
-      const ooFrom = new Account();
+      const ooFrom = Keypair.generate();
       openOrdersSigners.push(ooFrom);
       openOrdersTransaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
-          fromMarketAddress,
+          fromMarket.address,
           this.program.provider.wallet.publicKey,
           ooFrom.publicKey,
           DEX_PID,
@@ -581,12 +516,12 @@ export class Swap {
       );
       fromOpenOrders = ooFrom.publicKey;
 
-      const ooTo = new Account();
+      const ooTo = Keypair.generate();
       openOrdersSigners.push(ooTo);
       openOrdersTransaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
-          toMarketAddress,
+          toMarket.address,
           this.program.provider.wallet.publicKey,
           ooTo.publicKey,
           DEX_PID,
@@ -600,7 +535,7 @@ export class Swap {
             accounts: {
               openOrders: ooFrom.publicKey,
               authority: this.program.provider.wallet.publicKey,
-              market: fromMarketAddress,
+              market: fromMarket.address,
               dexProgram: DEX_PID,
               rent: SYSVAR_RENT_PUBKEY,
             },
@@ -611,7 +546,7 @@ export class Swap {
             accounts: {
               openOrders: ooTo.publicKey,
               authority: this.program.provider.wallet.publicKey,
-              market: fromMarketAddress,
+              market: fromMarket.address,
               dexProgram: DEX_PID,
               rent: SYSVAR_RENT_PUBKEY,
             },
@@ -619,12 +554,12 @@ export class Swap {
         );
       }
     } else if (fromNeedsOpenOrders) {
-      const oo = new Account();
+      const oo = Keypair.generate();
       swapSigners.push(oo);
       swapTransaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
-          fromMarketAddress,
+          fromMarket.address,
           this.program.provider.wallet.publicKey,
           oo.publicKey,
           DEX_PID,
@@ -632,12 +567,12 @@ export class Swap {
       );
       fromOpenOrders = oo.publicKey;
     } else if (toNeedsOpenOrders) {
-      const oo = new Account();
+      const oo = Keypair.generate();
       swapSigners.push(oo);
       swapTransaction.add(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
-          toMarketAddress,
+          toMarket.address,
           this.program.provider.wallet.publicKey,
           oo.publicKey,
           DEX_PID,
@@ -650,34 +585,34 @@ export class Swap {
       this.program.instruction.swapTransitive(amount, minExchangeRate, {
         accounts: {
           from: {
-            market: fromMarketClient.address,
+            market: fromMarket.address,
             // @ts-ignore
-            requestQueue: fromMarketClient._decoded.requestQueue,
+            requestQueue: fromMarket._decoded.requestQueue,
             // @ts-ignore
-            eventQueue: fromMarketClient._decoded.eventQueue,
-            bids: fromMarketClient.bidsAddress,
-            asks: fromMarketClient.asksAddress,
+            eventQueue: fromMarket._decoded.eventQueue,
+            bids: fromMarket.bidsAddress,
+            asks: fromMarket.asksAddress,
             // @ts-ignore
-            coinVault: fromMarketClient._decoded.baseVault,
+            coinVault: fromMarket._decoded.baseVault,
             // @ts-ignore
-            pcVault: fromMarketClient._decoded.quoteVault,
+            pcVault: fromMarket._decoded.quoteVault,
             vaultSigner: fromVaultSigner,
             openOrders: fromOpenOrders,
             orderPayerTokenAccount: fromWallet,
             coinWallet: fromWallet,
           },
           to: {
-            market: toMarketClient.address,
+            market: toMarket.address,
             // @ts-ignore
-            requestQueue: toMarketClient._decoded.requestQueue,
+            requestQueue: toMarket._decoded.requestQueue,
             // @ts-ignore
-            eventQueue: toMarketClient._decoded.eventQueue,
-            bids: toMarketClient.bidsAddress,
-            asks: toMarketClient.asksAddress,
+            eventQueue: toMarket._decoded.eventQueue,
+            bids: toMarket.bidsAddress,
+            asks: toMarket.asksAddress,
             // @ts-ignore
-            coinVault: toMarketClient._decoded.baseVault,
+            coinVault: toMarket._decoded.baseVault,
             // @ts-ignore
-            pcVault: toMarketClient._decoded.quoteVault,
+            pcVault: toMarket._decoded.quoteVault,
             vaultSigner: toVaultSigner,
             openOrders: toOpenOrders,
             orderPayerTokenAccount: pcWallet,
@@ -703,7 +638,7 @@ export class Swap {
             openOrders: fromOpenOrders,
             authority: this.program.provider.wallet.publicKey,
             destination: this.program.provider.wallet.publicKey,
-            market: fromMarketClient.address,
+            market: fromMarket.address,
             dexProgram: DEX_PID,
           },
         }),
@@ -720,7 +655,7 @@ export class Swap {
             openOrders: toOpenOrders,
             authority: this.program.provider.wallet.publicKey,
             destination: this.program.provider.wallet.publicKey,
-            market: toMarketClient.address,
+            market: toMarket.address,
             dexProgram: DEX_PID,
           },
         }),
@@ -740,6 +675,10 @@ export class Swap {
   }
 }
 
+function isUsdx(mint: PublicKey) {
+  return mint.equals(USDC_PUBKEY) || mint.equals(USDT_PUBKEY);
+}
+
 /**
  * Parameters to perform a swap.
  */
@@ -753,6 +692,12 @@ export type SwapParams = {
    * Token mint to swap to.
    */
   toMint: PublicKey;
+
+  /**
+   * Token mint used as the quote currency for a transitive swap, i.e., the
+   * connecting currency.
+   */
+  quoteMint?: PublicKey;
 
   /**
    * Amount of `fromMint` to swap in exchange for `toMint`.
@@ -773,51 +718,45 @@ export type SwapParams = {
   referral?: PublicKey;
 
   /**
-   * Wallet of the quote currency to use in a transitive swap. Should be either
-   * a USDC or USDT wallet. If not provided uses an associated token address
-   * for the configured provider.
-   */
-  quoteWallet?: PublicKey;
-
-  /**
    * Wallet for `fromMint`. If not provided, uses an associated token address
    * for the configured provider.
    */
   fromWallet?: PublicKey;
 
   /**
-   * Wallet for `toMint`. If not provided, uses the associated token address
-   * for the configured provider.
+   * Wallet for `toMint`. If not provided, an associated token account will
+   * be created for the configured provider.
    */
   toWallet?: PublicKey;
 
   /**
-   * Market client for the first leg of the swap. Can be given to prevent
-   * the client from making unnecessary network requests. It's recommended
-   * to use this in most cases. If not given, then swaps across a USD(x) quoted
-   * market.
+   * Wallet of the quote currency to use in a transitive swap. Should be either
+   * a USDC or USDT wallet. If not provided an associated token account will
+   * be created for the configured provider.
    */
-  fromMarket?: Market;
+  quoteWallet?: PublicKey;
+
+  /**
+   * Market client for the first leg of the swap. Can be given to prevent
+   * the client from making unnecessary network requests.
+   */
+  fromMarket: Market;
 
   /**
    * Market client for the second leg of the swap. Can be given to prevent
-   * the client from making unnecessary network requests. It's recommended
-   * to use this in most cases. If not given, then swaps across a USD(x) quoted
-   * market.
+   * the client from making unnecessary network requests.
    */
   toMarket?: Market;
 
   /**
-   * Open orders account for the first leg of the swap. Can be given to prevent
-   * the client from making unnecessary network requests. It's recommended
-   * to use this in most cases.
+   * Open orders account for the first leg of the swap. If not given, an
+   * open orders account will be created.
    */
   fromOpenOrders?: PublicKey;
 
   /**
-   * Open orders account for the second leg of the swap. Can be given to prevent
-   * the client from making unnecessary network requests. It's recommended
-   * to use this in most cases.
+   * Open orders account for the second leg of the swap. If not given, an
+   * open orders account will be created.
    */
   toOpenOrders?: PublicKey;
 
