@@ -193,5 +193,11 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "APEX",
+    "mintAddress": "51tMb3zBKDiQhNwGqpgwbavaGH54mk8fXFzxTc1xnasg",
+    "tokenName": "APEX",
+    "icon": "https://apexit.finance/images/apex.png"
   }
 ]
