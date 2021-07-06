@@ -280,6 +280,8 @@ export class DexInstructions {
   static consumeEvents({
     market,
     eventQueue,
+    coinFee,
+    pcFee,
     openOrdersAccounts,
     limit,
     programId,
@@ -293,6 +295,8 @@ export class DexInstructions {
         })),
         { pubkey: market, isSigner: false, isWritable: true },
         { pubkey: eventQueue, isSigner: false, isWritable: true },
+        { pubkey: coinFee, isSigner: false, isWriteable: true },
+        { pubkey: pcFee, isSigner: false, isWritable: true},
       ],
       programId,
       data: encodeInstruction({ consumeEvents: { limit } }),
