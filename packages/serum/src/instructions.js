@@ -457,6 +457,7 @@ export class DexInstructions {
     openOrders,
     owner,
     solWallet,
+    programId,
   }) {
     const keys = [
       { pubkey: openOrders, isSigner: false, isWritable: true },
@@ -477,6 +478,7 @@ export class DexInstructions {
     market,
     openOrders,
     owner,
+    programId,
   }) {
     const keys = [
       { pubkey: openOrders, isSigner: false, isWritable: true },
