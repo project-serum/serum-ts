@@ -1240,5 +1240,17 @@
     "address": "2Gx3UfV831BAh8uQv1FKSPKS9yajfeeD8GJ4ZNb2o2YP",
     "deprecated": false,
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
+  },
+  {
+    "name": "ETHV/USDT",
+    "address": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "programId": "HrgkuJryyKRserkoz7LBFYkASzhXHWp9XA6fRYCA6PHb"
+  },
+  {
+    "name": "IETHV/USDT",
+    "address": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "programId": "5aoLj1bySDhhWjo7cLfT3pF2gqNGd63uEJ9HMSfASESL"
   }
 ]
