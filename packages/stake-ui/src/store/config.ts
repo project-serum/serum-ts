@@ -28,7 +28,7 @@ export const networks: Networks = {
   mainnet: {
     // Cluster.
     label: 'Mainnet Beta',
-    url: 'https://solana-api.projectserum.com',
+    url: 'https://api.mainnet-beta.solana.com',
     //url: 'https://api.mainnet-beta.solana.com',
     explorerClusterSuffix: '',
 
@@ -47,15 +47,11 @@ export const networks: Networks = {
     registrars: {
       srm: new PublicKey('5vJRzKtcp4fJxqmR7qzajkaKSiAb6aT9grRsaZKXU222'),
       msrm: new PublicKey('7uURiX2DwCpRuMFebKSkFtX9v5GK1Cd8nWLL8tyoyxZY'),
-      maps: new PublicKey('9tzkorTXKbw73hokMsq34R6ADd13eJF9X4udXQLiGAKc'),
-      oxy: new PublicKey('DsWhta1RWA9NYEamaeYsGHpfLRX91bA4bWGnaivtFju2'),
       fida: new PublicKey('5C2ayX1E2SJ5kKEmDCA9ue9eeo3EPR34QFrhyzbbs3qh'),
     },
     mints: {
       srm: new PublicKey('SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt'),
       msrm: new PublicKey('MSRMcoVyrFxnSgo5uXwone5SKcGhT1KEJMFEkMEWf9L'),
-      maps: new PublicKey('MAPS41MDahZ9QdKXhVa4dWB9RuyfV4XqhyAZ8XcYepb'),
-      oxy: new PublicKey('z3dn17yLaGMKffVogeFHQ9zWVcXgqgf3PQnDsNs2g6M'),
       fida: new PublicKey('EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp'),
     },
   },
