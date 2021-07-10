@@ -730,7 +730,7 @@ export class Market {
       );
     }
 
-    return { transaction, signers, payer: owner };
+    return { transaction, signers, payer: owner, openOrdersAddress };
   }
 
   makePlaceOrderInstruction<T extends PublicKey | Account>(
