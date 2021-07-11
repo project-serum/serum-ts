@@ -1252,5 +1252,12 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5aoLj1bySDhhWjo7cLfT3pF2gqNGd63uEJ9HMSfASESL"
+  },
+  {
+    "name": "WOLFE/USDC",
+    "address": "3KnVxWhoYdc9UwDr5WMVkZp2LpF7gnojg7We7MUd6ixQ",
+    "deprecated": false,
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
+
 ]
