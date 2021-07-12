@@ -2,7 +2,6 @@ import { blob, seq, struct, u8 } from 'buffer-layout';
 import {
   accountFlagsLayout,
   publicKeyLayout,
-  selfTradeBehaviorLayout,
   u128,
   u64,
 } from './layout';
@@ -10,10 +9,10 @@ import { Slab, SLAB_LAYOUT } from './slab';
 import { DexInstructions } from './instructions';
 import BN from 'bn.js';
 import {
-  Account,
   AccountInfo,
   Commitment,
   Connection,
+  Keypair,
   LAMPORTS_PER_SOL,
   PublicKey,
   SystemProgram,
@@ -140,7 +139,7 @@ export class Market {
     options: MarketOptions = {},
     programId: PublicKey,
   ) {
-    const { skipPreflight = false, commitment = 'recent' } = options;
+    const { skipPreflight = false, commitment = 'processed' } = options;
     if (!decoded.accountFlags.initialized || !decoded.accountFlags.market) {
       throw new Error('Invalid market state');
     }
@@ -389,7 +388,7 @@ export class Market {
     const {
       transaction,
       signers,
-    } = await this.makePlaceOrderTransaction<Account>(connection, {
+    } = await this.makePlaceOrderTransaction<Keypair>(connection, {
       owner,
       payer,
       side,
@@ -539,7 +538,7 @@ export class Market {
     };
   }
 
-  async makePlaceOrderTransaction<T extends PublicKey | Account>(
+  async makePlaceOrderTransaction<T extends PublicKey | Keypair>(
     connection: Connection,
     {
       owner,
@@ -565,7 +564,7 @@ export class Market {
       cacheDurationMs,
     );
     const transaction = new Transaction();
-    const signers: Account[] = [];
+    const signers: Keypair[] = [];
 
     // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
     let useFeeDiscountPubkey: PublicKey | null;
@@ -588,11 +587,11 @@ export class Market {
 
     let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      let account;
+      let account: Keypair;
       if (openOrdersAccount) {
         account = openOrdersAccount;
       } else {
-        account = new Account();
+        account = Keypair.generate();
       }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -615,13 +614,13 @@ export class Market {
       openOrdersAddress = openOrdersAccounts[0].address;
     }
 
-    let wrappedSolAccount: Account | null = null;
+    let wrappedSolAccount: Keypair | null = null;
     if (payer.equals(ownerAddress)) {
       if (
         (side === 'buy' && this.quoteMintAddress.equals(WRAPPED_SOL_MINT)) ||
         (side === 'sell' && this.baseMintAddress.equals(WRAPPED_SOL_MINT))
       ) {
-        wrappedSolAccount = new Account();
+        wrappedSolAccount = Keypair.generate();
         let lamports;
         if (side === 'buy') {
           lamports = Math.round(price * size * 1.01 * LAMPORTS_PER_SOL);
@@ -684,7 +683,7 @@ export class Market {
     return { transaction, signers, payer: owner };
   }
 
-  makePlaceOrderInstruction<T extends PublicKey | Account>(
+  makePlaceOrderInstruction<T extends PublicKey | Keypair>(
     connection: Connection,
     {
       owner,
@@ -762,7 +761,7 @@ export class Market {
   private async _sendTransaction(
     connection: Connection,
     transaction: Transaction,
-    signers: Array<Account>,
+    signers: Array<Keypair>,
   ): Promise<TransactionSignature> {
     const signature = await connection.sendTransaction(transaction, signers, {
       skipPreflight: this._skipPreflight,
@@ -779,7 +778,7 @@ export class Market {
 
   async cancelOrderByClientId(
     connection: Connection,
-    owner: Account,
+    owner: Keypair,
     openOrders: PublicKey,
     clientId: BN,
   ) {
@@ -827,7 +826,7 @@ export class Market {
     return transaction;
   }
 
-  async cancelOrder(connection: Connection, owner: Account, order: Order) {
+  async cancelOrder(connection: Connection, owner: Keypair, order: Order) {
     const transaction = await this.makeCancelOrderTransaction(
       connection,
       owner.publicKey,
@@ -880,7 +879,7 @@ export class Market {
 
   async settleFunds(
     connection: Connection,
-    owner: Account,
+    owner: Keypair,
     openOrders: OpenOrders,
     baseWallet: PublicKey,
     quoteWallet: PublicKey,
@@ -922,16 +921,16 @@ export class Market {
     );
 
     const transaction = new Transaction();
-    const signers: Account[] = [];
+    const signers: Keypair[] = [];
 
-    let wrappedSolAccount: Account | null = null;
+    let wrappedSolAccount: Keypair | null = null;
     if (
       (this.baseMintAddress.equals(WRAPPED_SOL_MINT) &&
         baseWallet.equals(openOrders.owner)) ||
       (this.quoteMintAddress.equals(WRAPPED_SOL_MINT) &&
         quoteWallet.equals(openOrders.owner))
     ) {
-      wrappedSolAccount = new Account();
+      wrappedSolAccount = Keypair.generate();
       transaction.add(
         SystemProgram.createAccount({
           fromPubkey: openOrders.owner,
@@ -985,7 +984,7 @@ export class Market {
     return { transaction, signers, payer: openOrders.owner };
   }
 
-  async matchOrders(connection: Connection, feePayer: Account, limit: number) {
+  async matchOrders(connection: Connection, feePayer: Keypair, limit: number) {
     const tx = this.makeMatchOrdersTransaction(limit);
     return await this._sendTransaction(connection, tx, [feePayer]);
   }
@@ -1154,7 +1153,7 @@ export interface MarketOptions {
   commitment?: Commitment;
 }
 
-export interface OrderParams<T = Account> {
+export interface OrderParams<T = Keypair> {
   owner: T;
   payer: PublicKey;
   side: 'buy' | 'sell';
@@ -1163,7 +1162,7 @@ export interface OrderParams<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   openOrdersAddressKey?: PublicKey;
-  openOrdersAccount?: Account;
+  openOrdersAccount?: Keypair;
   feeDiscountPubkey?: PublicKey | null;
   selfTradeBehavior?:
     | 'decrementTake'
