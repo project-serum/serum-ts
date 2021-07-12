@@ -65,6 +65,9 @@ export default class SwapMarkets {
     baseMint: PublicKey,
   ): Promise<PublicKey> {
     const marketAddress = this.getMarketAddress(usdxMint, baseMint);
+    if (marketAddress === null) {
+      throw new Error('Market not found');
+    }
     let accounts = await OpenOrders.findForMarketAndOwner(
       this.provider.connection,
       marketAddress,
@@ -78,7 +81,10 @@ export default class SwapMarkets {
   }
 
   // Returns the `usdxMint` quoted market address.
-  public getMarketAddress(usdxMint: PublicKey, baseMint: PublicKey): PublicKey {
+  public getMarketAddress(
+    usdxMint: PublicKey,
+    baseMint: PublicKey,
+  ): PublicKey | null {
     const market = this.tokenList
       .getList()
       .filter((t) => {
@@ -101,9 +107,7 @@ export default class SwapMarkets {
         }
       })[0];
     if (market === undefined) {
-      throw new Error(
-        `Usd(x) quoted market not found for ${baseMint.toString()}`,
-      );
+      return null;
     }
     return market;
   }
@@ -120,5 +124,32 @@ export default class SwapMarkets {
       .filter((t) => t.address === toMint.toString())
       .filter((t) => t.extensions?.serumV3Usdc !== undefined)[0];
     return fromMarket !== undefined && toMarket !== undefined;
+  }
+
+  public route(fromMint: PublicKey, toMint: PublicKey): PublicKey[] | null {
+    if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
+      const market = this.getMarketAddress(fromMint, toMint);
+      if (market === null) {
+        return null;
+      }
+      return [market];
+    } else if (toMint.equals(USDC_PUBKEY) || toMint.equals(USDT_PUBKEY)) {
+      const market = this.getMarketAddress(toMint, fromMint);
+      if (market === null) {
+        return null;
+      }
+      return [market];
+    } else {
+      let fromMarket = this.getMarketAddress(USDC_PUBKEY, fromMint);
+      let toMarket = this.getMarketAddress(USDC_PUBKEY, toMint);
+      if (fromMarket === null || toMarket === null) {
+        fromMarket = this.getMarketAddress(USDT_PUBKEY, fromMint);
+        toMarket = this.getMarketAddress(USDT_PUBKEY, toMint);
+        if (fromMarket === null || toMarket === null) {
+          return null;
+        }
+      }
+      return [fromMarket, toMarket];
+    }
   }
 }

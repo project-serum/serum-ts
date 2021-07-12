@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "docs": "typedoc --out ../../docs/token --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
+    "docs": "typedoc --excludePrivate --out ../../docs/token src/index.ts --includeVersion --readme none",
     "start": "tsc --watch",
     "test": "",
     "clean": "rm -rf dist",

@@ -19,40 +19,12 @@ async function main() {
   // Client for sending transactions to the swap program on mainnet.
   const client = await swapClient();
 
-  // All tokens available for swapping.
-  const _tokens = client.tokens();
-
-  // All tokens available for swapping with SRM.
-  const _srmSwapPairs = client.pairs(SRM);
-
-  // Estimate the amount received by swapping from SRM -> USDC.
-  const estimatedUsdc = await client.estimate({
-    fromMint: SRM,
-    toMint: USDC,
-    amount: toNative(1),
-  });
-
-  const estimatedBtc = await client.estimate({
-    fromMint: SRM,
-    toMint: WBTC,
-    amount: toNative(1),
-  });
-		console.log('estimate', estimatedBtc.toNumber());
-/*
-  // Swaps SRM -> USDC on the Serum orderbook. If the resulting USDC is
-  // has greater than a 1% error from the estimate, then fails.
+  // Swaps SRM -> USDC on the Serum orderbook.
   const usdcSwapTx = await client.swap({
     fromMint: SRM,
     toMint: USDC,
     amount: toNative(1),
-    minExpectedSwapAmount: estimatedUsdc.mul(new BN(99)).div(new BN(100)),
-  });
-
-  // Uses the default minExpectedSwapAmount calculation.
-  const usdcSwapTxDefault = await client.swap({
-    fromMint: SRM,
-    toMint: USDC,
-    amount: toNative(1),
+    minExpectedExchangeRate: toNative(1),
   });
 
   // Transitive swap from SRM -> USDC -> BTC.
@@ -60,21 +32,18 @@ async function main() {
     fromMint: SRM,
     toMint: WBTC,
     amount: toNative(1),
+    minExpectedExchangeRate: toNative(1),
   });
 
-  console.log('resp', fromNative(estimatedUsdc));
-  console.log('resp', fromNative(estimatedBtc));
-  console.log('resp', usdcSwapTx);
-  console.log('resp', usdcSwapTxDefault);
-  console.log('resp', btcSwapTx);
-*/
+  console.log('response: ', usdcSwapTx);
+  console.log('response: ', btcSwapTx);
 }
 
 async function swapClient() {
   const provider = new Provider(
     new Connection('https://api.mainnet-beta.solana.com', 'recent'),
-			Wallet.local(),
-			Provider.defaultOptions(),
+    Wallet.local(),
+    Provider.defaultOptions(),
   );
   const tokenList = await new TokenListProvider().resolve();
   return new Swap(provider, tokenList);
