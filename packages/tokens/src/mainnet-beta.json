@@ -193,5 +193,10 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "NET",
+    "mintAddress": "CjpDCj8zLSM37669qng5znYP25JuoDPCvLSLLd7pxAsr",
+    "tokenName": "Nordic Energy Token"
   }
 ]
