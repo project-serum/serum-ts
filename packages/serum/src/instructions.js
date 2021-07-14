@@ -127,7 +127,8 @@ export class DexInstructions {
     feeRateBps,
     vaultSignerNonce,
     quoteDustThreshold,
-    programId,
+		programId,
+		authority,
   }) {
     let rentSysvar = new PublicKey('SysvarRent111111111111111111111111111111111');
     return new TransactionInstruction({
@@ -142,7 +143,7 @@ export class DexInstructions {
         { pubkey: baseMint, isSigner: false, isWritable: false },
         { pubkey: quoteMint, isSigner: false, isWritable: false },
         { pubkey: rentSysvar, isSigner: false, isWritable: false },
-      ],
+      ].concat(authority ? { pubkey: authority, isSigner: false, isWritable: false } : []),
       programId,
       data: encodeInstruction({
         initializeMarket: {
