@@ -8,7 +8,7 @@ import {
 } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
-import { Market, MarketOptions, OrderParams } from './market';
+import { Market, MarketOptions, OrderParams, OpenOrders } from './market';
 import { DexInstructions } from './instructions';
 
 // Permissioned market overrides Market since it requires a frontend, on-chain
@@ -34,11 +34,43 @@ export class PermissionedMarket extends Market {
     quoteMintDecimals: number,
     options: MarketOptions = {},
     dexProgramId: PublicKey,
-    permProgramId: PublicKey,
+    proxyProgramId: PublicKey,
   ) {
-    super(decoded, baseMintDecimals, quoteMintDecimals, options, permProgramId);
-    this._proxyProgramId = permProgramId;
+    super(
+      decoded,
+      baseMintDecimals,
+      quoteMintDecimals,
+      options,
+      proxyProgramId,
+    );
+    this._proxyProgramId = proxyProgramId;
     this._dexProgramId = dexProgramId;
+  }
+
+  public static async openOrdersAddress(
+    market: PublicKey,
+    owner: PublicKey,
+    proxyProgramId: PublicKey,
+  ): Promise<PublicKey> {
+    // b"open-orders".
+    const openOrdersStr = Buffer.from([
+      111,
+      112,
+      101,
+      110,
+      45,
+      111,
+      114,
+      100,
+      101,
+      114,
+      115,
+    ]);
+    const [addr] = await PublicKey.findProgramAddress(
+      [openOrdersStr, market.toBuffer(), owner.toBuffer()],
+      proxyProgramId,
+    );
+    return addr;
   }
 
   public makePlaceOrderInstructionPermissioned(
@@ -66,7 +98,7 @@ export class PermissionedMarket extends Market {
       [],
       amount.toNumber(),
     );
-    let tradeIx = this.proxy(
+    const tradeIx = this.proxy(
       super.makePlaceOrderInstruction(connection, params),
     );
     return [approveIx, tradeIx];
@@ -80,7 +112,7 @@ export class PermissionedMarket extends Market {
     address: PublicKey,
     options: MarketOptions = {},
     dexProgramId: PublicKey,
-    permProgramId?: PublicKey,
+    proxyProgramId?: PublicKey,
   ): Promise<PermissionedMarket> {
     const market = await Market.load(
       connection,
@@ -96,7 +128,7 @@ export class PermissionedMarket extends Market {
       market._quoteSplTokenDecimals,
       options,
       dexProgramId,
-      permProgramId!,
+      proxyProgramId!,
     );
   }
 
