@@ -43,7 +43,6 @@ export class PermissionedMarket extends Market {
 
   public makePlaceOrderInstructionPermissioned(
     connection: Connection,
-    price: number,
     params: OrderParams<PublicKey>,
   ): Array<TransactionInstruction> {
     // The amount of USDC transferred into the dex for the trade.
@@ -52,7 +51,7 @@ export class PermissionedMarket extends Market {
       // @ts-ignore
       amount = new BN(this._decoded.quoteLotSize.toNumber()).mul(
         this.baseSizeNumberToLots(params.size).mul(
-          this.priceNumberToLots(price),
+          this.priceNumberToLots(params.price),
         ),
       );
     } else {
