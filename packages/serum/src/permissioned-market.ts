@@ -6,6 +6,7 @@ import {
   Account,
   TransactionInstruction,
 } from '@solana/web3.js';
+import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
 import { Market, MarketOptions, OrderParams } from './market';
 import { DexInstructions } from './instructions';
@@ -40,6 +41,41 @@ export class PermissionedMarket extends Market {
     this._dexProgramId = dexProgramId;
   }
 
+  public makePlaceOrderInstructionPermissioned(
+    connection: Connection,
+    price: number,
+    params: OrderParams<PublicKey>,
+  ): Array<TransactionInstruction> {
+    // The amount of USDC transferred into the dex for the trade.
+    let amount;
+    if (params.side === 'buy') {
+      // @ts-ignore
+      amount = new BN(this._decoded.quoteLotSize.toNumber()).mul(
+        this.baseSizeNumberToLots(params.size).mul(
+          this.priceNumberToLots(price),
+        ),
+      );
+    } else {
+      amount = this.baseSizeNumberToLots(params.size);
+    }
+
+    const approveIx = Token.createApproveInstruction(
+      TOKEN_PROGRAM_ID,
+      params.payer,
+      params.openOrdersAddressKey!,
+      params.owner,
+      [],
+      amount.toNumber(),
+    );
+    let tradeIx = this.proxy(
+      super.makePlaceOrderInstruction(connection, params),
+    );
+    return [approveIx, tradeIx];
+  }
+
+  /**
+   * @override
+   */
   static async load(
     connection: Connection,
     address: PublicKey,
@@ -55,18 +91,26 @@ export class PermissionedMarket extends Market {
     );
     return new PermissionedMarket(
       market.decoded,
-      market.decoded.baseSplTokenDecimals,
-      market.decoded.quoteSplTokenDecimals,
+      // @ts-ignore
+      market._baseSplTokenDecimals,
+      // @ts-ignore
+      market._quoteSplTokenDecimals,
       options,
       dexProgramId,
       permProgramId!,
     );
   }
 
+  /**
+   * @override
+   */
   public static getLayout(_programId: PublicKey) {
     return _MARKET_STATE_LAYOUT_V3;
   }
 
+  /**
+   * @override
+   */
   public makePlaceOrderInstruction<T extends PublicKey | Account>(
     connection: Connection,
     params: OrderParams<T>,
@@ -75,6 +119,9 @@ export class PermissionedMarket extends Market {
     return this.proxy(ix);
   }
 
+  /**
+   * @override
+   */
   public async makeCancelOrderByClientIdInstruction(
     connection: Connection,
     owner: PublicKey,
@@ -92,6 +139,9 @@ export class PermissionedMarket extends Market {
     return this.proxy(ix);
   }
 
+  /**
+   * @override
+   */
   public async makeSettleFundsInstruction(
     openOrders: PublicKey,
     owner: PublicKey,
@@ -120,6 +170,9 @@ export class PermissionedMarket extends Market {
     return this.proxy(ix);
   }
 
+  /**
+   * @override
+   */
   public makeCloseOpenOrdersInstruction(
     openOrders: PublicKey,
     owner: PublicKey,
@@ -135,6 +188,9 @@ export class PermissionedMarket extends Market {
     return this.proxy(ix);
   }
 
+  /**
+   * @override
+   */
   // Skips the proxy frontend and goes directly to the orderbook.
   public makeConsumeEventsInstruction(
     openOrdersAccounts: Array<PublicKey>,
