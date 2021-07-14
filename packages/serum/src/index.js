@@ -19,3 +19,4 @@ export {
 } from './queue';
 export * as TokenInstructions from './token-instructions';
 export * from './error';
+export { PermissionedMarket } from './permissioned-market';

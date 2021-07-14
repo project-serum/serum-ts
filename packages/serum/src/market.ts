@@ -1,3 +1,4 @@
+import * as assert from 'assert';
 import { blob, seq, struct, u8 } from 'buffer-layout';
 import {
   accountFlagsLayout,
@@ -246,6 +247,10 @@ export class Market {
     return this._decoded.asks;
   }
 
+  get decoded(): any {
+    return this._decoded;
+  }
+
   async loadBids(connection: Connection): Promise<Orderbook> {
     const { data } = throwIfNull(
       await connection.getAccountInfo(this._decoded.bids),
@@ -386,10 +391,9 @@ export class Market {
       feeDiscountPubkey,
     }: OrderParams,
   ) {
-    const {
-      transaction,
-      signers,
-    } = await this.makePlaceOrderTransaction<Account>(connection, {
+    const { transaction, signers } = await this.makePlaceOrderTransaction<
+      Account
+    >(connection, {
       owner,
       payer,
       side,
@@ -876,6 +880,21 @@ export class Market {
         programId: this._programId,
       });
     }
+  }
+
+  public makeConsumeEventsInstruction(
+    openOrdersAccounts: Array<PublicKey>,
+    limit: number,
+  ): TransactionInstruction {
+    return DexInstructions.consumeEvents({
+      market: this.address,
+      eventQueue: this._decoded.eventQueue,
+      coinFee: this._decoded.eventQueue,
+      pcFee: this._decoded.eventQueue,
+      openOrdersAccounts,
+      limit,
+      programId: this._programId,
+    });
   }
 
   async settleFunds(
