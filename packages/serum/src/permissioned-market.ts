@@ -5,10 +5,12 @@ import {
   PublicKey,
   Account,
   TransactionInstruction,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
 } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
-import { Market, MarketOptions, OrderParams, OpenOrders } from './market';
+import { Market, MarketOptions, OrderParams } from './market';
 import { DexInstructions } from './instructions';
 
 // Permissioned market overrides Market since it requires a frontend, on-chain
@@ -142,6 +144,69 @@ export class PermissionedMarket extends Market {
   /**
    * @override
    */
+  public async makeInitOpenOrdersInstruction(
+    owner: PublicKey,
+    market: PublicKey,
+  ): Promise<TransactionInstruction> {
+    // b"open-orders"
+    const openOrdersSeed = Buffer.from([
+      111,
+      112,
+      101,
+      110,
+      45,
+      111,
+      114,
+      100,
+      101,
+      114,
+      115,
+    ]);
+    // b"open-orders-init"
+    const openOrdersInitSeed = Buffer.from([
+      111,
+      112,
+      101,
+      110,
+      45,
+      111,
+      114,
+      100,
+      101,
+      114,
+      115,
+      45,
+      105,
+      110,
+      105,
+      116,
+    ]);
+    const [openOrders] = await PublicKey.findProgramAddress(
+      [openOrdersSeed, market.toBuffer(), owner.toBuffer()],
+      this._proxyProgramId,
+    );
+    const [marketAuthority] = await PublicKey.findProgramAddress(
+      [openOrdersInitSeed, market.toBuffer()],
+      this._proxyProgramId,
+    );
+    const ix = DexInstructions.initOpenOrders({
+      market,
+      openOrders,
+      owner,
+      programId: this._proxyProgramId,
+      marketAuthority,
+    });
+    ix.keys = [
+      { pubkey: this._dexProgramId, isSigner: false, isWritable: false },
+      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+      ...ix.keys,
+    ];
+    return this.proxy(ix);
+  }
+
+  /**
+   * @override
+   */
   public makePlaceOrderInstruction<T extends PublicKey | Account>(
     connection: Connection,
     params: OrderParams<T>,
@@ -245,6 +310,7 @@ export class PermissionedMarket extends Market {
       { pubkey: this._dexProgramId, isWritable: false, isSigner: false },
       ...ix.keys,
     ];
+
     return ix;
   }
 }
