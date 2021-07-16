@@ -5,8 +5,8 @@ import {
   PublicKey,
   Account,
   TransactionInstruction,
-  SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  AccountMeta,
 } from '@solana/web3.js';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
@@ -30,6 +30,10 @@ export class PermissionedMarket extends Market {
   // Dex program ID.
   private _dexProgramId: PublicKey;
 
+  // Account metas that are loaded as the first account to *all* transactions
+  // to the proxy.
+  private _preloadAccountMetas?: AccountMeta[];
+
   constructor(
     decoded: any,
     baseMintDecimals: number,
@@ -37,6 +41,7 @@ export class PermissionedMarket extends Market {
     options: MarketOptions = {},
     dexProgramId: PublicKey,
     proxyProgramId: PublicKey,
+    preloadAccountMetas?: AccountMeta[],
   ) {
     super(
       decoded,
@@ -47,6 +52,7 @@ export class PermissionedMarket extends Market {
     );
     this._proxyProgramId = proxyProgramId;
     this._dexProgramId = dexProgramId;
+    this._preloadAccountMetas = preloadAccountMetas;
   }
 
   public static async openOrdersAddress(
@@ -115,6 +121,7 @@ export class PermissionedMarket extends Market {
     options: MarketOptions = {},
     dexProgramId: PublicKey,
     proxyProgramId?: PublicKey,
+    preloadAccountMetas?: AccountMeta[],
   ): Promise<PermissionedMarket> {
     const market = await Market.load(
       connection,
@@ -131,6 +138,7 @@ export class PermissionedMarket extends Market {
       options,
       dexProgramId,
       proxyProgramId!,
+      preloadAccountMetas!,
     );
   }
 
@@ -308,6 +316,7 @@ export class PermissionedMarket extends Market {
   private proxy(ix: TransactionInstruction) {
     ix.keys = [
       { pubkey: this._dexProgramId, isWritable: false, isSigner: false },
+      ...(this._preloadAccountMetas ?? []),
       ...ix.keys,
     ];
 
