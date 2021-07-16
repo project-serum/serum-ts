@@ -58,6 +58,7 @@ export class PermissionedMarket extends Market {
   public static async openOrdersAddress(
     market: PublicKey,
     owner: PublicKey,
+    dexProgramId: PublicKey,
     proxyProgramId: PublicKey,
   ): Promise<PublicKey> {
     // b"open-orders".
@@ -75,7 +76,12 @@ export class PermissionedMarket extends Market {
       115,
     ]);
     const [addr] = await PublicKey.findProgramAddress(
-      [openOrdersStr, market.toBuffer(), owner.toBuffer()],
+      [
+        openOrdersStr,
+        dexProgramId.toBuffer(),
+        market.toBuffer(),
+        owner.toBuffer(),
+      ],
       proxyProgramId,
     );
     return addr;
@@ -190,11 +196,16 @@ export class PermissionedMarket extends Market {
       116,
     ]);
     const [openOrders] = await PublicKey.findProgramAddress(
-      [openOrdersSeed, market.toBuffer(), owner.toBuffer()],
+      [
+        openOrdersSeed,
+        this._dexProgramId.toBuffer(),
+        market.toBuffer(),
+        owner.toBuffer(),
+      ],
       this._proxyProgramId,
     );
     const [marketAuthority] = await PublicKey.findProgramAddress(
-      [openOrdersInitSeed, market.toBuffer()],
+      [openOrdersInitSeed, this._dexProgramId.toBuffer(), market.toBuffer()],
       this._proxyProgramId,
     );
     const ix = DexInstructions.initOpenOrders({
@@ -204,6 +215,8 @@ export class PermissionedMarket extends Market {
       programId: this._proxyProgramId,
       marketAuthority,
     });
+
+    // Prepend to the account list extra accounts needed for PDA initialization.
     ix.keys = [
       { pubkey: this._dexProgramId, isSigner: false, isWritable: false },
       { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
