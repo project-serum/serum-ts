@@ -19,4 +19,5 @@ export {
 } from './queue';
 export * as TokenInstructions from './token-instructions';
 export * from './error';
-export { PermissionedMarket } from './permissioned-market';
+export { MarketProxy } from './market-proxy';
+export { OpenOrdersPda, ReferralFees, Logger, Middleware } from './market-proxy/middleware';

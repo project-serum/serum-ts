@@ -5,13 +5,13 @@ import {
   PublicKey,
   Account,
   TransactionInstruction,
-  SystemProgram,
-  AccountMeta,
 } from '@solana/web3.js';
+import { utils } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
-import { Market, MarketOptions, OrderParams } from './market';
-import { DexInstructions } from './instructions';
+import { accountFlagsLayout, publicKeyLayout, u64 } from '../layout';
+import { Market, MarketOptions, OrderParams } from '../market';
+import { DexInstructions } from '../instructions';
+import { Middleware } from './middleware';
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -19,7 +19,7 @@ import { DexInstructions } from './instructions';
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-// Permissioned market overrides Market since it requires a frontend, on-chain
+// MarketProxy overrides Market since it requires a frontend, on-chain
 // proxy program, which relays all instructions to the orderbook. This requires
 // two modifications for most instructions.
 //
@@ -29,7 +29,7 @@ import { DexInstructions } from './instructions';
 //    removing this account before relaying to the dex.
 //
 // Otherwise, the client should function the same as a regular Market client.
-export class PermissionedMarket extends Market {
+export class MarketProxy extends Market {
   // Program ID of the permissioning proxy program.
   private _proxyProgramId: PublicKey;
 
@@ -38,7 +38,7 @@ export class PermissionedMarket extends Market {
 
   // Account metas that are loaded as the first account to *all* transactions
   // to the proxy.
-  private _preloadAccountMetas?: AccountMeta[];
+  private _middlewares: Middleware[];
 
   constructor(
     decoded: any,
@@ -47,7 +47,7 @@ export class PermissionedMarket extends Market {
     options: MarketOptions = {},
     dexProgramId: PublicKey,
     proxyProgramId: PublicKey,
-    preloadAccountMetas?: AccountMeta[],
+    middlewares: Middleware[],
   ) {
     super(
       decoded,
@@ -58,7 +58,7 @@ export class PermissionedMarket extends Market {
     );
     this._proxyProgramId = proxyProgramId;
     this._dexProgramId = dexProgramId;
-    this._preloadAccountMetas = preloadAccountMetas;
+    this._middlewares = middlewares;
   }
 
   public static async openOrdersAddress(
@@ -110,6 +110,9 @@ export class PermissionedMarket extends Market {
       amount = this.baseSizeNumberToLots(params.size);
     }
 
+    // TODO: approve ix probably be injected by the middleware.
+    //       Can probably just have another method similar to the runtime
+    //       instruction method.
     const approveIx = Token.createApproveInstruction(
       TOKEN_PROGRAM_ID,
       params.payer,
@@ -118,10 +121,10 @@ export class PermissionedMarket extends Market {
       [],
       amount.toNumber(),
     );
-    const tradeIx = this.proxy(
-      super.makePlaceOrderInstruction(connection, params),
-    );
-    return [approveIx, tradeIx];
+    const tradeIx = super.makePlaceOrderInstruction(connection, params);
+    this._middlewares.forEach((mw) => mw.newOrderV3(tradeIx));
+
+    return [approveIx, this.proxy(tradeIx)];
   }
 
   /**
@@ -133,15 +136,15 @@ export class PermissionedMarket extends Market {
     options: MarketOptions = {},
     dexProgramId: PublicKey,
     proxyProgramId?: PublicKey,
-    preloadAccountMetas?: AccountMeta[],
-  ): Promise<PermissionedMarket> {
+    middlewares?: Middleware[],
+  ): Promise<MarketProxy> {
     const market = await Market.load(
       connection,
       address,
       options,
       dexProgramId,
     );
-    return new PermissionedMarket(
+    return new MarketProxy(
       market.decoded,
       // @ts-ignore
       market._baseSplTokenDecimals,
@@ -150,7 +153,7 @@ export class PermissionedMarket extends Market {
       options,
       dexProgramId,
       proxyProgramId!,
-      preloadAccountMetas!,
+      middlewares!,
     );
   }
 
@@ -164,56 +167,12 @@ export class PermissionedMarket extends Market {
   /**
    * @override
    */
-  public async makeInitOpenOrdersInstruction(
+  public makeInitOpenOrdersInstruction(
     owner: PublicKey,
     market: PublicKey,
-  ): Promise<TransactionInstruction> {
-    // b"open-orders"
-    const openOrdersSeed = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
-    ]);
-    // b"open-orders-init"
-    const openOrdersInitSeed = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
-      45,
-      105,
-      110,
-      105,
-      116,
-    ]);
-    const [openOrders] = await PublicKey.findProgramAddress(
-      [
-        openOrdersSeed,
-        this._dexProgramId.toBuffer(),
-        market.toBuffer(),
-        owner.toBuffer(),
-      ],
-      this._proxyProgramId,
-    );
-    const [marketAuthority] = await PublicKey.findProgramAddress(
-      [openOrdersInitSeed, this._dexProgramId.toBuffer(), market.toBuffer()],
-      this._proxyProgramId,
-    );
+    openOrders: PublicKey,
+    marketAuthority: PublicKey,
+  ): TransactionInstruction {
     const ix = DexInstructions.initOpenOrders({
       market,
       openOrders,
@@ -221,13 +180,7 @@ export class PermissionedMarket extends Market {
       programId: this._proxyProgramId,
       marketAuthority,
     });
-
-    // Prepend to the account list extra accounts needed for PDA initialization.
-    ix.keys = [
-      { pubkey: this._dexProgramId, isSigner: false, isWritable: false },
-      { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
-      ...ix.keys,
-    ];
+    this._middlewares.forEach((mw) => mw.initOpenOrders(ix));
     return this.proxy(ix);
   }
 
@@ -245,33 +198,35 @@ export class PermissionedMarket extends Market {
   /**
    * @override
    */
-  public async makeCancelOrderByClientIdInstruction(
-    connection: Connection,
+  public makeCancelOrderByClientIdInstruction(
     owner: PublicKey,
     openOrders: PublicKey,
     clientId: BN,
-  ): Promise<TransactionInstruction> {
-    const ix = (
-      await this.makeCancelOrderByClientIdTransaction(
-        connection,
-        owner,
-        openOrders,
-        clientId,
-      )
-    ).instructions[0];
+  ): TransactionInstruction {
+    const ix = DexInstructions.cancelOrderByClientIdV2({
+      market: this.address,
+      openOrders,
+      owner,
+      bids: this.decoded.bids,
+      asks: this.decoded.asks,
+      eventQueue: this.decoded.eventQueue,
+      clientId,
+      programId: this._proxyProgramId,
+    });
+    this._middlewares.forEach((mw) => mw.cancelOrderByClientIdV2(ix));
     return this.proxy(ix);
   }
 
   /**
    * @override
    */
-  public async makeSettleFundsInstruction(
+  public makeSettleFundsInstruction(
     openOrders: PublicKey,
     owner: PublicKey,
     baseWallet: PublicKey,
     quoteWallet: PublicKey,
     referrerQuoteWallet: PublicKey,
-  ): Promise<TransactionInstruction> {
+  ): TransactionInstruction {
     const ix = DexInstructions.settleFunds({
       market: this.address,
       openOrders,
@@ -280,7 +235,7 @@ export class PermissionedMarket extends Market {
       quoteVault: this.decoded.quoteVault,
       baseWallet,
       quoteWallet,
-      vaultSigner: await PublicKey.createProgramAddress(
+      vaultSigner: utils.publicKey.createProgramAddressSync(
         [
           this.address.toBuffer(),
           this.decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
@@ -290,6 +245,7 @@ export class PermissionedMarket extends Market {
       programId: this._proxyProgramId,
       referrerQuoteWallet,
     });
+    this._middlewares.forEach((mw) => mw.settleFunds(ix));
     return this.proxy(ix);
   }
 
@@ -308,6 +264,7 @@ export class PermissionedMarket extends Market {
       solWallet,
       programId: this._proxyProgramId,
     });
+    this._middlewares.forEach((mw) => mw.closeOpenOrders(ix));
     return this.proxy(ix);
   }
 
@@ -335,7 +292,6 @@ export class PermissionedMarket extends Market {
   private proxy(ix: TransactionInstruction) {
     ix.keys = [
       { pubkey: this._dexProgramId, isWritable: false, isSigner: false },
-      ...(this._preloadAccountMetas ?? []),
       ...ix.keys,
     ];
 
