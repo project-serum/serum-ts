@@ -13,6 +13,12 @@ import { accountFlagsLayout, publicKeyLayout, u64 } from './layout';
 import { Market, MarketOptions, OrderParams } from './market';
 import { DexInstructions } from './instructions';
 
+////////////////////////////////////////////////////////////////////////////////
+//
+// This API is experimental. It may be subject to imminent breaking changes.
+//
+////////////////////////////////////////////////////////////////////////////////
+
 // Permissioned market overrides Market since it requires a frontend, on-chain
 // proxy program, which relays all instructions to the orderbook. This requires
 // two modifications for most instructions.
