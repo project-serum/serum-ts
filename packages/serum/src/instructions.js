@@ -8,7 +8,11 @@ import {
   u64,
   VersionedLayout,
 } from './layout';
-import { SYSVAR_RENT_PUBKEY, TransactionInstruction, PublicKey } from '@solana/web3.js';
+import {
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+  PublicKey,
+} from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 // NOTE: Update these if the position of arguments for the settleFunds instruction changes
@@ -91,16 +95,8 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   struct([u64('clientId')]),
   'cancelOrderByClientIdV2',
 );
-INSTRUCTION_LAYOUT.inner.addVariant(
-  14,
-  struct([]),
-  'closeOpenOrders',
-);
-INSTRUCTION_LAYOUT.inner.addVariant(
-  15,
-  struct([]),
-  'initOpenOrders',
-);
+INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
+INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -128,8 +124,11 @@ export class DexInstructions {
     vaultSignerNonce,
     quoteDustThreshold,
     programId,
+    authority,
   }) {
-    let rentSysvar = new PublicKey('SysvarRent111111111111111111111111111111111');
+    let rentSysvar = new PublicKey(
+      'SysvarRent111111111111111111111111111111111',
+    );
     return new TransactionInstruction({
       keys: [
         { pubkey: market, isSigner: false, isWritable: true },
@@ -142,7 +141,11 @@ export class DexInstructions {
         { pubkey: baseMint, isSigner: false, isWritable: false },
         { pubkey: quoteMint, isSigner: false, isWritable: false },
         { pubkey: rentSysvar, isSigner: false, isWritable: false },
-      ],
+      ].concat(
+        authority
+          ? { pubkey: authority, isSigner: false, isWritable: false }
+          : [],
+      ),
       programId,
       data: encodeInstruction({
         initializeMarket: {
@@ -306,7 +309,7 @@ export class DexInstructions {
         { pubkey: market, isSigner: false, isWritable: true },
         { pubkey: eventQueue, isSigner: false, isWritable: true },
         { pubkey: coinFee, isSigner: false, isWriteable: true },
-        { pubkey: pcFee, isSigner: false, isWritable: true},
+        { pubkey: pcFee, isSigner: false, isWritable: true },
       ],
       programId,
       data: encodeInstruction({ consumeEvents: { limit } }),
@@ -452,13 +455,7 @@ export class DexInstructions {
     });
   }
 
-  static closeOpenOrders({
-    market,
-    openOrders,
-    owner,
-    solWallet,
-    programId,
-  }) {
+  static closeOpenOrders({ market, openOrders, owner, solWallet, programId }) {
     const keys = [
       { pubkey: openOrders, isSigner: false, isWritable: true },
       { pubkey: owner, isSigner: true, isWritable: false },
@@ -479,13 +476,18 @@ export class DexInstructions {
     openOrders,
     owner,
     programId,
+    marketAuthority,
   }) {
     const keys = [
       { pubkey: openOrders, isSigner: false, isWritable: true },
       { pubkey: owner, isSigner: true, isWritable: false },
       { pubkey: market, isSigner: false, isWritable: false },
       { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
-    ];
+    ].concat(
+      marketAuthority
+        ? { pubkey: marketAuthority, isSigner: false, isWritable: false }
+        : [],
+    );
     return new TransactionInstruction({
       keys,
       programId,
