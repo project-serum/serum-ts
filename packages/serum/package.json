@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/serum",
-  "version": "0.13.46",
+  "version": "0.13.47",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
   "repository": "project-serum/serum-ts",
@@ -46,6 +46,7 @@
     "trailingComma": "all"
   },
   "dependencies": {
+    "@solana/spl-token": "^0.1.6",
     "@solana/web3.js": "^0.90.0",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
