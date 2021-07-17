@@ -1,15 +1,13 @@
-import { blob, struct } from 'buffer-layout';
 import BN from 'bn.js';
-import {
-  Connection,
-  PublicKey,
-  Account,
-  TransactionInstruction,
-} from '@solana/web3.js';
+import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { utils } from '@project-serum/anchor';
 import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { accountFlagsLayout, publicKeyLayout, u64 } from '../layout';
-import { Market, MarketOptions, OrderParams } from '../market';
+import {
+  Market,
+  MarketOptions,
+  OrderParams,
+  MARKET_STATE_LAYOUT_V3,
+} from '../market';
 import { DexInstructions } from '../instructions';
 import { Middleware } from './middleware';
 
@@ -18,47 +16,70 @@ import { Middleware } from './middleware';
 // This API is experimental. It may be subject to imminent breaking changes.
 //
 ////////////////////////////////////////////////////////////////////////////////
-
-// MarketProxy overrides Market since it requires a frontend, on-chain
-// proxy program, which relays all instructions to the orderbook. This requires
-// two modifications for most instructions.
 //
-// 1. The dex program ID must be changed to the proxy program.
-// 2. The canonical dex program ID must be inserted as the first account
-//    in instructions using the proxy relay. The program is responsible for
-//    removing this account before relaying to the dex.
+// MarketProxy provides an API for constructing transactions to an on-chain
+// DEX proxy, which relays all instructions to the orderbook. Minimally, this
+// requires two modifications for DEX instructions.
 //
-// Otherwise, the client should function the same as a regular Market client.
-export class MarketProxy extends Market {
-  // Program ID of the permissioning proxy program.
-  private _proxyProgramId: PublicKey;
+// 1. Transasctions are sent to the proxy program--not the DEX.
+// 2. The DEX program ID must be inserted as the first account in instructions
+//    using the proxy relay, so that the proxy can use the account for CPI.
+//    The program is responsible for removing this account before relaying to
+//    the dex.
+//
+// Additionally, a middleware abstraction is provided so that one can configure
+// both the client and the smart contract with the ability to send and processs
+// arbitrary accounts and instruction data *in addition* to what the Serum DEX
+// expects.
+//
+// Similar to the layers of an onion, each middleware wraps a transaction
+// request with additional accounts and instruction data before sending it to
+// the program. Upon receiving the request, the program--with its own set of
+// middleware-- unwraps and processes each layer. The process ends with all
+// layers being unwrapped and the proxy relaying the transaction to the DEX.
+//
+// As a result, the order of the middleware matters and the client should
+// process middleware in the *reverse* order of the proxy smart contract.
+export class MarketProxy {
+  // Underlying DEX market.
+  get market(): Market {
+    return this._market;
+  }
+  private _market: Market;
 
-  // Dex program ID.
-  private _dexProgramId: PublicKey;
+  // Instruction namespace.
+  get instruction(): MarketProxyInstruction {
+    return this._instruction;
+  }
+  private _instruction: MarketProxyInstruction;
 
-  // Account metas that are loaded as the first account to *all* transactions
-  // to the proxy.
-  private _middlewares: Middleware[];
+  constructor(market: Market, instruction: MarketProxyInstruction) {
+    this._market = market;
+    this._instruction = instruction;
+  }
 
-  constructor(
-    decoded: any,
-    baseMintDecimals: number,
-    quoteMintDecimals: number,
+  public static async load(
+    connection: Connection,
+    address: PublicKey,
     options: MarketOptions = {},
     dexProgramId: PublicKey,
-    proxyProgramId: PublicKey,
-    middlewares: Middleware[],
-  ) {
-    super(
-      decoded,
-      baseMintDecimals,
-      quoteMintDecimals,
+    proxyProgramId?: PublicKey,
+    middlewares?: Middleware[],
+  ): Promise<MarketProxy> {
+    const market = await Market.load(
+      connection,
+      address,
       options,
-      proxyProgramId,
+      dexProgramId,
+      MARKET_STATE_LAYOUT_V3,
     );
-    this._proxyProgramId = proxyProgramId;
-    this._dexProgramId = dexProgramId;
-    this._middlewares = middlewares;
+    const instruction = new MarketProxyInstruction(
+      proxyProgramId!,
+      dexProgramId,
+      market,
+      middlewares!,
+    );
+    return new MarketProxy(market, instruction);
   }
 
   public static async openOrdersAddress(
@@ -92,22 +113,48 @@ export class MarketProxy extends Market {
     );
     return addr;
   }
+}
 
-  public makePlaceOrderInstructionPermissioned(
-    connection: Connection,
+// Instruction builder for the market proxy.
+export class MarketProxyInstruction {
+  // Program ID of the permissioning proxy program.
+  private _proxyProgramId: PublicKey;
+
+  // Dex program ID.
+  private _dexProgramId: PublicKey;
+
+  // Underlying DEX market.
+  private _market: Market;
+
+  // Middlewares for processing the creation of transactions.
+  private _middlewares: Middleware[];
+
+  constructor(
+    proxyProgramId: PublicKey,
+    dexProgramId: PublicKey,
+    market: Market,
+    middlewares: Middleware[],
+  ) {
+    this._proxyProgramId = proxyProgramId;
+    this._dexProgramId = dexProgramId;
+    this._market = market;
+    this._middlewares = middlewares;
+  }
+
+  public newOrderV3(
     params: OrderParams<PublicKey>,
   ): Array<TransactionInstruction> {
     // The amount of USDC transferred into the dex for the trade.
     let amount;
     if (params.side === 'buy') {
       // @ts-ignore
-      amount = new BN(this._decoded.quoteLotSize.toNumber()).mul(
-        this.baseSizeNumberToLots(params.size).mul(
-          this.priceNumberToLots(params.price),
-        ),
+      amount = new BN(this._market.decoded.quoteLotSize.toNumber()).mul(
+        this._market
+          .baseSizeNumberToLots(params.size)
+          .mul(this._market.priceNumberToLots(params.price)),
       );
     } else {
-      amount = this.baseSizeNumberToLots(params.size);
+      amount = this._market.baseSizeNumberToLots(params.size);
     }
 
     // TODO: approve ix probably be injected by the middleware.
@@ -121,53 +168,16 @@ export class MarketProxy extends Market {
       [],
       amount.toNumber(),
     );
-    const tradeIx = super.makePlaceOrderInstruction(connection, params);
+    const tradeIx = this._market.makeNewOrderV3Instruction({
+      ...params,
+      programId: this._proxyProgramId,
+    });
     this._middlewares.forEach((mw) => mw.newOrderV3(tradeIx));
 
     return [approveIx, this.proxy(tradeIx)];
   }
 
-  /**
-   * @override
-   */
-  static async load(
-    connection: Connection,
-    address: PublicKey,
-    options: MarketOptions = {},
-    dexProgramId: PublicKey,
-    proxyProgramId?: PublicKey,
-    middlewares?: Middleware[],
-  ): Promise<MarketProxy> {
-    const market = await Market.load(
-      connection,
-      address,
-      options,
-      dexProgramId,
-    );
-    return new MarketProxy(
-      market.decoded,
-      // @ts-ignore
-      market._baseSplTokenDecimals,
-      // @ts-ignore
-      market._quoteSplTokenDecimals,
-      options,
-      dexProgramId,
-      proxyProgramId!,
-      middlewares!,
-    );
-  }
-
-  /**
-   * @override
-   */
-  public static getLayout(_programId: PublicKey) {
-    return _MARKET_STATE_LAYOUT_V3;
-  }
-
-  /**
-   * @override
-   */
-  public makeInitOpenOrdersInstruction(
+  public initOpenOrders(
     owner: PublicKey,
     market: PublicKey,
     openOrders: PublicKey,
@@ -184,32 +194,18 @@ export class MarketProxy extends Market {
     return this.proxy(ix);
   }
 
-  /**
-   * @override
-   */
-  public makePlaceOrderInstruction<T extends PublicKey | Account>(
-    connection: Connection,
-    params: OrderParams<T>,
-  ): TransactionInstruction {
-    const ix = super.makePlaceOrderInstruction(connection, params);
-    return this.proxy(ix);
-  }
-
-  /**
-   * @override
-   */
-  public makeCancelOrderByClientIdInstruction(
+  public cancelOrderByClientId(
     owner: PublicKey,
     openOrders: PublicKey,
     clientId: BN,
   ): TransactionInstruction {
     const ix = DexInstructions.cancelOrderByClientIdV2({
-      market: this.address,
+      market: this._market.address,
       openOrders,
       owner,
-      bids: this.decoded.bids,
-      asks: this.decoded.asks,
-      eventQueue: this.decoded.eventQueue,
+      bids: this._market.decoded.bids,
+      asks: this._market.decoded.asks,
+      eventQueue: this._market.decoded.eventQueue,
       clientId,
       programId: this._proxyProgramId,
     });
@@ -217,10 +213,7 @@ export class MarketProxy extends Market {
     return this.proxy(ix);
   }
 
-  /**
-   * @override
-   */
-  public makeSettleFundsInstruction(
+  public settleFunds(
     openOrders: PublicKey,
     owner: PublicKey,
     baseWallet: PublicKey,
@@ -228,17 +221,17 @@ export class MarketProxy extends Market {
     referrerQuoteWallet: PublicKey,
   ): TransactionInstruction {
     const ix = DexInstructions.settleFunds({
-      market: this.address,
+      market: this._market.address,
       openOrders,
       owner,
-      baseVault: this.decoded.baseVault,
-      quoteVault: this.decoded.quoteVault,
+      baseVault: this._market.decoded.baseVault,
+      quoteVault: this._market.decoded.quoteVault,
       baseWallet,
       quoteWallet,
       vaultSigner: utils.publicKey.createProgramAddressSync(
         [
-          this.address.toBuffer(),
-          this.decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
+          this._market.address.toBuffer(),
+          this._market.decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
         ],
         this._dexProgramId,
       ),
@@ -249,16 +242,13 @@ export class MarketProxy extends Market {
     return this.proxy(ix);
   }
 
-  /**
-   * @override
-   */
-  public makeCloseOpenOrdersInstruction(
+  public closeOpenOrders(
     openOrders: PublicKey,
     owner: PublicKey,
     solWallet: PublicKey,
   ): TransactionInstruction {
     const ix = DexInstructions.closeOpenOrders({
-      market: this.address,
+      market: this._market.address,
       openOrders,
       owner,
       solWallet,
@@ -266,25 +256,6 @@ export class MarketProxy extends Market {
     });
     this._middlewares.forEach((mw) => mw.closeOpenOrders(ix));
     return this.proxy(ix);
-  }
-
-  /**
-   * @override
-   */
-  // Skips the proxy frontend and goes directly to the orderbook.
-  public makeConsumeEventsInstruction(
-    openOrdersAccounts: Array<PublicKey>,
-    limit: number,
-  ): TransactionInstruction {
-    return DexInstructions.consumeEvents({
-      market: this.address,
-      eventQueue: this.decoded.eventQueue,
-      coinFee: this.decoded.eventQueue,
-      pcFee: this.decoded.eventQueue,
-      openOrdersAccounts,
-      limit,
-      programId: this._dexProgramId,
-    });
   }
 
   // Adds the serum dex account to the instruction so that proxies can
@@ -298,43 +269,3 @@ export class MarketProxy extends Market {
     return ix;
   }
 }
-
-const _MARKET_STATE_LAYOUT_V3 = struct([
-  blob(5),
-
-  accountFlagsLayout('accountFlags'),
-
-  publicKeyLayout('ownAddress'),
-
-  u64('vaultSignerNonce'),
-
-  publicKeyLayout('baseMint'),
-  publicKeyLayout('quoteMint'),
-
-  publicKeyLayout('baseVault'),
-  u64('baseDepositsTotal'),
-  u64('baseFeesAccrued'),
-
-  publicKeyLayout('quoteVault'),
-  u64('quoteDepositsTotal'),
-  u64('quoteFeesAccrued'),
-
-  u64('quoteDustThreshold'),
-
-  publicKeyLayout('requestQueue'),
-  publicKeyLayout('eventQueue'),
-
-  publicKeyLayout('bids'),
-  publicKeyLayout('asks'),
-
-  u64('baseLotSize'),
-  u64('quoteLotSize'),
-
-  u64('feeRateBps'),
-
-  u64('referrerRebatesAccrued'),
-
-  publicKeyLayout('authority'),
-
-  blob(7),
-]);
