@@ -41,7 +41,7 @@ import { Middleware } from './middleware';
 // As a result, the order of the middleware matters and the client should
 // process middleware in the *reverse* order of the proxy smart contract.
 export class MarketProxy {
-  // Underlying DEX market.
+  // DEX market being proxied.
   get market(): Market {
     return this._market;
   }
@@ -81,38 +81,6 @@ export class MarketProxy {
     );
     return new MarketProxy(market, instruction);
   }
-
-  public static async openOrdersAddress(
-    market: PublicKey,
-    owner: PublicKey,
-    dexProgramId: PublicKey,
-    proxyProgramId: PublicKey,
-  ): Promise<PublicKey> {
-    // b"open-orders".
-    const openOrdersStr = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
-    ]);
-    const [addr] = await PublicKey.findProgramAddress(
-      [
-        openOrdersStr,
-        dexProgramId.toBuffer(),
-        market.toBuffer(),
-        owner.toBuffer(),
-      ],
-      proxyProgramId,
-    );
-    return addr;
-  }
 }
 
 // Instruction builder for the market proxy.
@@ -141,40 +109,13 @@ export class MarketProxyInstruction {
     this._middlewares = middlewares;
   }
 
-  public newOrderV3(
-    params: OrderParams<PublicKey>,
-  ): Array<TransactionInstruction> {
-    // The amount of USDC transferred into the dex for the trade.
-    let amount;
-    if (params.side === 'buy') {
-      // @ts-ignore
-      amount = new BN(this._market.decoded.quoteLotSize.toNumber()).mul(
-        this._market
-          .baseSizeNumberToLots(params.size)
-          .mul(this._market.priceNumberToLots(params.price)),
-      );
-    } else {
-      amount = this._market.baseSizeNumberToLots(params.size);
-    }
-
-    // TODO: approve ix probably be injected by the middleware.
-    //       Can probably just have another method similar to the runtime
-    //       instruction method.
-    const approveIx = Token.createApproveInstruction(
-      TOKEN_PROGRAM_ID,
-      params.payer,
-      params.openOrdersAddressKey!,
-      params.owner,
-      [],
-      amount.toNumber(),
-    );
+  public newOrderV3(params: OrderParams<PublicKey>): TransactionInstruction {
     const tradeIx = this._market.makeNewOrderV3Instruction({
       ...params,
       programId: this._proxyProgramId,
     });
     this._middlewares.forEach((mw) => mw.newOrderV3(tradeIx));
-
-    return [approveIx, this.proxy(tradeIx)];
+    return this.proxy(tradeIx);
   }
 
   public initOpenOrders(
