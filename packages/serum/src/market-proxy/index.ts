@@ -1,7 +1,6 @@
 import BN from 'bn.js';
 import { Connection, PublicKey, TransactionInstruction } from '@solana/web3.js';
 import { utils } from '@project-serum/anchor';
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Market,
   MarketOptions,
@@ -11,12 +10,6 @@ import {
 import { DexInstructions } from '../instructions';
 import { Middleware } from './middleware';
 
-////////////////////////////////////////////////////////////////////////////////
-//
-// This API is experimental. It may be subject to imminent breaking changes.
-//
-////////////////////////////////////////////////////////////////////////////////
-//
 // MarketProxy provides an API for constructing transactions to an on-chain
 // DEX proxy, which relays all instructions to the orderbook. Minimally, this
 // requires two modifications for DEX instructions.
@@ -53,33 +46,10 @@ export class MarketProxy {
   }
   private _instruction: MarketProxyInstruction;
 
+  // Ctor.
   constructor(market: Market, instruction: MarketProxyInstruction) {
     this._market = market;
     this._instruction = instruction;
-  }
-
-  public static async load(
-    connection: Connection,
-    address: PublicKey,
-    options: MarketOptions = {},
-    dexProgramId: PublicKey,
-    proxyProgramId?: PublicKey,
-    middlewares?: Middleware[],
-  ): Promise<MarketProxy> {
-    const market = await Market.load(
-      connection,
-      address,
-      options,
-      dexProgramId,
-      MARKET_STATE_LAYOUT_V3,
-    );
-    const instruction = new MarketProxyInstruction(
-      proxyProgramId!,
-      dexProgramId,
-      market,
-      middlewares!,
-    );
-    return new MarketProxy(market, instruction);
   }
 }
 
@@ -208,5 +178,47 @@ export class MarketProxyInstruction {
     ];
 
     return ix;
+  }
+}
+
+export class MarketProxyBuilder {
+  private _middlewares: Middleware[];
+
+  constructor() {
+    this._middlewares = [];
+  }
+
+  public middleware(mw: Middleware): MarketProxyBuilder {
+    this._middlewares.push(mw);
+    return this;
+  }
+
+  public async load({
+    connection,
+    market,
+    options = {},
+    dexProgramId,
+    proxyProgramId,
+  }: {
+    connection: Connection;
+    market: PublicKey;
+    options: MarketOptions;
+    dexProgramId: PublicKey;
+    proxyProgramId: PublicKey;
+  }): Promise<MarketProxy> {
+    const marketClient = await Market.load(
+      connection,
+      market,
+      options,
+      dexProgramId,
+      MARKET_STATE_LAYOUT_V3,
+    );
+    const instruction = new MarketProxyInstruction(
+      proxyProgramId,
+      dexProgramId,
+      marketClient,
+      this._middlewares,
+    );
+    return new MarketProxy(marketClient, instruction);
   }
 }

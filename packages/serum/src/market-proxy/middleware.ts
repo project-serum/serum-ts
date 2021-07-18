@@ -62,8 +62,8 @@ export class OpenOrdersPda implements Middleware {
   }
 
   initOpenOrders(ix: TransactionInstruction) {
-    let market = ix.keys[2].pubkey;
-    let owner = ix.keys[1].pubkey;
+    const market = ix.keys[2].pubkey;
+    const owner = ix.keys[1].pubkey;
     // b"open-orders"
     const openOrdersSeed = Buffer.from([
       111,
@@ -144,20 +144,38 @@ export class OpenOrdersPda implements Middleware {
   }
 }
 
-export class ReferralFees {
+export class ReferralFees implements Middleware {
+  // eslint-disable-next-line
   initOpenOrders(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
   newOrderV3(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
   cancelOrderV2(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
   cancelOrderByClientIdV2(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
   settleFunds(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
   closeOpenOrders(_ix: TransactionInstruction) {}
 }
 
-export class Logger {
-  initOpenOrders(_ix: TransactionInstruction) {}
-  newOrderV3(_ix: TransactionInstruction) {}
-  cancelOrderV2(_ix: TransactionInstruction) {}
-  cancelOrderByClientIdV2(_ix: TransactionInstruction) {}
-  settleFunds(_ix: TransactionInstruction) {}
-  closeOpenOrders(_ix: TransactionInstruction) {}
+export class Logger implements Middleware {
+  initOpenOrders(ix: TransactionInstruction) {
+    console.log('Proxying initOpeNorders', ix);
+  }
+  newOrderV3(ix: TransactionInstruction) {
+    console.log('Proxying newOrderV3', ix);
+  }
+  cancelOrderV2(ix: TransactionInstruction) {
+    console.log('Proxying cancelOrderV2', ix);
+  }
+  cancelOrderByClientIdV2(ix: TransactionInstruction) {
+    console.log('Proxying cancelOrderByClientIdV2', ix);
+  }
+  settleFunds(ix: TransactionInstruction) {
+    console.log('Proxying settleFunds', ix);
+  }
+  closeOpenOrders(ix: TransactionInstruction) {
+    console.log('Proxying closeOpenOrders', ix);
+  }
 }

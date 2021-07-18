@@ -340,18 +340,18 @@ export class DexInstructions {
     });
   }
 
-  static cancelOrderV2({
-    market,
-    bids,
-    asks,
-    eventQueue,
-    openOrders,
-    owner,
-    side,
-    orderId,
-    openOrdersSlot,
-    programId,
-  }) {
+  static cancelOrderV2(order) {
+    const {
+      market,
+      bids,
+      asks,
+      eventQueue,
+      openOrders,
+      owner,
+      side,
+      orderId,
+      programId,
+    } = order;
     return new TransactionInstruction({
       keys: [
         { pubkey: market, isSigner: false, isWritable: false },

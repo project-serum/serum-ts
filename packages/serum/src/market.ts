@@ -1,12 +1,5 @@
-import * as assert from 'assert';
 import { blob, seq, struct, u8 } from 'buffer-layout';
-import {
-  accountFlagsLayout,
-  publicKeyLayout,
-  selfTradeBehaviorLayout,
-  u128,
-  u64,
-} from './layout';
+import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
 import { Slab, SLAB_LAYOUT } from './slab';
 import { DexInstructions } from './instructions';
 import BN from 'bn.js';
@@ -737,7 +730,7 @@ export class Market {
     connection: Connection,
     params: OrderParams<T>,
   ): TransactionInstruction {
-    let {
+    const {
       owner,
       payer,
       side,
@@ -748,7 +741,6 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = null,
-      selfTradeBehavior = 'decrementTake',
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -757,9 +749,6 @@ export class Market {
     }
     if (this.priceNumberToLots(price).lte(new BN(0))) {
       throw new Error('invalid price');
-    }
-    if (!this.supportsSrmFeeDiscounts) {
-      feeDiscountPubkey = null;
     }
     if (this.usesRequestQueue) {
       return DexInstructions.newOrder({
@@ -778,7 +767,9 @@ export class Market {
         orderType,
         clientId,
         programId: this._programId,
-        feeDiscountPubkey,
+        feeDiscountPubkey: this.supportsSrmFeeDiscounts
+          ? feeDiscountPubkey
+          : null,
       });
     } else {
       return this.makeNewOrderV3Instruction(params);
@@ -827,7 +818,9 @@ export class Market {
       clientId,
       programId: programId ?? this._programId,
       selfTradeBehavior,
-      feeDiscountPubkey,
+      feeDiscountPubkey: this.supportsSrmFeeDiscounts
+        ? feeDiscountPubkey
+        : null,
     });
   }
 
