@@ -29,6 +29,38 @@ export class OpenOrdersPda implements Middleware {
     this._dexProgramId = dexProgramId;
   }
 
+  // PDA authorized to create open orders accounts.
+  public static async marketAuthority(
+    market: PublicKey,
+    dexProgramId: PublicKey,
+    proxyProgramId: PublicKey,
+  ): Promise<PublicKey> {
+    // b"open-orders-init"
+    const openOrdersStr = Buffer.from([
+      111,
+      112,
+      101,
+      110,
+      45,
+      111,
+      114,
+      100,
+      101,
+      114,
+      115,
+      45,
+      105,
+      110,
+      105,
+      116,
+    ]);
+    const [addr] = await PublicKey.findProgramAddress(
+      [openOrdersStr, dexProgramId.toBuffer(), market.toBuffer()],
+      proxyProgramId,
+    );
+    return addr;
+  }
+
   public static async openOrdersAddress(
     market: PublicKey,
     owner: PublicKey,
