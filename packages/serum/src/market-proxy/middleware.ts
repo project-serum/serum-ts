@@ -148,6 +148,9 @@ export class OpenOrdersPda implements Middleware {
     ix.keys[0].pubkey = openOrders;
     ix.keys[4].pubkey = marketAuthority;
 
+    // Writable because it must pay for the PDA initialization.
+    ix.keys[1].isWritable = true;
+
     // Prepend to the account list extra accounts needed for PDA initialization.
     ix.keys = [
       { pubkey: this._dexProgramId, isSigner: false, isWritable: false },
@@ -193,21 +196,29 @@ export class ReferralFees implements Middleware {
 
 export class Logger implements Middleware {
   initOpenOrders(ix: TransactionInstruction) {
-    console.log('Proxying initOpeNorders', ix);
+    console.log('Proxying initOpenOrders', this.ixToDisplay(ix));
   }
   newOrderV3(ix: TransactionInstruction) {
-    console.log('Proxying newOrderV3', ix);
+    console.log('Proxying newOrderV3', this.ixToDisplay(ix));
   }
   cancelOrderV2(ix: TransactionInstruction) {
-    console.log('Proxying cancelOrderV2', ix);
+    console.log('Proxying cancelOrderV2', this.ixToDisplay(ix));
   }
   cancelOrderByClientIdV2(ix: TransactionInstruction) {
-    console.log('Proxying cancelOrderByClientIdV2', ix);
+    console.log('Proxying cancelOrderByClientIdV2', this.ixToDisplay(ix));
   }
   settleFunds(ix: TransactionInstruction) {
-    console.log('Proxying settleFunds', ix);
+    console.log('Proxying settleFunds', this.ixToDisplay(ix));
   }
   closeOpenOrders(ix: TransactionInstruction) {
-    console.log('Proxying closeOpenOrders', ix);
+    console.log('Proxying closeOpenOrders', this.ixToDisplay(ix));
+  }
+  ixToDisplay(ix: TransactionInstruction): Object {
+    const keys = ix.keys.map((i) => {
+      return { ...i, pubkey: i.pubkey.toString() };
+    });
+    const programId = ix.programId.toString();
+    const data = new Uint8Array(ix.data);
+    return { keys, programId, data };
   }
 }

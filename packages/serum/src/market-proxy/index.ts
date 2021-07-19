@@ -46,6 +46,16 @@ export class MarketProxy {
   }
   private _instruction: MarketProxyInstruction;
 
+  // Serum DEX program ID.
+  get dexProgramId(): PublicKey {
+    return this._market.programId;
+  }
+
+  // Proxy program ID.
+  get proxyProgramId(): PublicKey {
+    return this._instruction.proxyProgramId;
+  }
+
   // Ctor.
   constructor(market: Market, instruction: MarketProxyInstruction) {
     this._market = market;
@@ -56,6 +66,9 @@ export class MarketProxy {
 // Instruction builder for the market proxy.
 export class MarketProxyInstruction {
   // Program ID of the permissioning proxy program.
+  get proxyProgramId(): PublicKey {
+    return this._proxyProgramId;
+  }
   private _proxyProgramId: PublicKey;
 
   // Dex program ID.
