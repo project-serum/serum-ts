@@ -124,7 +124,7 @@ export class DexInstructions {
     vaultSignerNonce,
     quoteDustThreshold,
     programId,
-    authority,
+    authority = undefined,
   }) {
     let rentSysvar = new PublicKey(
       'SysvarRent111111111111111111111111111111111',
