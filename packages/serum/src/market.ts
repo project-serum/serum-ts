@@ -140,6 +140,7 @@ export const MARKET_STATE_LAYOUT_V3 = struct([
   u64('referrerRebatesAccrued'),
 
   publicKeyLayout('authority'),
+  publicKeyLayout('pruneAuthority'),
 
   blob(7),
 ]);
