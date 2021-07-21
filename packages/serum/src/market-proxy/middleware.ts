@@ -12,6 +12,7 @@ export interface Middleware {
   cancelOrderByClientIdV2(ix: TransactionInstruction): void;
   settleFunds(ix: TransactionInstruction): void;
   closeOpenOrders(ix: TransactionInstruction): void;
+  prune(ix: TransactionInstruction): void;
 }
 
 export class OpenOrdersPda implements Middleware {
@@ -177,6 +178,9 @@ export class OpenOrdersPda implements Middleware {
   closeOpenOrders(ix: TransactionInstruction) {
     ix.data = Buffer.concat([Buffer.from([5]), ix.data]);
   }
+  prune(ix: TransactionInstruction) {
+    ix.data = Buffer.concat([Buffer.from([6]), ix.data]);
+  }
 }
 
 export class ReferralFees implements Middleware {
@@ -192,6 +196,8 @@ export class ReferralFees implements Middleware {
   settleFunds(_ix: TransactionInstruction) {}
   // eslint-disable-next-line
   closeOpenOrders(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
+  prune(_ix: TransactionInstruction) {}
 }
 
 export class Logger implements Middleware {
@@ -212,6 +218,9 @@ export class Logger implements Middleware {
   }
   closeOpenOrders(ix: TransactionInstruction) {
     console.log('Proxying closeOpenOrders', this.ixToDisplay(ix));
+  }
+  prune(ix: TransactionInstruction) {
+    console.log('Proxying prune', this.ixToDisplay(ix));
   }
   ixToDisplay(ix: TransactionInstruction): Object {
     const keys = ix.keys.map((i) => {

@@ -182,6 +182,24 @@ export class MarketProxyInstruction {
     return this.proxy(ix);
   }
 
+  public prune(
+    openOrders: PublicKey,
+    openOrdersOwner: PublicKey,
+  ): TransactionInstruction {
+    const ix = DexInstructions.prune({
+      market: this._market.address,
+      bids: this._market.decoded.bids,
+      asks: this._market.decoded.asks,
+      eventQueue: this._market.decoded.eventQueue,
+      pruneAuthority: this._market.decoded.pruneAuthority,
+      openOrders,
+      openOrdersOwner,
+      programId: this._proxyProgramId,
+    });
+    this._middlewares.forEach((mw) => mw.prune(ix));
+    return this.proxy(ix);
+  }
+
   // Adds the serum dex account to the instruction so that proxies can
   // relay (CPI requires the executable account).
   private proxy(ix: TransactionInstruction) {

@@ -140,6 +140,7 @@ export const MARKET_STATE_LAYOUT_V3 = struct([
   u64('referrerRebatesAccrued'),
 
   publicKeyLayout('authority'),
+  publicKeyLayout('pruneAuthority'),
 
   blob(7),
 ]);
@@ -235,7 +236,7 @@ export class Market {
     if (!owner.equals(programId)) {
       throw new Error('Address not owned by program: ' + owner.toBase58());
     }
-    const decoded = this.getLayout(programId).decode(data);
+    const decoded = (layoutOverride ?? this.getLayout(programId)).decode(data);
     if (
       !decoded.accountFlags.initialized ||
       !decoded.accountFlags.market ||
