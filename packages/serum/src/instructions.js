@@ -97,6 +97,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
 );
 INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
+INSTRUCTION_LAYOUT.inner.addVariant(16, struct([]), 'prune');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -125,6 +126,7 @@ export class DexInstructions {
     quoteDustThreshold,
     programId,
     authority = undefined,
+    pruneAuthority = undefined,
   }) {
     let rentSysvar = new PublicKey(
       'SysvarRent111111111111111111111111111111111',
@@ -140,12 +142,18 @@ export class DexInstructions {
         { pubkey: quoteVault, isSigner: false, isWritable: true },
         { pubkey: baseMint, isSigner: false, isWritable: false },
         { pubkey: quoteMint, isSigner: false, isWritable: false },
-        { pubkey: rentSysvar, isSigner: false, isWritable: false },
-      ].concat(
-        authority
-          ? { pubkey: authority, isSigner: false, isWritable: false }
-          : [],
-      ),
+        { pubkey: quoteMint, isSigner: false, isWritable: false }, // Dummy.
+      ]
+        .concat(
+          authority
+            ? { pubkey: authority, isSigner: false, isWritable: false }
+            : [],
+        )
+        .concat(
+          authority && pruneAuthority
+            ? { pubkey: pruneAuthority, isSigner: false, isWritable: false }
+            : [],
+        ),
       programId,
       data: encodeInstruction({
         initializeMarket: {
@@ -493,6 +501,35 @@ export class DexInstructions {
       programId,
       data: encodeInstruction({
         initOpenOrders: {},
+      }),
+    });
+  }
+
+  static prune({
+    market,
+    bids,
+    asks,
+    eventQueue,
+    pruneAuthority,
+    openOrders,
+    openOrdersOwner,
+    programId,
+  }) {
+    const keys = [
+      { pubkey: market, isSigner: false, isWritable: true },
+      { pubkey: bids, isSigner: false, isWritable: true },
+      { pubkey: asks, isSigner: false, isWritable: true },
+      // Keep signer false so that one can use a PDA.
+      { pubkey: pruneAuthority, isSigner: false, isWritable: false },
+      { pubkey: openOrders, isSigner: false, isWritable: true },
+      { pubkey: openOrdersOwner, isSigner: false, isWritable: false },
+      { pubkey: eventQueue, isSigner: false, isWritable: true },
+    ];
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data: encodeInstruction({
+        prune: {},
       }),
     });
   }
