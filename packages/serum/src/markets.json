@@ -1258,5 +1258,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "HXBi8YBwbh4TXF6PjVw81m8Z3Cc4WBofvauj5SBFdgUs"
+  },
+  {
+    "name": "DXL/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "EgmRGGXRQha1ZgPti1C2TCeVUWmz5Bd6THmvkdQC8sqP"
   }
 ]
