@@ -170,5 +170,13 @@
   {
     "address": "SLRSSpSLUTP7okbCUBYStWCo1vUgyt775faPqz8HUMr",
     "name": "SLRS"
+  },
+  {
+    "address": "CDJWUqTcYTVAKXAVXoQZFes5JUFc7owSeq7eMQcDSbo5",
+    "name": "renBTC"
+  },
+  {
+    "address": "ArUkYE2XDKzqy77PRRGjo4wREWwqk6RXTfM9NeqzPvjU",
+    "name": "renDOGE"
   }
 ]
