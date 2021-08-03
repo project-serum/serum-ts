@@ -1,100 +1,103 @@
-import { Transaction, SystemProgram } from "@solana/web3.js";
-import {PROGRAM_LAYOUT_VERSIONS} from "./tokens_and_markets";
+import { Transaction, SystemProgram } from '@solana/web3.js';
+import { PROGRAM_LAYOUT_VERSIONS } from './tokens_and_markets';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
 export enum DexError {
-    InvalidMarketFlags = 0,
-    InvalidAskFlags,
-    InvalidBidFlags,
-    InvalidQueueLength,
-    OwnerAccountNotProvided,
+  InvalidMarketFlags = 0,
+  InvalidAskFlags,
+  InvalidBidFlags,
+  InvalidQueueLength,
+  OwnerAccountNotProvided,
 
-    ConsumeEventsQueueFailure,
-    WrongCoinVault,
-    WrongPcVault,
-    WrongCoinMint,
-    WrongPcMint,
+  ConsumeEventsQueueFailure,
+  WrongCoinVault,
+  WrongPcVault,
+  WrongCoinMint,
+  WrongPcMint,
 
-    CoinVaultProgramId = 10,
-    PcVaultProgramId,
-    CoinMintProgramId,
-    PcMintProgramId,
+  CoinVaultProgramId = 10,
+  PcVaultProgramId,
+  CoinMintProgramId,
+  PcMintProgramId,
 
-    WrongCoinMintSize,
-    WrongPcMintSize,
-    WrongCoinVaultSize,
-    WrongPcVaultSize,
+  WrongCoinMintSize,
+  WrongPcMintSize,
+  WrongCoinVaultSize,
+  WrongPcVaultSize,
 
-    UninitializedVault,
-    UninitializedMint,
+  UninitializedVault,
+  UninitializedMint,
 
-    CoinMintUninitialized = 20,
-    PcMintUninitialized,
-    WrongMint,
-    WrongVaultOwner,
-    VaultHasDelegate,
+  CoinMintUninitialized = 20,
+  PcMintUninitialized,
+  WrongMint,
+  WrongVaultOwner,
+  VaultHasDelegate,
 
-    AlreadyInitialized,
-    WrongAccountDataAlignment,
-    WrongAccountDataPaddingLength,
-    WrongAccountHeadPadding,
-    WrongAccountTailPadding,
+  AlreadyInitialized,
+  WrongAccountDataAlignment,
+  WrongAccountDataPaddingLength,
+  WrongAccountHeadPadding,
+  WrongAccountTailPadding,
 
-    RequestQueueEmpty = 30,
-    EventQueueTooSmall,
-    SlabTooSmall,
-    BadVaultSignerNonce,
-    InsufficientFunds,
+  RequestQueueEmpty = 30,
+  EventQueueTooSmall,
+  SlabTooSmall,
+  BadVaultSignerNonce,
+  InsufficientFunds,
 
-    SplAccountProgramId,
-    SplAccountLen,
-    WrongFeeDiscountAccountOwner,
-    WrongFeeDiscountMint,
+  SplAccountProgramId,
+  SplAccountLen,
+  WrongFeeDiscountAccountOwner,
+  WrongFeeDiscountMint,
 
-    CoinPayerProgramId,
-    PcPayerProgramId = 40,
-    ClientIdNotFound,
-    TooManyOpenOrders,
+  CoinPayerProgramId,
+  PcPayerProgramId = 40,
+  ClientIdNotFound,
+  TooManyOpenOrders,
 
-    FakeErrorSoWeDontChangeNumbers,
-    BorrowError,
+  FakeErrorSoWeDontChangeNumbers,
+  BorrowError,
 
-    WrongOrdersAccount,
-    WrongBidsAccount,
-    WrongAsksAccount,
-    WrongRequestQueueAccount,
-    WrongEventQueueAccount,
+  WrongOrdersAccount,
+  WrongBidsAccount,
+  WrongAsksAccount,
+  WrongRequestQueueAccount,
+  WrongEventQueueAccount,
 
-    RequestQueueFull = 50,
-    EventQueueFull,
-    MarketIsDisabled,
-    WrongSigner,
-    TransferFailed,
-    ClientOrderIdIsZero,
+  RequestQueueFull = 50,
+  EventQueueFull,
+  MarketIsDisabled,
+  WrongSigner,
+  TransferFailed,
+  ClientOrderIdIsZero,
 
-    WrongRentSysvarAccount,
-    RentNotProvided,
-    OrdersNotRentExempt,
-    OrderNotFound,
-    OrderNotYours,
+  WrongRentSysvarAccount,
+  RentNotProvided,
+  OrdersNotRentExempt,
+  OrderNotFound,
+  OrderNotYours,
 
-    WouldSelfTrade,
+  WouldSelfTrade,
 
-    Unknown = 1000,
+  Unknown = 1000,
 }
 
 export const KNOWN_PROGRAMS = {
   [TOKEN_PROGRAM_ID.toString()]: 'Token program',
-  [SystemProgram.programId.toString()]: 'System program'
+  [SystemProgram.programId.toString()]: 'System program',
 };
 
-type CustomError = { Custom: number }
-type InstructionError = [number, CustomError]
+type CustomError = { Custom: number };
+type InstructionError = [number, CustomError];
 
-export function parseInstructionErrorResponse(transaction: Transaction, errorResponse: InstructionError): {
-  failedInstructionIndex: number,
-  error: string,
-  failedProgram: string,
+export function parseInstructionErrorResponse(
+  transaction: Transaction,
+  errorResponse: InstructionError,
+): {
+  failedInstructionIndex: number;
+  error: string;
+  failedProgram: string;
 } {
   const [failedInstructionIndex, customError] = errorResponse;
   const failedInstruction = transaction.instructions[failedInstructionIndex];
@@ -105,11 +108,13 @@ export function parseInstructionErrorResponse(transaction: Transaction, errorRes
     const program = KNOWN_PROGRAMS[failedInstruction.programId.toString()];
     parsedError = `${program} error ${customError['Custom']}`;
   } else {
-    parsedError = `Unknown program ${failedInstruction.programId.toString()} custom error: ${customError['Custom']}`
+    parsedError = `Unknown program ${failedInstruction.programId.toString()} custom error: ${
+      customError['Custom']
+    }`;
   }
   return {
     failedInstructionIndex,
     error: parsedError,
-    failedProgram: failedInstruction.programId.toString()
+    failedProgram: failedInstruction.programId.toString(),
   };
 }
