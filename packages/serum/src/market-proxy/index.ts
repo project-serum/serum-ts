@@ -185,7 +185,11 @@ export class MarketProxyInstruction {
   public prune(
     openOrders: PublicKey,
     openOrdersOwner: PublicKey,
+    limit?: number,
   ): TransactionInstruction {
+    if (!limit) {
+      limit = 65535;
+    }
     const ix = DexInstructions.prune({
       market: this._market.address,
       bids: this._market.decoded.bids,
@@ -195,6 +199,7 @@ export class MarketProxyInstruction {
       openOrders,
       openOrdersOwner,
       programId: this._proxyProgramId,
+      limit,
     });
     this._middlewares.forEach((mw) => mw.prune(ix));
     return this.proxy(ix);

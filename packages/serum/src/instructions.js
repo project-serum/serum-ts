@@ -97,7 +97,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
 );
 INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
-INSTRUCTION_LAYOUT.inner.addVariant(16, struct([]), 'prune');
+INSTRUCTION_LAYOUT.inner.addVariant(16, struct([u16('limit')]), 'prune');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -142,7 +142,12 @@ export class DexInstructions {
         { pubkey: quoteVault, isSigner: false, isWritable: true },
         { pubkey: baseMint, isSigner: false, isWritable: false },
         { pubkey: quoteMint, isSigner: false, isWritable: false },
-        { pubkey: quoteMint, isSigner: false, isWritable: false }, // Dummy.
+        // Use a dummy address if using the new dex upgrade to save tx space.
+        {
+          pubkey: authority ? quoteMint : SYSVAR_RENT_PUBKEY,
+          isSigner: false,
+          isWritable: false,
+        },
       ]
         .concat(
           authority
@@ -514,6 +519,7 @@ export class DexInstructions {
     openOrders,
     openOrdersOwner,
     programId,
+    limit,
   }) {
     const keys = [
       { pubkey: market, isSigner: false, isWritable: true },
@@ -529,7 +535,7 @@ export class DexInstructions {
       keys,
       programId,
       data: encodeInstruction({
-        prune: {},
+        prune: { limit },
       }),
     });
   }

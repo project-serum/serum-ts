@@ -222,7 +222,7 @@ export class Logger implements Middleware {
   prune(ix: TransactionInstruction) {
     console.log('Proxying prune', this.ixToDisplay(ix));
   }
-  ixToDisplay(ix: TransactionInstruction): Object {
+  ixToDisplay(ix: TransactionInstruction): any {
     const keys = ix.keys.map((i) => {
       return { ...i, pubkey: i.pubkey.toString() };
     });

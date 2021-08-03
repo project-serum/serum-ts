@@ -142,6 +142,8 @@ export const MARKET_STATE_LAYOUT_V3 = struct([
   publicKeyLayout('authority'),
   publicKeyLayout('pruneAuthority'),
 
+  blob(1024),
+
   blob(7),
 ]);
 
