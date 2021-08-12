@@ -6,6 +6,7 @@ import {
   MarketOptions,
   OrderParams,
   MARKET_STATE_LAYOUT_V3,
+  Order,
 } from '../market';
 import { DexInstructions } from '../instructions';
 import { Middleware } from './middleware';
@@ -114,6 +115,17 @@ export class MarketProxyInstruction {
       programId: this._proxyProgramId,
       marketAuthority,
     });
+    this._middlewares.forEach((mw) => mw.initOpenOrders(ix));
+    return this.proxy(ix);
+  }
+
+  public cancelOrder(owner: PublicKey, order: Order): TransactionInstruction {
+    const ix = this._market.makeCancelOrderInstruction(
+      // @ts-ignore
+      null, // Not used by the function.
+      owner,
+      order,
+    );
     this._middlewares.forEach((mw) => mw.initOpenOrders(ix));
     return this.proxy(ix);
   }
