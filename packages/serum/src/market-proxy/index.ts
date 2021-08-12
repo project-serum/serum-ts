@@ -126,7 +126,7 @@ export class MarketProxyInstruction {
       owner,
       order,
     );
-    this._middlewares.forEach((mw) => mw.initOpenOrders(ix));
+    this._middlewares.forEach((mw) => mw.cancelOrderV2(ix));
     return this.proxy(ix);
   }
 
