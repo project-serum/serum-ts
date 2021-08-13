@@ -1282,5 +1282,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "3d4rzwpy9iGdCZvgxcu7B1YocYffVLsQXPXkBZKt2zLc"
+  },
+  {
+    "name": "PORT/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "8x8jf7ikJwgP9UthadtiGFgfFuyyyYPHL3obJAuxFWko"
   }
 ]
