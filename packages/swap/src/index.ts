@@ -359,7 +359,7 @@ export class Swap {
           authority: this.program.provider.wallet.publicKey,
           dexProgram: DEX_PID,
           tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
+          rent: TOKEN_PROGRAM_ID,
         },
         remainingAccounts: referral && [
           { pubkey: referral, isWritable: true, isSigner: false },
@@ -622,7 +622,7 @@ export class Swap {
           authority: this.program.provider.wallet.publicKey,
           dexProgram: DEX_PID,
           tokenProgram: TOKEN_PROGRAM_ID,
-          rent: SYSVAR_RENT_PUBKEY,
+          rent: TOKEN_PROGRAM_ID,
         },
         remainingAccounts: referral && [
           { pubkey: referral, isWritable: true, isSigner: false },
