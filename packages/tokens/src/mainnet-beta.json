@@ -193,5 +193,11 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "HAPI",
+    "mintAddress": "6VNKqgz9hk7zRShTFdg5AnkfKwZUcojzwAkzxSH3bnUm",
+    "tokenName": "HAPI Token"
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/6VNKqgz9hk7zRShTFdg5AnkfKwZUcojzwAkzxSH3bnUm/logo.png"
   }
 ]
