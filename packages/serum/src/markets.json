@@ -1282,5 +1282,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "3d4rzwpy9iGdCZvgxcu7B1YocYffVLsQXPXkBZKt2zLc"
+  },
+  {
+    "name": "CHEEMS/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "5WVBCaUPZF4HP3io9Z56N71cPMJt8qh3c4ZwSjRDeuut"
   }
 ]
