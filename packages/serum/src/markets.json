@@ -1278,6 +1278,12 @@
     "address": "DYfigimKWc5VhavR4moPBibx9sMcWYVSjVdWvPztBPTa"
   },
   {
+    "name": "SUNNY/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "Aubv1QBFh4bwB2wbP1DaPW21YyQBLfgjg8L4PHTaPzRc"
+  },
+  {
     "name": "MNGO/USDC",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
