@@ -1294,5 +1294,23 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "Di66GTLsV64JgCCYGVcY21RZ173BHkjJVgPyezNN7P1K"
+  },
+  {
+    "name": "LIKE/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "3WptgZZu34aiDrLMUiPntTYZGNZ72yT1yxHYxSdbTArX"
+  },
+  {
+    "name": "MSOL/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "6oGsL2puUgySccKzn9XA9afqF217LfxP5ocq4B3LWsjy"
+  },
+  {
+    "name": "MSOL/SOL",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
   }
 ]
