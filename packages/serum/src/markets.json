@@ -1284,6 +1284,12 @@
     "address": "3d4rzwpy9iGdCZvgxcu7B1YocYffVLsQXPXkBZKt2zLc"
   },
   {
+    "name": "CYS/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "6V6y6QFi17QZC9qNRpVp7SaPiHpCTp2skbRQkUyZZXPW"
+  },
+  {
     "name": "POLIS/USDC",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
