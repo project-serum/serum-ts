@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/borsh",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Serum Borsh",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -22,11 +22,11 @@
     "prepare": "run-s clean build"
   },
   "dependencies": {
-    "bn.js": "^5.1.2",
-    "buffer-layout": "^1.2.0"
+    "bn.js": "^5.2.0",
+    "buffer-layout": "^1.2.2"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^1.2.0"
+    "@solana/web3.js": "^1.24.1"
   },
   "files": [
     "dist"

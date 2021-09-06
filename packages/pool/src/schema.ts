@@ -75,6 +75,7 @@ export interface Basket {
   quantities: BN[];
 }
 
+// TODO update layouts to support latest borsh version
 export const AssetInfo: Layout<AssetInfo> = struct([
   publicKey('mint'),
   publicKey('vaultAddress'),

@@ -11,7 +11,6 @@ import {
 import {
   SYSVAR_RENT_PUBKEY,
   TransactionInstruction,
-  PublicKey,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
 
@@ -128,9 +127,6 @@ export class DexInstructions {
     authority = undefined,
     pruneAuthority = undefined,
   }) {
-    let rentSysvar = new PublicKey(
-      'SysvarRent111111111111111111111111111111111',
-    );
     return new TransactionInstruction({
       keys: [
         { pubkey: market, isSigner: false, isWritable: true },

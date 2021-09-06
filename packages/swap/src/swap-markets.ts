@@ -36,7 +36,7 @@ export default class SwapMarkets {
     // Add all tokens that also have USDC quoted markets.
     if (mintInfo.extensions?.serumV3Usdc) {
       pairs.add(USDC_PUBKEY.toString());
-      let iter = tokenList
+      const iter = tokenList
         .filter(
           (t) => t.address !== mintInfo.address && t.extensions?.serumV3Usdc,
         )
@@ -65,7 +65,7 @@ export default class SwapMarkets {
     baseMint: PublicKey,
   ): Promise<PublicKey> {
     const marketAddress = this.getMarketAddress(usdxMint, baseMint);
-    let accounts = await OpenOrders.findForMarketAndOwner(
+    const accounts = await OpenOrders.findForMarketAndOwner(
       this.provider.connection,
       marketAddress,
       this.provider.wallet.publicKey,

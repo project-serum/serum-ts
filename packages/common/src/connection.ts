@@ -1,5 +1,5 @@
 import { AccountInfo, Connection, PublicKey } from '@solana/web3.js';
-import { struct } from 'superstruct';
+import * as superstruct from 'superstruct';
 import assert from 'assert';
 
 export async function getMultipleSolanaAccounts(
@@ -9,7 +9,8 @@ export async function getMultipleSolanaAccounts(
   const args = [publicKeys.map(k => k.toBase58()), { commitment: 'recent' }];
   // @ts-ignore
   const unsafeRes = await connection._rpcRequest('getMultipleAccounts', args);
-  const res = GetMultipleAccountsAndContextRpcResult(unsafeRes);
+  const res = GetMultipleAccountsAndContextRpcResult.create(unsafeRes)
+
   if (res.error) {
     throw new Error(
       'failed to get info about accounts ' +
@@ -56,39 +57,34 @@ export async function getMultipleSolanaAccounts(
 }
 
 function jsonRpcResult(resultDescription: any) {
-  const jsonRpcVersion = struct.literal('2.0');
-  return struct.union([
-    struct({
+  const jsonRpcVersion = superstruct.literal('2.0');
+  return superstruct.union([
+    superstruct.object({
       jsonrpc: jsonRpcVersion,
-      id: 'string',
-      error: 'any',
-    }),
-    struct({
-      jsonrpc: jsonRpcVersion,
-      id: 'string',
-      error: 'null?',
-      result: resultDescription,
+      id: superstruct.string(),
+      error: superstruct.nullable(superstruct.any()),
+      result: superstruct.nullable(resultDescription),
     }),
   ]);
 }
 
 function jsonRpcResultAndContext(resultDescription: any) {
   return jsonRpcResult({
-    context: struct({
-      slot: 'number',
+    context: superstruct.object({
+      slot: superstruct.number(),
     }),
     value: resultDescription,
   });
 }
 
-const AccountInfoResult = struct({
-  executable: 'boolean',
-  owner: 'string',
-  lamports: 'number',
-  data: 'any',
-  rentEpoch: 'number?',
+const AccountInfoResult = superstruct.object({
+  executable: superstruct.boolean(),
+  owner: superstruct.string(),
+  lamports: superstruct.number(),
+  data: superstruct.any(),
+  rentEpoch: superstruct.number(),
 });
 
 export const GetMultipleAccountsAndContextRpcResult = jsonRpcResultAndContext(
-  struct.array([struct.union(['null', AccountInfoResult])]),
+  superstruct.array(superstruct.nullable(AccountInfoResult)),
 );
