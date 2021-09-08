@@ -190,6 +190,11 @@
     "tokenName": "MAPS"
   },
   {
+    "tokenSymbol": "CYS",
+    "mintAddress": "BRLsMczKuaR5w9vSubF4j8HwEGGprVAyyVgS4EX7DKEg",
+    "tokenName": "Cyclos"
+  },
+  {
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
