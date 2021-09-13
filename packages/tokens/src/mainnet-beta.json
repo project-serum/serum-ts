@@ -198,5 +198,11 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "CRY",
+    "mintAddress": "HbrmyoumgcK6sDFBi6EZQDi4i4ZgoN16eRB2JseKc7Hi",
+    "tokenName": "Crystal",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/HbrmyoumgcK6sDFBi6EZQDi4i4ZgoN16eRB2JseKc7Hi/logo.png"
   }
 ]
