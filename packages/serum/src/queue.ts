@@ -107,12 +107,16 @@ function decodeQueue(
     for (let i = 0; i < Math.min(history, allocLen); ++i) {
       const nodeIndex =
         (header.head + header.count + allocLen - 1 - i) % allocLen;
-      nodes.push(decodeQueueItem(headerLayout, nodeLayout, buffer, nodeIndex));
+      const item = decodeQueueItem(headerLayout, nodeLayout, buffer, nodeIndex);
+      item.seqNum = header.seqNum - 1 - i;
+      nodes.push(item);
     }
   } else {
     for (let i = 0; i < header.count; ++i) {
       const nodeIndex = (header.head + i) % allocLen;
-      nodes.push(decodeQueueItem(headerLayout, nodeLayout, buffer, nodeIndex));
+      const item = decodeQueueItem(headerLayout, nodeLayout, buffer, nodeIndex);
+      item.seqNum = header.seqNum - header.count + i;
+      nodes.push(item);
     }
   }
   return { header, nodes };
@@ -120,29 +124,40 @@ function decodeQueue(
 
 export function decodeEventsSince(buffer: Buffer, lastSeqNum: number): Event[] {
   const header = EVENT_QUEUE_HEADER.decode(buffer);
-  const allocLen = Math.floor(
-    (buffer.length - EVENT_QUEUE_HEADER.span) / EVENT.span,
-  );
-
-  // calculate number of missed events
-  // account for u32 & ringbuffer overflows
-  const modulo32Uint = 0x100000000;
-  let missedEvents = (header.seqNum - lastSeqNum + modulo32Uint) % modulo32Uint;
-  if (missedEvents > allocLen) {
-    missedEvents = allocLen - 1;
-  }
-  const startSeq = (header.seqNum - missedEvents + modulo32Uint) % modulo32Uint;
-
-  // define boundary indexes in ring buffer [start;end)
-  const endIndex = (header.head + header.count) % allocLen;
-  const startIndex = (endIndex - missedEvents + allocLen) % allocLen;
-
   const results: Event[] = [];
-  for (let i = 0; i < missedEvents; ++i) {
-    const nodeIndex = (startIndex + i) % allocLen;
-    const event = decodeQueueItem(EVENT_QUEUE_HEADER, EVENT, buffer, nodeIndex);
-    event.seqNum = (startSeq + i) % modulo32Uint;
-    results.push(event);
+  if (lastSeqNum < header.seqNum) {
+    const allocLen = Math.floor(
+      (buffer.length - EVENT_QUEUE_HEADER.span) / EVENT.span,
+    );
+    // calculate number of missed events
+    // account for u32 & ringbuffer overflows
+    const modulo32Uint = 0x100000000;
+    let missedEvents =
+      (header.seqNum - lastSeqNum + modulo32Uint) % modulo32Uint;
+
+    // console.log({ allocLen, missedEvents, lastSeqNum, head: header.seqNum });
+    if (missedEvents > allocLen) {
+      missedEvents = allocLen;
+    }
+    const startSeq =
+      (header.seqNum - missedEvents + modulo32Uint) % modulo32Uint;
+
+    // define boundary indexes in ring buffer [start;end)
+    const endIndex = (header.head + header.count) % allocLen;
+    const startIndex = (endIndex - missedEvents + allocLen) % allocLen;
+
+    // console.log({ allocLen, missedEvents, startSeq, endIndex, startIndex });
+    for (let i = 0; i < missedEvents; ++i) {
+      const nodeIndex = (startIndex + i) % allocLen;
+      const event = decodeQueueItem(
+        EVENT_QUEUE_HEADER,
+        EVENT,
+        buffer,
+        nodeIndex,
+      );
+      event.seqNum = (startSeq + i) % modulo32Uint;
+      results.push(event);
+    }
   }
   return results;
 }
