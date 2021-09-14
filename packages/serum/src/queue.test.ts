@@ -27,7 +27,7 @@ function queueWith(head, count, seqNum) {
 
   // use order id to encode the offset from the beginning for easy tests
   for (let i = 0; i < size; i++) {
-    Event.encode({ orderId: new BN(0) }, b, QueueHeader.span + i * Event.span);
+    Event.encode({ orderId: new BN(i) }, b, QueueHeader.span + i * Event.span);
   }
 
   return b;
