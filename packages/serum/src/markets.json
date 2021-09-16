@@ -1317,6 +1317,12 @@
     "name": "MSOL/SOL",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
-    "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
+    "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"  
+  },
+  {
+    "name": "CRP/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "93mtNf4qzvytwp5sWrSC7JNUccPAomEE39ztErUq5V3F"
   }
 ]
