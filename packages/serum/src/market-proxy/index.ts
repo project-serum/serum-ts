@@ -120,12 +120,18 @@ export class MarketProxyInstruction {
   }
 
   public cancelOrder(owner: PublicKey, order: Order): TransactionInstruction {
-    const ix = this._market.makeCancelOrderInstruction(
-      // @ts-ignore
-      null, // Not used by the function.
+    const ix = DexInstructions.cancelOrderV2({
+      market: this._market.address,
       owner,
-      order,
-    );
+      openOrders: order.openOrdersAddress,
+      bids: this._market.decoded.bids,
+      asks: this._market.decoded.asks,
+      eventQueue: this._market.decoded.eventQueue,
+      side: order.side,
+      orderId: order.orderId,
+      openOrdersSlot: order.openOrdersSlot,
+      programId: this._proxyProgramId,
+    })
     this._middlewares.forEach((mw) => mw.cancelOrderV2(ix));
     return this.proxy(ix);
   }
