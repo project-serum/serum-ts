@@ -1,11 +1,9 @@
 {
   "parser": "@typescript-eslint/parser",
-  "plugins": ["@typescript-eslint"],
+  "plugins": [],
   "extends": [
     "eslint:recommended",
-    "plugin:@typescript-eslint/recommended",
-    "prettier",
-    "prettier/@typescript-eslint"
+    "prettier"
   ],
   "env": {
     "node": true,
@@ -18,6 +16,8 @@
   "rules": {
     "no-constant-condition": ["error", { "checkLoops": false }],
     "no-empty-function": "off",
+    "no-unused-vars": "off",
+    "no-redeclare": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/no-explicit-any": "off"
   }

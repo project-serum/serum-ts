@@ -770,6 +770,7 @@ export class Market {
         orderType,
         clientId,
         programId: this._programId,
+        // @ts-ignore
         feeDiscountPubkey: this.supportsSrmFeeDiscounts
           ? feeDiscountPubkey
           : null,
@@ -821,6 +822,7 @@ export class Market {
       clientId,
       programId: programId ?? this._programId,
       selfTradeBehavior,
+      // @ts-ignore
       feeDiscountPubkey: this.supportsSrmFeeDiscounts
         ? feeDiscountPubkey
         : null,
@@ -1051,6 +1053,7 @@ export class Market {
             : quoteWallet,
         vaultSigner,
         programId: this._programId,
+        // @ts-ignore
         referrerQuoteWallet,
       }),
     );

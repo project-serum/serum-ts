@@ -1,6 +1,6 @@
 {
   "name": "@project-serum/common",
-  "version": "0.0.1-beta.3",
+  "version": "0.0.1-beta.4",
   "description": "Serum common utilities",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -22,12 +22,12 @@
     "prepare": "run-s clean build"
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.21",
-    "bn.js": "^5.1.2",
-    "superstruct": "0.8.3"
+    "@project-serum/serum": "^0.13.58",
+    "bn.js": "^5.2.0",
+    "superstruct": "0.15.2"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.24.1"
   },
   "files": [
     "dist"

@@ -379,7 +379,7 @@ export class PoolTransactions {
     if (wrappedSolAccount) {
       transaction.add(
         TokenInstructions.closeAccount({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          // @ts-ignore
           source: wrappedSolAccount!.publicKey,
           destination: user.owner,
           owner: delegate.publicKey,

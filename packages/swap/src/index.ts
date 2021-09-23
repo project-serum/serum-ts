@@ -538,14 +538,15 @@ export class Swap {
     // Decode the return value.
     //
     // TODO: Expose the event parsing api in anchor to make this less manual.
-    let didSwapEvent = resp.value.logs
+    const didSwapEvent = resp.value.logs
       .filter((log) => log.startsWith('Program log: 4ZfIrPLY4R'))
       .map((log) => {
         const logStr = log.slice('Program log: '.length);
         const logArr = Buffer.from(base64.toByteArray(logStr));
-        return this.program.coder.events.decode('DidSwap', logArr.slice(8));
+        return this.program.coder.events.decode('DidSwap' + logArr.slice(8));
       })[0];
-    return didSwapEvent.toAmount;
+    // @ts-ignore
+    return didSwapEvent!.toAmount;
   }
 
   private async swapIxs(
@@ -669,7 +670,7 @@ export class Swap {
     );
     const [vaultSigner] = await getVaultOwnerAndNonce(marketClient.address);
     let openOrders = await (async () => {
-      let openOrders = await OpenOrders.findForMarketAndOwner(
+      const openOrders = await OpenOrders.findForMarketAndOwner(
         this.program.provider.connection,
         marketClient.address,
         this.program.provider.wallet.publicKey,
@@ -799,7 +800,7 @@ export class Swap {
     );
     const [toVaultSigner] = await getVaultOwnerAndNonce(toMarketClient.address);
     const [fromOpenOrders, toOpenOrders] = await (async () => {
-      let [fromOpenOrders, toOpenOrders] = await Promise.all([
+      const [fromOpenOrders, toOpenOrders] = await Promise.all([
         OpenOrders.findForMarketAndOwner(
           this.program.provider.connection,
           fromMarketClient.address,
@@ -827,7 +828,7 @@ export class Swap {
     const signers: Account[] = [];
 
     // Add instruction to batch create all open orders accounts, if needed.
-    let accounts: Account[] = [];
+    const accounts: Account[] = [];
     if (fromNeedsOpenOrders || true) {
       const oo = new Account();
       signers.push(oo);
@@ -839,7 +840,7 @@ export class Swap {
       accounts.push(oo);
     }
     if (fromNeedsOpenOrders || toNeedsOpenOrders || true) {
-      let remainingAccounts = accounts.map((a) => {
+      const remainingAccounts = accounts.map((a) => {
         return {
           pubkey: a.publicKey,
           isSigner: true,
