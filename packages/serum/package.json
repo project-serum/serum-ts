@@ -29,6 +29,7 @@
     "@typescript-eslint/eslint-plugin": "^4.6.0",
     "@typescript-eslint/parser": "^4.6.0",
     "babel-eslint": "^10.0.3",
+    "bs58": "^4.0.1",
     "cross-env": "^7.0.2",
     "eslint": "^7.6.0",
     "eslint-config-prettier": "^6.11.0",
@@ -50,7 +51,6 @@
     "@solana/spl-token": "^0.1.6",
     "@solana/web3.js": "^1.21.0",
     "bn.js": "^5.1.2",
-    "bs58": "^4.0.1",
     "buffer-layout": "^1.2.0"
   },
   "browserslist": [
