@@ -2515,11 +2515,6 @@ base@^0.11.1:
     mixin-deep "^1.2.0"
     pascalcase "^0.1.1"
 
-basex-encoder@^0.0.10:
-  version "0.0.10"
-  resolved "https://registry.yarnpkg.com/basex-encoder/-/basex-encoder-0.0.10.tgz#3c89e54a49650133a6920cf4a57506032cd86ab4"
-  integrity sha512-7C/hMsE+cWNTxy+N1heJ5e540eIHIUpF5jTRz9sdSRvCYDDvaSNZ1/tDUqm9fwDxhAZu6jkOexxlEvyoTzaRMg==
-
 bcrypt-pbkdf@^1.0.0:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/bcrypt-pbkdf/-/bcrypt-pbkdf-1.0.2.tgz#a4301d389b6a43f9b67ff3ca11a3f6637e360e9e"

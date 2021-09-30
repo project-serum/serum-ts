@@ -1,10 +1,6 @@
 import { encodeInstruction, decodeInstruction } from './instructions';
 import BN from 'bn.js';
-import { encoder } from "basex-encoder";
-
-const base58 = encoder(
-  "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz"
-);
+import base58 from 'bs58';
 
 describe('instruction', () => {
   it('encodes initialize market', () => {
@@ -39,7 +35,7 @@ describe('instruction', () => {
   it('decodes new order from rawbytes', () => {
     const newOrderExpectedJSON = '{"newOrderV3":{"side":"buy","limitPrice":"011d28","maxBaseQuantity":"0122","maxQuoteQuantity":"7e2edb40","selfTradeBehavior":"decrementTake","orderType":"limit","clientId":"00","limit":65535}}'
     const newOrderInstData58 = '189VEfQCdeLeDg3Y6qq3iVwwij5GobKfSvh42MPYfkCpGVM4TkjdwRK9FdLswwBvABt5k'
-    const newOrderInstDataBytes = base58.decodeToBuffer(newOrderInstData58)
+    const newOrderInstDataBytes = base58.decode(newOrderInstData58)
     const orderObj = decodeInstruction(newOrderInstDataBytes);
     expect(JSON.stringify(orderObj)).toEqual(newOrderExpectedJSON);
   });
