@@ -141,8 +141,9 @@ export const MARKET_STATE_LAYOUT_V3 = struct([
 
   publicKeyLayout('authority'),
   publicKeyLayout('pruneAuthority'),
+  publicKeyLayout('consumeEventsAuthority'),
 
-  blob(1024),
+  blob(992),
 
   blob(7),
 ]);
@@ -955,6 +956,20 @@ export class Market {
       eventQueue: this._decoded.eventQueue,
       coinFee: this._decoded.eventQueue,
       pcFee: this._decoded.eventQueue,
+      openOrdersAccounts,
+      limit,
+      programId: this._programId,
+    });
+  }
+
+  public makeConsumeEventsPermissionedInstruction(
+    openOrdersAccounts: Array<PublicKey>,
+    limit: number,
+  ): TransactionInstruction {
+    return DexInstructions.consumeEventsPermissioned({
+      market: this.address,
+      eventQueue: this._decoded.eventQueue,
+      crankAuthority: this._decoded.consumeEventsAuthority,
       openOrdersAccounts,
       limit,
       programId: this._programId,
