@@ -128,6 +128,7 @@ export class DexInstructions {
     programId,
     authority = undefined,
     pruneAuthority = undefined,
+    crankAuthority = undefined,
   }) {
     let rentSysvar = new PublicKey(
       'SysvarRent111111111111111111111111111111111',
@@ -158,6 +159,11 @@ export class DexInstructions {
         .concat(
           authority && pruneAuthority
             ? { pubkey: pruneAuthority, isSigner: false, isWritable: false }
+            : [],
+        )
+        .concat(
+          authority && pruneAuthority && crankAuthority
+            ? { pubkey: crankAuthority, isSigner: false, isWritable: false }
             : [],
         ),
       programId,
