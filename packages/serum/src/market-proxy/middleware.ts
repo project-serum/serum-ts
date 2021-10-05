@@ -212,6 +212,29 @@ export class ReferralFees implements Middleware {
   consumeEventsPermissioned(_ix: TransactionInstruction) {}
 }
 
+export class PermissionedCrank implements Middleware {
+	// eslint-disable-next-line
+	initOpenOrders(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	newOrderV3(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	cancelOrderV2(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	cancelOrderByClientIdV2(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	settleFunds(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	closeOpenOrders(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	prune(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	consumeEvents(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	consumeEventsPermissioned(ix: TransactionInstruction) {
+    ix.keys[ix.keys.length - 1].isSigner = false;
+  }
+}
+
 export class Logger implements Middleware {
   initOpenOrders(ix: TransactionInstruction) {
     console.log('Proxying initOpenOrders', this.ixToDisplay(ix));
