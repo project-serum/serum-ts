@@ -1318,5 +1318,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
+  },
+  {
+    "address": "5j6hdwx4eW3QBYZtRjKiUj7aDA1dxDpveSHBznwq7kUv",
+    "deprecated": false,
+    "name": "HAMS/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin"
   }
 ]
