@@ -59,6 +59,7 @@ export class MarketProxy {
 
   // Ctor.
   constructor(market: Market, instruction: MarketProxyInstruction) {
+    console.log('Using local version');
     this._market = market;
     this._instruction = instruction;
   }

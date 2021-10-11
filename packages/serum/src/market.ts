@@ -961,6 +961,21 @@ export class Market {
     });
   }
 
+  public makeConsumeEventsPermissionedInstruction(
+    openOrdersAccounts: Array<PublicKey>,
+    consumeEventsAuthority: PublicKey,
+    limit: number,
+  ): TransactionInstruction {
+    return DexInstructions.consumeEventsPermissioned({
+      market: this.address,
+      eventQueue: this._decoded.eventQueue,
+      consumeEventsAuthority,
+      openOrdersAccounts,
+      limit,
+      programId: this._programId,
+    });
+  }
+
   async settleFunds(
     connection: Connection,
     owner: Account,
