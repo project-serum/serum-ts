@@ -131,6 +131,7 @@ export class OpenOrdersPda implements Middleware {
       105,
       116,
     ]);
+    // @ts-ignore
     const [openOrders, bump] = utils.publicKey.findProgramAddressSync(
       [
         openOrdersSeed,
