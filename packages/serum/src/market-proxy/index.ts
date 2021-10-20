@@ -178,6 +178,7 @@ export class MarketProxyInstruction {
         this._dexProgramId,
       ),
       programId: this._proxyProgramId,
+      // @ts-ignore
       referrerQuoteWallet,
     });
     this._middlewares.forEach((mw) => mw.settleFunds(ix));

@@ -1,6 +1,6 @@
 {
-  "name": "@project-serum/serum",
-  "version": "0.13.59",
+  "name": "@mithraic-labs/serum",
+  "version": "0.1.0-rc3",
   "description": "Library for interacting with the serum dex",
   "license": "MIT",
   "repository": "project-serum/serum-ts",
@@ -48,7 +48,6 @@
   "dependencies": {
     "@solana/spl-token": "^0.1.6",
     "@project-serum/anchor": "^0.11.1",
-    "@solana/web3.js": "^1.21.0",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
@@ -57,5 +56,8 @@
     "not dead",
     "not op_mini all",
     "maintained node versions"
-  ]
+  ],
+  "peerDependencies": {
+    "@solana/web3.js": "^1.2.6"
+  }
 }

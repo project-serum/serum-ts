@@ -17,7 +17,7 @@ import {
 } from '@solana/web3.js';
 import { decodeEventQueue, decodeRequestQueue } from './queue';
 import { Buffer } from 'buffer';
-import { getFeeTier, supportsSrmFeeDiscounts } from './fees';
+import { getFeeRates, getFeeTier, supportsSrmFeeDiscounts } from './fees';
 import {
   closeAccount,
   initializeAccount,
@@ -597,6 +597,7 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = undefined,
+      feeRate = 0,
       selfTradeBehavior = 'decrementTake',
     }: OrderParams<T>,
     cacheDurationMs = 0,
@@ -612,7 +613,8 @@ export class Market {
     const transaction = new Transaction();
     const signers: Account[] = [];
 
-    // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
+    // Fetch an SRM fee discount key and rate if the market supports discounts and it is not supplied
+    let possibleFeeRate = feeRate;
     let useFeeDiscountPubkey: PublicKey | null;
     if (feeDiscountPubkey) {
       useFeeDiscountPubkey = feeDiscountPubkey;
@@ -620,13 +622,14 @@ export class Market {
       feeDiscountPubkey === undefined &&
       this.supportsSrmFeeDiscounts
     ) {
-      useFeeDiscountPubkey = (
-        await this.findBestFeeDiscountKey(
-          connection,
-          ownerAddress,
-          feeDiscountPubkeyCacheDurationMs,
-        )
-      ).pubkey;
+      const bestFeeDiscount = await this.findBestFeeDiscountKey(
+        connection,
+        ownerAddress,
+        feeDiscountPubkeyCacheDurationMs,
+      );
+      useFeeDiscountPubkey = bestFeeDiscount.pubkey;
+      const { taker } = getFeeRates(bestFeeDiscount.feeTier);
+      possibleFeeRate = orderType === 'postOnly' ? 0 : taker;
     } else {
       useFeeDiscountPubkey = null;
     }
@@ -712,6 +715,7 @@ export class Market {
       clientId,
       openOrdersAddressKey: openOrdersAddress,
       feeDiscountPubkey: useFeeDiscountPubkey,
+      feeRate: possibleFeeRate,
       selfTradeBehavior,
     });
     transaction.add(placeOrderInstruction);
@@ -726,7 +730,7 @@ export class Market {
       );
     }
 
-    return { transaction, signers, payer: owner };
+    return { transaction, signers, payer: owner, openOrdersAddress };
   }
 
   makePlaceOrderInstruction<T extends PublicKey | Account>(
@@ -744,6 +748,8 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = null,
+      feeRate = 0,
+      selfTradeBehavior = 'decrementTake',
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -770,11 +776,13 @@ export class Market {
         orderType,
         clientId,
         programId: this._programId,
+        // @ts-ignore
         feeDiscountPubkey: this.supportsSrmFeeDiscounts
           ? feeDiscountPubkey
           : null,
       });
     } else {
+
       return this.makeNewOrderV3Instruction(params);
     }
   }
@@ -795,6 +803,7 @@ export class Market {
       feeDiscountPubkey = null,
       selfTradeBehavior = 'decrementTake',
       programId,
+      feeRate = 0,
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -815,12 +824,15 @@ export class Market {
       limitPrice: this.priceNumberToLots(price),
       maxBaseQuantity: this.baseSizeNumberToLots(size),
       maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
-        this.baseSizeNumberToLots(size).mul(this.priceNumberToLots(price)),
+        this.baseSizeNumberToLots(size).mul(
+          this.priceNumberToLots(price * (1 + feeRate)),
+        ),
       ),
       orderType,
       clientId,
       programId: programId ?? this._programId,
       selfTradeBehavior,
+      // @ts-ignore
       feeDiscountPubkey: this.supportsSrmFeeDiscounts
         ? feeDiscountPubkey
         : null,
@@ -1185,6 +1197,18 @@ export class Market {
     );
   }
 
+  priceNumberToLotsRoundUp(price: number): BN {
+    return new BN(
+      Math.ceil(
+        (price *
+          Math.pow(10, this._quoteSplTokenDecimals) *
+          this._decoded.baseLotSize.toNumber()) /
+          (Math.pow(10, this._baseSplTokenDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
+      ),
+    );
+  }
+
   baseSplSizeToNumber(size: BN) {
     return divideBnToNumber(size, this._baseSplTokenMultiplier);
   }
@@ -1248,6 +1272,7 @@ export interface OrderParams<T = Account> {
   openOrdersAddressKey?: PublicKey;
   openOrdersAccount?: Account;
   feeDiscountPubkey?: PublicKey | null;
+  feeRate?: number;
   selfTradeBehavior?:
     | 'decrementTake'
     | 'cancelProvide'
