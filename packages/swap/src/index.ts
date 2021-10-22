@@ -32,11 +32,6 @@ import SwapMarkets from './swap-markets';
 // TODO: enable once the DEX supports closing open orders accounts.
 const CLOSE_ENABLED = false;
 
-// Initialize open orders feature flag.
-//
-// TODO: enable once the DEX supports initializing open orders accounts.
-const OPEN_ENABLED = false;
-
 /**
  *
  * # Swap
@@ -529,30 +524,28 @@ export class Swap {
       );
       toOpenOrders = ooTo.publicKey;
 
-      if (OPEN_ENABLED) {
-        openOrdersTransaction.add(
-          this.program.instruction.initAccount({
-            accounts: {
-              openOrders: ooFrom.publicKey,
-              authority: this.program.provider.wallet.publicKey,
-              market: fromMarket.address,
-              dexProgram: DEX_PID,
-              rent: SYSVAR_RENT_PUBKEY,
-            },
-          }),
-        );
-        openOrdersTransaction.add(
-          this.program.instruction.initAccount({
-            accounts: {
-              openOrders: ooTo.publicKey,
-              authority: this.program.provider.wallet.publicKey,
-              market: fromMarket.address,
-              dexProgram: DEX_PID,
-              rent: SYSVAR_RENT_PUBKEY,
-            },
-          }),
-        );
-      }
+      openOrdersTransaction.add(
+        this.program.instruction.initAccount({
+          accounts: {
+            openOrders: ooFrom.publicKey,
+            authority: this.program.provider.wallet.publicKey,
+            market: fromMarket.address,
+            dexProgram: DEX_PID,
+            rent: SYSVAR_RENT_PUBKEY,
+          },
+        }),
+      );
+      openOrdersTransaction.add(
+        this.program.instruction.initAccount({
+          accounts: {
+            openOrders: ooTo.publicKey,
+            authority: this.program.provider.wallet.publicKey,
+            market: fromMarket.address,
+            dexProgram: DEX_PID,
+            rent: SYSVAR_RENT_PUBKEY,
+          },
+        }),
+      );
     } else if (fromNeedsOpenOrders) {
       const oo = Keypair.generate();
       swapSigners.push(oo);
