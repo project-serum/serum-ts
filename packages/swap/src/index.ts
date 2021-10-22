@@ -540,7 +540,7 @@ export class Swap {
           accounts: {
             openOrders: ooTo.publicKey,
             authority: this.program.provider.wallet.publicKey,
-            market: fromMarket.address,
+            market: toMarket.address,
             dexProgram: DEX_PID,
             rent: SYSVAR_RENT_PUBKEY,
           },
