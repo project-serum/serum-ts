@@ -295,7 +295,10 @@ class MapEntryLayout<K, V> extends LayoutCls<[K, V]> {
   decode(b: Buffer, offset?: number): [K, V] {
     offset = offset || 0;
     const key = this.keyLayout.decode(b, offset);
-    const value = this.valueLayout.decode(b, offset + this.keyLayout.span);
+    const value = this.valueLayout.decode(
+      b,
+      offset + this.keyLayout.getSpan(b, offset),
+    );
     return [key, value];
   }
 
