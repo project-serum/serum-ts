@@ -1318,5 +1318,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
+  },
+    {
+    "name": "QUEST/USDT",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "7QwEMFeKS8mPACndc9EzpgoqKbQhpBm1N4JCtzjGEyR7"
   }
 ]
