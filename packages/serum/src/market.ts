@@ -1541,10 +1541,12 @@ function getPriceFromKey(key) {
 }
 
 function divideBnToNumber(numerator: BN, denominator: BN): number {
-  const quotient = numerator.div(denominator).toNumber();
+  const quotient = numerator.div(denominator);
   const rem = numerator.umod(denominator);
   const gcd = rem.gcd(denominator);
-  return quotient + rem.div(gcd).toNumber() / denominator.div(gcd).toNumber();
+  return Number(
+    quotient.add(rem.div(gcd).div(denominator.div(gcd))).toString(),
+  );
 }
 
 const MINT_LAYOUT = struct([blob(44), u8('decimals'), blob(37)]);
