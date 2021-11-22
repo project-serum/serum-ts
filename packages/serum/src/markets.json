@@ -1318,5 +1318,17 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
+  },
+  {
+    "name": "SAFE/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "3zyMD67tUqSfuF8XTZjzBjqT6daEUfx2nk6YSVtmzDnD"
+  },
+  {
+    "name": "SAFE/USDT",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "2sedHoXJosRteBjP4FEV4U9TJ6JhHaNDgmkzm2dNtSHe"
   }
 ]
