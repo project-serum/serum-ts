@@ -122,6 +122,10 @@ export class Swap {
    * Executes a swap against the Serum DEX.
    */
   public async swap(params: SwapParams): Promise<Array<TransactionSignature>> {
+    const pk = this.program.provider.wallet.publicKey;
+    if (!pk || PublicKey.default.equals(pk)) {
+      throw new Error('Wallet not found');
+    }
     let txs = await this.swapTxs(params);
     if (params.additionalTransactions) {
       txs = txs.concat(params.additionalTransactions);
