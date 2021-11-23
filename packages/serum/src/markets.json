@@ -1278,6 +1278,12 @@
     "address": "DYfigimKWc5VhavR4moPBibx9sMcWYVSjVdWvPztBPTa"
   },
   {
+    "name": "MOF/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "6HKDynRqoLrt2rbFNKPt1arVtFZJqTQZT8odYnGwoeYD"
+  },
+  {
     "name": "MNGO/USDC",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
