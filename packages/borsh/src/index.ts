@@ -10,7 +10,15 @@ import {
 } from 'buffer-layout';
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-export { u8, s8 as i8, u16, s16 as i16, u32, s32 as i32, struct } from 'buffer-layout';
+export {
+  u8,
+  s8 as i8,
+  u16,
+  s16 as i16,
+  u32,
+  s32 as i32,
+  struct,
+} from 'buffer-layout';
 
 export interface Layout<T> {
   span: number;
@@ -270,6 +278,62 @@ export function array<T>(
     layout,
     ({ values }) => values,
     values => ({ values }),
+    property,
+  );
+}
+
+class MapEntryLayout<K, V> extends LayoutCls<[K, V]> {
+  keyLayout: Layout<K>;
+  valueLayout: Layout<V>;
+
+  constructor(keyLayout: Layout<K>, valueLayout: Layout<V>, property?: string) {
+    super(keyLayout.span + valueLayout.span, property);
+    this.keyLayout = keyLayout;
+    this.valueLayout = valueLayout;
+  }
+
+  decode(b: Buffer, offset?: number): [K, V] {
+    offset = offset || 0;
+    const key = this.keyLayout.decode(b, offset);
+    const value = this.valueLayout.decode(
+      b,
+      offset + this.keyLayout.getSpan(b, offset),
+    );
+    return [key, value];
+  }
+
+  encode(src: [K, V], b: Buffer, offset?: number): number {
+    offset = offset || 0;
+    const keyBytes = this.keyLayout.encode(src[0], b, offset);
+    const valueBytes = this.valueLayout.encode(src[1], b, offset + keyBytes);
+    return keyBytes + valueBytes;
+  }
+
+  getSpan(b: Buffer, offset?: number): number {
+    return (
+      this.keyLayout.getSpan(b, offset) + this.valueLayout.getSpan(b, offset)
+    );
+  }
+}
+
+export function map<K, V>(
+  keyLayout: Layout<K>,
+  valueLayout: Layout<V>,
+  property?: string,
+): Layout<Map<K, V>> {
+  const length = u32('length');
+  const layout: Layout<{ values: [K, V][] }> = struct([
+    length,
+    seq(
+      new MapEntryLayout(keyLayout, valueLayout),
+      offset(length, -length.span),
+      'values',
+    ),
+  ]);
+  return new WrappedLayout(
+    layout,
+    ({ values }) => new Map(values),
+    values => ({ values: Array.from(values.entries()) }),
     property,
   );
 }
