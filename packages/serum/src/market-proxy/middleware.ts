@@ -13,6 +13,8 @@ export interface Middleware {
   settleFunds(ix: TransactionInstruction): void;
   closeOpenOrders(ix: TransactionInstruction): void;
   prune(ix: TransactionInstruction): void;
+  consumeEvents(ix: TransactionInstruction): void;
+  consumeEventsPermissioned(ix: TransactionInstruction): void;
 }
 
 export class OpenOrdersPda implements Middleware {
@@ -181,6 +183,12 @@ export class OpenOrdersPda implements Middleware {
   prune(ix: TransactionInstruction) {
     ix.data = Buffer.concat([Buffer.from([6]), ix.data]);
   }
+  consumeEvents(ix: TransactionInstruction) {
+    ix.data = Buffer.concat([Buffer.from([7]), ix.data]);
+  }
+  consumeEventsPermissioned(ix: TransactionInstruction) {
+    ix.data = Buffer.concat([Buffer.from([8]), ix.data]);
+  }
 }
 
 export class ReferralFees implements Middleware {
@@ -198,6 +206,33 @@ export class ReferralFees implements Middleware {
   closeOpenOrders(_ix: TransactionInstruction) {}
   // eslint-disable-next-line
   prune(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
+  consumeEvents(_ix: TransactionInstruction) {}
+  // eslint-disable-next-line
+  consumeEventsPermissioned(_ix: TransactionInstruction) {}
+}
+
+export class PermissionedCrank implements Middleware {
+	// eslint-disable-next-line
+	initOpenOrders(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	newOrderV3(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	cancelOrderV2(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	cancelOrderByClientIdV2(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	settleFunds(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	closeOpenOrders(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	prune(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	consumeEvents(_ix: TransactionInstruction) {}
+	// eslint-disable-next-line
+	consumeEventsPermissioned(ix: TransactionInstruction) {
+    ix.keys[ix.keys.length - 1].isSigner = false;
+  }
 }
 
 export class Logger implements Middleware {
@@ -221,6 +256,12 @@ export class Logger implements Middleware {
   }
   prune(ix: TransactionInstruction) {
     console.log('Proxying prune', this.ixToDisplay(ix));
+  }
+  consumeEvents(ix: TransactionInstruction) {
+    console.log('Proxying consumeEvents', this.ixToDisplay(ix));
+  }
+  consumeEventsPermissioned(ix: TransactionInstruction) {
+    console.log('Proxying consumeEventsPermissioned', this.ixToDisplay(ix));
   }
   ixToDisplay(ix: TransactionInstruction): any {
     const keys = ix.keys.map((i) => {

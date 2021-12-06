@@ -98,6 +98,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
 INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(16, struct([u16('limit')]), 'prune');
+INSTRUCTION_LAYOUT.inner.addVariant(17, struct([u16('limit')]), 'consumeEventsPermissioned');
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -127,6 +128,7 @@ export class DexInstructions {
     programId,
     authority = undefined,
     pruneAuthority = undefined,
+    crankAuthority = undefined,
   }) {
     let rentSysvar = new PublicKey(
       'SysvarRent111111111111111111111111111111111',
@@ -157,6 +159,11 @@ export class DexInstructions {
         .concat(
           authority && pruneAuthority
             ? { pubkey: pruneAuthority, isSigner: false, isWritable: false }
+            : [],
+        )
+        .concat(
+          authority && pruneAuthority && crankAuthority
+            ? { pubkey: crankAuthority, isSigner: false, isWritable: false }
             : [],
         ),
       programId,
@@ -326,6 +333,30 @@ export class DexInstructions {
       ],
       programId,
       data: encodeInstruction({ consumeEvents: { limit } }),
+    });
+  }
+
+  static consumeEventsPermissioned({
+    market,
+    eventQueue,
+    crankAuthority,
+    openOrdersAccounts,
+    limit,
+    programId,
+  }) {
+    return new TransactionInstruction({
+      keys: [
+        ...openOrdersAccounts.map((account) => ({
+          pubkey: account,
+          isSigner: false,
+          isWritable: true,
+        })),
+        { pubkey: market, isSigner: false, isWritable: true },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
+        { pubkey: crankAuthority, isSigner: true, isWritable: false },
+      ],
+      programId,
+      data: encodeInstruction({ consumeEventsPermissioned: { limit } }),
     });
   }
 
