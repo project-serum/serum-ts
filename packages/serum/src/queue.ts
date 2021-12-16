@@ -171,7 +171,7 @@ export function decodeEventQueue(buffer: Buffer, history?: number): Event[] {
     throw new Error('Invalid events queue');
   }
   const modulo32Uint = 0x100000000;
-  let startSeqNum = header.seqNum + header.count - nodes.length;
+  const startSeqNum = header.seqNum + header.count - nodes.length;
   for (const [i, node] of nodes.entries()) {
     // seqNum itself may have u32 overflow in this span of `nodes`
     node.seqNum = (startSeqNum + i + modulo32Uint) % modulo32Uint;
