@@ -198,5 +198,11 @@
     "tokenSymbol": "COPE",
     "mintAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
     "tokenName": "COPE"
+  },
+  {
+    "tokenSymbol": "WNAV",
+    "mintAddress": "HRBrRXGCrPro6TtryKQkLXuZqg3LdBMN9ZWx2v66pT4L",
+    "tokenName": "Wrapped Navcoin",
+    "icon": "https://github.com/anquii/navcoin-assets/raw/main/wnav/wnav-logo-border.png"
   }
 ]
