@@ -1318,5 +1318,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5cLrMai1DsLRYc1Nio9qMTicsWtvzjzZfJPXyAoF4t1Z"
+  },
+  {
+    "name": "LIQ/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "D7p7PebNjpkH6VNHJhmiDFNmpz9XE7UaTv9RouxJMrwb"
   }
 ]
