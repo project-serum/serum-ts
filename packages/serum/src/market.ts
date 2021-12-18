@@ -1331,6 +1331,9 @@ export class OpenOrders {
   quoteTokenFree!: BN;
   quoteTokenTotal!: BN;
 
+  freeSlotBits!: BN;
+  isBidBits!: BN;
+
   orders!: BN[];
   clientIds!: BN[];
 
