@@ -312,5 +312,89 @@
     "tokenName": "Swag Token (Wormhole)",
     "tokenSymbol": "SWAG",
     "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/5hcdG6NjQwiNhVa9bcyaaDsCyA1muPQ6WRzQwHfgeeKo/logo.png"
+  },
+  {
+    "mintAddress": "KgV1GvrHQmRBY8sHQQeUKwTm2r2h8t4C8qt12Cw1HVE",
+    "tokenName": "AVAX (Wormhole)",
+    "tokenSymbol": "AVAX",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/KgV1GvrHQmRBY8sHQQeUKwTm2r2h8t4C8qt12Cw1HVE/logo.png"
+  },
+  {
+    "mintAddress": "HysWcbHiYY9888pHbaqhwLYZQeZrcQMXKQWRqS7zcPK5",
+    "tokenName": "Axie Infinity Shard (Wormhole from Ethereum)",
+    "tokenSymbol": "AXSet",
+    "icon": "https://cloudflare-ipfs.com/ipfs/QmVUzbiJP2xm2rH69Y42rmTxD8MZxEpGmvdfVKe551zZcR/"
+  },
+  {
+    "mintAddress": "9gP2kCy3wA1ctvYWQk75guqXuHfrEomqydHLtcTCqiLa",
+    "tokenName": "Binance Coin (Wormhole)",
+    "tokenSymbol": "BNB",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/9gP2kCy3wA1ctvYWQk75guqXuHfrEomqydHLtcTCqiLa/logo.png"
+  },
+  {
+    "mintAddress": "AuGz22orMknxQHTVGwAu7e3dJikTJKgcjFwMNDikEKmF",
+    "tokenName": "Gala (Wormhole)",
+    "tokenSymbol": "GALA",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/AuGz22orMknxQHTVGwAu7e3dJikTJKgcjFwMNDikEKmF/logo.png"
+  },
+  {
+    "mintAddress": "F6v4wfAdJB8D8p77bMXZgYt8TDKsYxLYxH5AFhUkYx9W",
+    "tokenName": "LUNA (Wormhole)",
+    "tokenSymbol": "LUNA",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/F6v4wfAdJB8D8p77bMXZgYt8TDKsYxLYxH5AFhUkYx9W/logo.png"
+  },
+  {
+    "mintAddress": "Gz7VkD4MacbEB6yC5XD3HcumEiYx2EtDYYrfikGsvopG",
+    "tokenName": "Matic (Wormhole from Polygon)",
+    "tokenSymbol": "MATICpo",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/C7NNPWuZCNjZBfW5p6JvGsR8pUdsRpEdP1ZAhnoDwj7h/logo.png"
+  },
+  {
+    "mintAddress": "S3SQfD6RheMXQ3EEYn1Z5sJsbtwfXdt7tSAVXPQFtYo",
+    "tokenName": "ROSE (Wormhole)",
+    "tokenSymbol": "ROSE",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/S3SQfD6RheMXQ3EEYn1Z5sJsbtwfXdt7tSAVXPQFtYo/logo.png"
+  },
+  {
+    "mintAddress": "49c7WuCZkQgc3M4qH8WuEUNXfgwupZf1xqWkDQ7gjRGt",
+    "tokenName": "Sandbox (Wormhole)",
+    "tokenSymbol": "SAND",
+    "icon": "https://gemini.com/images/currencies/icons/default/sand.svg"
+  },
+  {
+    "mintAddress": "CiKu4eHsVrc1eueVQeHn7qhXTcVu95gSQmBpX4utjL9z",
+    "tokenName": "SHIBA INU (Wormhole)",
+    "tokenSymbol": "SHIB",
+    "icon": "https://cloudflare-ipfs.com/ipfs/QmU8BZDCVQuVGyX25ApGGkRy2KKG2QDqe4UhKrxYbNMjwr/"
+  },
+  {
+    "mintAddress": "9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i",
+    "tokenName": "UST (Wormhole)",
+    "tokenSymbol": "UST",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/9vMJfxuKxXBoEa7rM12mYLMwTacLMLDJqHozw96WQL8i/logo.png"
+  },
+  {
+    "mintAddress": "EdAhkbj5nF9sRM7XN7ewuW8C9XEUMs8P7cnoQ57SYE96",
+    "tokenName": "FABRIC",
+    "tokenSymbol": "FAB",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EdAhkbj5nF9sRM7XN7ewuW8C9XEUMs8P7cnoQ57SYE96/logo.png"
+  },
+  {
+    "mintAddress": "JET6zMJWkCN9tpRT2v2jfAmm5VnQFDpUBCyaKojmGtz",
+    "tokenName": "Jet Protocol",
+    "tokenSymbol": "JET",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/JET6zMJWkCN9tpRT2v2jfAmm5VnQFDpUBCyaKojmGtz/logo.png"
+  },
+  {
+    "mintAddress": "5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm",
+    "tokenName": "Socean staked SOL",
+    "tokenSymbol": "scnSOL",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/5oVNBeEEQvYi1cX3ir8Dx5n1P7pdxydbGF2X4TxVusJm/logo.png"
+  },
+  {
+    "mintAddress": "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj",
+    "tokenName": "Lido Staked SOL",
+    "tokenSymbol": "stSOL",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj/logo.png"
   }
 ]
