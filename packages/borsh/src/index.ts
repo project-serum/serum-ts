@@ -258,8 +258,9 @@ export interface EnumLayout<T> extends Layout<T> {
 export function rustEnum<T>(
   variants: Layout<any>[],
   property?: string,
+  discriminant?: Layout<any>,
 ): EnumLayout<T> {
-  const unionLayout = union(u8(), property);
+  const unionLayout = union(discriminant ?? u8(), property);
   variants.forEach((variant, index) =>
     unionLayout.addVariant(index, variant, variant.property),
   );
