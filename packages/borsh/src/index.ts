@@ -17,6 +17,8 @@ export {
   s16 as i16,
   u32,
   s32 as i32,
+  f32,
+  f64,
   struct,
 } from 'buffer-layout';
 
