@@ -261,6 +261,71 @@ export class Market {
     );
   }
 
+  /**
+   * Find the most liquid Serum market for a given base mint address and the 
+   * quote address
+   * 
+   * @param connection 
+   * @param baseMint 
+   * @param quoteMint 
+   * @param dexProgramId 
+   * @returns 
+   */
+  static async findMostLiquidMarket(
+    connection: Connection,
+    baseMint: PublicKey,
+    quoteMint: PublicKey,
+    dexProgramId: PublicKey
+  ): Promise<PublicKey> {
+    // Load all the accounts with the correct mints
+    const marketAccounts = await Market.findAccountsByMints(
+      connection,
+      baseMint,
+      quoteMint,
+      dexProgramId
+    );
+  
+    const markets: {
+      pubkey: PublicKey;
+      bids: Orderbook;
+      asks: Orderbook;
+      totalSize: number;
+    }[] = [];
+  
+    // aggregate the total size for bids and asks to determine which market has the best liquidity
+    await Promise.all(
+      marketAccounts.map(async (marketAccount, index) => {
+        const market = await Market.load(
+          connection,
+          marketAccount.publicKey,
+          {},
+          dexProgramId
+        );
+        const [bids, asks] = await Promise.all([
+          market.loadBids(connection),
+          market.loadAsks(connection),
+        ]);
+        // Found that a depth of 20 was sufficient to determine the right 
+        //  SOL/USDC market
+        const bidsL2 = bids.getL2(20);
+        const asksL2 = asks.getL2(20);
+        const totalSize =
+          bidsL2.reduce((agg, cur) => agg + cur[1], 0) +
+          asksL2.reduce((agg, cur) => agg + cur[1], 0);
+        markets[index] = {
+          pubkey: marketAccount.publicKey,
+          bids,
+          asks,
+          totalSize,
+        };
+      })
+    );
+  
+    markets.sort((a, b) => b.totalSize - a.totalSize);
+  
+    return markets[0].pubkey;
+  };
+
   get programId(): PublicKey {
     return this._programId;
   }
