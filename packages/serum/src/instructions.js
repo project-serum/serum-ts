@@ -105,8 +105,17 @@ export function encodeInstruction(instruction) {
   return b.slice(0, INSTRUCTION_LAYOUT.encode(instruction, b));
 }
 
-export function decodeInstruction(message) {
-  return INSTRUCTION_LAYOUT.decode(message);
+/**
+ * Accepts raw instruction data as a buffer of raw bytes
+ *    eg. from  [@solana/web3.js.TransactionInstruction.data](https://solana-labs.github.io/solana-web3.js/classes/TransactionInstruction.html)
+ *     or from  decoding the base58 data from [@solana/web3.js.PartiallyDecodedInstruction.data](https://solana-labs.github.io/solana-web3.js/modules.html#PartiallyDecodedInstruction)
+ * Returns an object that describes the instruction parameters
+ * 
+ * @param {Uint8Array} instructionData 
+ * @returns {Object} decoded Instruction Object
+ */
+export function decodeInstruction(instructionData) {
+  return INSTRUCTION_LAYOUT.decode(instructionData);
 }
 
 export class DexInstructions {
