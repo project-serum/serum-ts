@@ -84,7 +84,6 @@ INSTRUCTION_LAYOUT.inner.addVariant(
     orderTypeLayout('orderType'),
     u64('clientId'),
     u16('limit'),
-    i64('maxTs'),
   ]),
   'newOrderV3',
 );
@@ -117,9 +116,34 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   'cancelOrdersByClientIds',
 );
 
+export const INSTRUCTION_LAYOUT_V2 = new VersionedLayout(
+  0,
+  union(u32('instruction')),
+);
+INSTRUCTION_LAYOUT_V2.inner.addVariant(
+  10,
+  struct([
+    sideLayout('side'),
+    u64('limitPrice'),
+    u64('maxBaseQuantity'),
+    u64('maxQuoteQuantity'),
+    selfTradeBehaviorLayout('selfTradeBehavior'),
+    orderTypeLayout('orderType'),
+    u64('clientId'),
+    u16('limit'),
+    i64('maxTs'),
+  ]),
+  'newOrderV3',
+);
+
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
   return b.slice(0, INSTRUCTION_LAYOUT.encode(instruction, b));
+}
+
+export function encodeInstructionV2(instruction) {
+  const b = Buffer.alloc(100);
+  return b.slice(0, INSTRUCTION_LAYOUT_V2.encode(instruction, b));
 }
 
 export function decodeInstruction(message) {
@@ -284,10 +308,12 @@ export class DexInstructions {
         isWritable: false,
       });
     }
+
+    const encoder = maxTs ? encodeInstructionV2 : encodeInstruction;
     return new TransactionInstruction({
       keys,
       programId,
-      data: encodeInstruction({
+      data: encoder({
         newOrderV3: {
           side,
           limitPrice,
