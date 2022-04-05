@@ -1650,6 +1650,12 @@
     "address": "D52sefGCWho2nd5UGxWd7wCftAzeNEMNYZkdEPGEdQTb"
   },
   {
+    "name": "TTRYB/USDL",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "GSyCMvxTG3NcN2Kgx8HjuZ857RQumGUx79a2tEnrYSUF"
+  },
+  {
     "name": "stSOL/USDC",
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
