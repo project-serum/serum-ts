@@ -6,6 +6,7 @@ import {
   sideLayout,
   u128,
   u64,
+  i64,
   VersionedLayout,
 } from './layout';
 import {
@@ -14,6 +15,7 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
+import BN from 'bn.js';
 
 // NOTE: Update these if the position of arguments for the settleFunds instruction changes
 export const SETTLE_FUNDS_BASE_WALLET_INDEX = 5;
@@ -82,6 +84,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
     orderTypeLayout('orderType'),
     u64('clientId'),
     u16('limit'),
+    i64('maxTs'),
   ]),
   'newOrderV3',
 );
@@ -244,6 +247,7 @@ export class DexInstructions {
     programId,
     selfTradeBehavior,
     feeDiscountPubkey = null,
+    maxTs = null,
   }) {
     const keys = [
       { pubkey: market, isSigner: false, isWritable: true },
@@ -266,6 +270,12 @@ export class DexInstructions {
         isWritable: false,
       });
     }
+    let useMaxTs;
+    if (maxTs) {
+      useMaxTs = maxTs;
+    } else {
+      useMaxTs = new BN("9223372036854775807");
+    }
     return new TransactionInstruction({
       keys,
       programId,
@@ -279,6 +289,7 @@ export class DexInstructions {
           orderType,
           clientId,
           limit: 65535,
+          maxTs: useMaxTs,
         },
       }),
     });

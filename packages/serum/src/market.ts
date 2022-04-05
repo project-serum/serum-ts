@@ -745,6 +745,7 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = null,
+      maxTs = null,
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -796,6 +797,7 @@ export class Market {
       feeDiscountPubkey = null,
       selfTradeBehavior = 'decrementTake',
       programId,
+      maxTs = null,
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -825,6 +827,7 @@ export class Market {
       feeDiscountPubkey: this.supportsSrmFeeDiscounts
         ? feeDiscountPubkey
         : null,
+      maxTs: maxTs
     });
   }
 
@@ -1269,6 +1272,7 @@ export interface OrderParams<T = Account> {
     | 'abortTransaction'
     | undefined;
   programId?: PublicKey;
+  maxTs?: BN;
 }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([
