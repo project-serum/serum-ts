@@ -6,6 +6,7 @@ import {
   sideLayout,
   u128,
   u64,
+  i64,
   VersionedLayout,
 } from './layout';
 import {
@@ -14,6 +15,7 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
+import BN from 'bn.js';
 
 // NOTE: Update these if the position of arguments for the settleFunds instruction changes
 export const SETTLE_FUNDS_BASE_WALLET_INDEX = 5;
@@ -82,6 +84,7 @@ INSTRUCTION_LAYOUT.inner.addVariant(
     orderTypeLayout('orderType'),
     u64('clientId'),
     u16('limit'),
+    i64('maxTs'),
   ]),
   'newOrderV3',
 );
@@ -99,6 +102,20 @@ INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(16, struct([u16('limit')]), 'prune');
 INSTRUCTION_LAYOUT.inner.addVariant(17, struct([u16('limit')]), 'consumeEventsPermissioned');
+INSTRUCTION_LAYOUT.inner.addVariant(
+  18,
+  struct([
+    u64('clientId0'),
+    u64('clientId1'),
+    u64('clientId2'),
+    u64('clientId3'),
+    u64('clientId4'),
+    u64('clientId5'),
+    u64('clientId6'),
+    u64('clientId7')
+  ]),
+  'cancelOrdersByClientIds',
+);
 
 export function encodeInstruction(instruction) {
   const b = Buffer.alloc(100);
@@ -244,6 +261,7 @@ export class DexInstructions {
     programId,
     selfTradeBehavior,
     feeDiscountPubkey = null,
+    maxTs = null,
   }) {
     const keys = [
       { pubkey: market, isSigner: false, isWritable: true },
@@ -279,6 +297,7 @@ export class DexInstructions {
           orderType,
           clientId,
           limit: 65535,
+          maxTs: new BN(maxTs ?? '9223372036854775807'),
         },
       }),
     });
@@ -456,6 +475,40 @@ export class DexInstructions {
       programId,
       data: encodeInstruction({
         cancelOrderByClientIdV2: { clientId },
+      }),
+    });
+  }
+
+  static cancelOrdersByClientIds({
+    market,
+    openOrders,
+    owner,
+    bids,
+    asks,
+    eventQueue,
+    clientIds,
+    programId,
+  }) {
+    if (clientIds.length > 8) {
+      throw new Error("Number of client ids cannot exceed 8!");
+    }
+
+    while (clientIds.length < 8) {
+      clientIds.push(new BN(0));
+    }
+
+    return new TransactionInstruction({
+      keys: [
+        { pubkey: market, isSigner: false, isWritable: false },
+        { pubkey: bids, isSigner: false, isWritable: true },
+        { pubkey: asks, isSigner: false, isWritable: true },
+        { pubkey: openOrders, isSigner: false, isWritable: true },
+        { pubkey: owner, isSigner: true, isWritable: false },
+        { pubkey: eventQueue, isSigner: false, isWritable: true },
+      ],
+      programId,
+      data: encodeInstruction({
+        cancelOrdersByClientIds: Object.fromEntries(clientIds.map((clientId, i) => [`clientId${i}`, clientId])),
       }),
     });
   }
