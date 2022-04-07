@@ -150,6 +150,10 @@ export function decodeInstruction(message) {
   return INSTRUCTION_LAYOUT.decode(message);
 }
 
+export function decodeInstructionV2(message) {
+  return INSTRUCTION_LAYOUT_V2.decode(message);
+}
+
 export class DexInstructions {
   static initializeMarket({
     market,
