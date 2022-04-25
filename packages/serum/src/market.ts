@@ -418,6 +418,29 @@ export class Market {
     return openOrdersAccountsForOwner;
   }
 
+  async replaceOrders(
+    connection: Connection,
+    accounts: OrderParamsAccounts,
+    orders: OrderParamsBase[],
+    cacheDurationMs = 0,
+  ) {
+    if (!accounts.openOrdersAccount && !accounts.openOrdersAddressKey) {
+      const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
+      const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
+        connection,
+        ownerAddress,
+        cacheDurationMs,
+      );
+      accounts.openOrdersAddressKey = openOrdersAccounts[0].address;
+    }
+
+    const transaction = new Transaction();
+    transaction.add(this.makeReplaceOrdersByClientIdsInstruction(accounts, orders));
+    return await this._sendTransaction(connection, transaction, [
+      accounts.owner,
+    ]);
+  }
+
   async placeOrder(
     connection: Connection,
     {
@@ -432,6 +455,7 @@ export class Market {
       openOrdersAccount,
       feeDiscountPubkey,
       maxTs,
+      replaceIfExists = false,
     }: OrderParams,
   ) {
     const { transaction, signers } = await this.makePlaceOrderTransaction<
@@ -448,6 +472,7 @@ export class Market {
       openOrdersAccount,
       feeDiscountPubkey,
       maxTs,
+      replaceIfExists,
     });
     return await this._sendTransaction(connection, transaction, [
       owner,
@@ -602,6 +627,7 @@ export class Market {
       feeDiscountPubkey = undefined,
       selfTradeBehavior = 'decrementTake',
       maxTs,
+      replaceIfExists = false,
     }: OrderParams<T>,
     cacheDurationMs = 0,
     feeDiscountPubkeyCacheDurationMs = 0,
@@ -718,6 +744,7 @@ export class Market {
       feeDiscountPubkey: useFeeDiscountPubkey,
       selfTradeBehavior,
       maxTs,
+      replaceIfExists,
     });
     transaction.add(placeOrderInstruction);
 
@@ -749,7 +776,6 @@ export class Market {
       openOrdersAddressKey,
       openOrdersAccount,
       feeDiscountPubkey = null,
-      maxTs,
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -776,6 +802,7 @@ export class Market {
         orderType,
         clientId,
         programId: this._programId,
+        // @ts-ignore
         feeDiscountPubkey: this.supportsSrmFeeDiscounts
           ? feeDiscountPubkey
           : null,
@@ -802,6 +829,7 @@ export class Market {
       selfTradeBehavior = 'decrementTake',
       programId,
       maxTs,
+      replaceIfExists,
     } = params;
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -834,6 +862,47 @@ export class Market {
         : null,
       // @ts-ignore
       maxTs,
+      replaceIfExists,
+    });
+  }
+
+  makeReplaceOrdersByClientIdsInstruction<T extends PublicKey | Account>(
+    accounts: OrderParamsAccounts<T>, orders: OrderParamsBase<T>[],
+  ): TransactionInstruction {
+    // @ts-ignore
+    const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
+    return DexInstructions.replaceOrdersByClientIds({
+      market: this.address,
+      bids: this._decoded.bids,
+      asks: this._decoded.asks,
+      requestQueue: this._decoded.requestQueue,
+      eventQueue: this._decoded.eventQueue,
+      baseVault: this._decoded.baseVault,
+      quoteVault: this._decoded.quoteVault,
+      openOrders: accounts.openOrdersAccount
+        ? accounts.openOrdersAccount.publicKey
+        : accounts.openOrdersAddressKey,
+      owner: ownerAddress,
+      payer: accounts.payer,
+      programId: accounts.programId ?? this._programId,
+      // @ts-ignore
+      feeDiscountPubkey: this.supportsSrmFeeDiscounts
+        ? accounts.feeDiscountPubkey
+        : null,
+      orders: orders.map(order => ({
+        side: order.side,
+        limitPrice: this.priceNumberToLots(order.price),
+        maxBaseQuantity: this.baseSizeNumberToLots(order.size),
+        maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
+          this.baseSizeNumberToLots(order.size).mul(this.priceNumberToLots(order.price)),
+        ),
+        orderType: order.orderType,
+        clientId: order.clientId,
+        programId: accounts.programId ?? this._programId,
+        selfTradeBehavior: order.selfTradeBehavior,
+        // @ts-ignore
+        maxTs: order.maxTs,
+      }))
     });
   }
 
@@ -1298,24 +1367,31 @@ export interface MarketOptions {
   commitment?: Commitment;
 }
 
-export interface OrderParams<T = Account> {
-  owner: T;
-  payer: PublicKey;
+export interface OrderParamsBase<T = Account> {
   side: 'buy' | 'sell';
   price: number;
   size: number;
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
-  openOrdersAddressKey?: PublicKey;
-  openOrdersAccount?: Account;
-  feeDiscountPubkey?: PublicKey | null;
   selfTradeBehavior?:
   | 'decrementTake'
   | 'cancelProvide'
   | 'abortTransaction'
   | undefined;
-  programId?: PublicKey;
   maxTs?: number | null;
+}
+
+export interface OrderParamsAccounts<T = Account> {
+  owner: T;
+  payer: PublicKey;
+  openOrdersAddressKey?: PublicKey;
+  openOrdersAccount?: Account;
+  feeDiscountPubkey?: PublicKey | null;
+  programId?: PublicKey;
+}
+
+export interface OrderParams<T = Account> extends OrderParamsBase<T>, OrderParamsAccounts<T> {
+  replaceIfExists?: boolean;
 }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([

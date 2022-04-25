@@ -1,4 +1,4 @@
-import { struct, u16, u32, u8, union } from 'buffer-layout';
+import { struct, u16, u32, u8, union, seq } from 'buffer-layout';
 import {
   orderTypeLayout,
   publicKeyLayout,
@@ -103,18 +103,32 @@ INSTRUCTION_LAYOUT.inner.addVariant(16, struct([u16('limit')]), 'prune');
 INSTRUCTION_LAYOUT.inner.addVariant(17, struct([u16('limit')]), 'consumeEventsPermissioned');
 INSTRUCTION_LAYOUT.inner.addVariant(
   18,
-  struct([
-    u64('clientId0'),
-    u64('clientId1'),
-    u64('clientId2'),
-    u64('clientId3'),
-    u64('clientId4'),
-    u64('clientId5'),
-    u64('clientId6'),
-    u64('clientId7')
-  ]),
+  struct([seq(u64(), 8, 'clientIds')]),
   'cancelOrdersByClientIds',
 );
+
+const orderStruct = () => struct([
+  sideLayout('side'),
+  u64('limitPrice'),
+  u64('maxBaseQuantity'),
+  u64('maxQuoteQuantity'),
+  selfTradeBehaviorLayout('selfTradeBehavior'),
+  orderTypeLayout('orderType'),
+  u64('clientId'),
+  u16('limit'),
+  i64('maxTs'),
+]);
+
+INSTRUCTION_LAYOUT.inner.addVariant(
+  19,
+  orderStruct(),
+  'replaceOrderByClientId'
+)
+INSTRUCTION_LAYOUT.inner.addVariant(
+  20,
+  struct([u64('orderAmount'), seq(orderStruct(), 8, 'orders')]),
+  'replaceOrdersByClientIds'
+)
 
 export const INSTRUCTION_LAYOUT_V2 = new VersionedLayout(
   0,
@@ -122,22 +136,12 @@ export const INSTRUCTION_LAYOUT_V2 = new VersionedLayout(
 );
 INSTRUCTION_LAYOUT_V2.inner.addVariant(
   10,
-  struct([
-    sideLayout('side'),
-    u64('limitPrice'),
-    u64('maxBaseQuantity'),
-    u64('maxQuoteQuantity'),
-    selfTradeBehaviorLayout('selfTradeBehavior'),
-    orderTypeLayout('orderType'),
-    u64('clientId'),
-    u16('limit'),
-    i64('maxTs'),
-  ]),
+  orderStruct(),
   'newOrderV3',
 );
 
-export function encodeInstruction(instruction) {
-  const b = Buffer.alloc(100);
+export function encodeInstruction(instruction, maxLength = 100) {
+  const b = Buffer.alloc(maxLength);
   return b.slice(0, INSTRUCTION_LAYOUT.encode(instruction, b));
 }
 
@@ -290,6 +294,7 @@ export class DexInstructions {
     selfTradeBehavior,
     feeDiscountPubkey = null,
     maxTs = null,
+    replaceIfExists = false,
   }) {
     const keys = [
       { pubkey: market, isSigner: false, isWritable: true },
@@ -313,12 +318,20 @@ export class DexInstructions {
       });
     }
 
-    const encoder = maxTs ? encodeInstructionV2 : encodeInstruction;
+    let instructionName, encoder;
+    if (replaceIfExists) {
+      instructionName = 'replaceOrderByClientId';
+      encoder = encodeInstruction;
+    } else {
+      instructionName = 'newOrderV3';
+      encoder = maxTs ? encodeInstructionV2 : encodeInstruction;
+    }
+
     return new TransactionInstruction({
       keys,
       programId,
       data: encoder({
-        newOrderV3: {
+        [instructionName]: {
           side,
           limitPrice,
           maxBaseQuantity,
@@ -330,6 +343,59 @@ export class DexInstructions {
           maxTs: new BN(maxTs ?? '9223372036854775807'),
         },
       }),
+    });
+  }
+
+  static replaceOrdersByClientIds({
+    market,
+    openOrders,
+    payer,
+    owner,
+    requestQueue,
+    eventQueue,
+    bids,
+    asks,
+    baseVault,
+    quoteVault,
+    feeDiscountPubkey = null,
+    programId,
+    orders
+  }) {
+    const keys = [
+      { pubkey: market, isSigner: false, isWritable: true },
+      { pubkey: openOrders, isSigner: false, isWritable: true },
+      { pubkey: requestQueue, isSigner: false, isWritable: true },
+      { pubkey: eventQueue, isSigner: false, isWritable: true },
+      { pubkey: bids, isSigner: false, isWritable: true },
+      { pubkey: asks, isSigner: false, isWritable: true },
+      { pubkey: payer, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+      { pubkey: baseVault, isSigner: false, isWritable: true },
+      { pubkey: quoteVault, isSigner: false, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+    ];
+    if (feeDiscountPubkey) {
+      keys.push({
+        pubkey: feeDiscountPubkey,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data: encodeInstruction({
+        replaceOrdersByClientIds: {
+          orderAmount: new BN(orders.length),
+          orders: orders.map(order => ({
+            ...order,
+            maxTs: new BN(order.maxTs ?? '9223372036854775807'),
+            limit: 65535,
+          }))
+        }
+      }, 15 + orders.length * 60).slice(0, 13 + orders.length * 54)
     });
   }
 
@@ -538,7 +604,7 @@ export class DexInstructions {
       ],
       programId,
       data: encodeInstruction({
-        cancelOrdersByClientIds: Object.fromEntries(clientIds.map((clientId, i) => [`clientId${i}`, clientId])),
+        cancelOrdersByClientIds: { clientIds },
       }),
     });
   }
