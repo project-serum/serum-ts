@@ -425,7 +425,8 @@ export class Market {
     cacheDurationMs = 0,
   ) {
     if (!accounts.openOrdersAccount && !accounts.openOrdersAddressKey) {
-      const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
+      const ownerAddress: PublicKey =
+        accounts.owner.publicKey ?? accounts.owner;
       const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
         connection,
         ownerAddress,
@@ -435,7 +436,9 @@ export class Market {
     }
 
     const transaction = new Transaction();
-    transaction.add(this.makeReplaceOrdersByClientIdsInstruction(accounts, orders));
+    transaction.add(
+      this.makeReplaceOrdersByClientIdsInstruction(accounts, orders),
+    );
     return await this._sendTransaction(connection, transaction, [
       accounts.owner,
     ]);
@@ -663,25 +666,33 @@ export class Market {
 
     let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      let account;
-      if (openOrdersAccount) {
-        account = openOrdersAccount;
+      if (
+        openOrdersAccount &&
+        (await connection.getAccountInfo(openOrdersAccount?.publicKey))
+      ) {
+        // Account already exists but is not populated.
+        openOrdersAddress = openOrdersAccount.publicKey;
       } else {
-        account = new Account();
+        let account;
+        if (openOrdersAccount) {
+          account = openOrdersAccount;
+        } else {
+          account = new Account();
+        }
+        transaction.add(
+          await OpenOrders.makeCreateAccountTransaction(
+            connection,
+            this.address,
+            ownerAddress,
+            account.publicKey,
+            this._programId,
+          ),
+        );
+        openOrdersAddress = account.publicKey;
+        signers.push(account);
+        // refresh the cache of open order accounts on next fetch
+        this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
       }
-      transaction.add(
-        await OpenOrders.makeCreateAccountTransaction(
-          connection,
-          this.address,
-          ownerAddress,
-          account.publicKey,
-          this._programId,
-        ),
-      );
-      openOrdersAddress = account.publicKey;
-      signers.push(account);
-      // refresh the cache of open order accounts on next fetch
-      this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
     } else if (openOrdersAccount) {
       openOrdersAddress = openOrdersAccount.publicKey;
     } else if (openOrdersAddressKey) {
@@ -867,7 +878,8 @@ export class Market {
   }
 
   makeReplaceOrdersByClientIdsInstruction<T extends PublicKey | Account>(
-    accounts: OrderParamsAccounts<T>, orders: OrderParamsBase<T>[],
+    accounts: OrderParamsAccounts<T>,
+    orders: OrderParamsBase<T>[],
   ): TransactionInstruction {
     // @ts-ignore
     const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
@@ -889,12 +901,14 @@ export class Market {
       feeDiscountPubkey: this.supportsSrmFeeDiscounts
         ? accounts.feeDiscountPubkey
         : null,
-      orders: orders.map(order => ({
+      orders: orders.map((order) => ({
         side: order.side,
         limitPrice: this.priceNumberToLots(order.price),
         maxBaseQuantity: this.baseSizeNumberToLots(order.size),
         maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
-          this.baseSizeNumberToLots(order.size).mul(this.priceNumberToLots(order.price)),
+          this.baseSizeNumberToLots(order.size).mul(
+            this.priceNumberToLots(order.price),
+          ),
         ),
         orderType: order.orderType,
         clientId: order.clientId,
@@ -902,7 +916,7 @@ export class Market {
         selfTradeBehavior: order.selfTradeBehavior,
         // @ts-ignore
         maxTs: order.maxTs,
-      }))
+      })),
     });
   }
 
@@ -1309,8 +1323,8 @@ export class Market {
         (price *
           Math.pow(10, this._quoteSplTokenDecimals) *
           this._decoded.baseLotSize.toNumber()) /
-        (Math.pow(10, this._baseSplTokenDecimals) *
-          this._decoded.quoteLotSize.toNumber()),
+          (Math.pow(10, this._baseSplTokenDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
       ),
     );
   }
@@ -1374,10 +1388,10 @@ export interface OrderParamsBase<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   selfTradeBehavior?:
-  | 'decrementTake'
-  | 'cancelProvide'
-  | 'abortTransaction'
-  | undefined;
+    | 'decrementTake'
+    | 'cancelProvide'
+    | 'abortTransaction'
+    | undefined;
   maxTs?: number | null;
 }
 
@@ -1390,7 +1404,9 @@ export interface OrderParamsAccounts<T = Account> {
   programId?: PublicKey;
 }
 
-export interface OrderParams<T = Account> extends OrderParamsBase<T>, OrderParamsAccounts<T> {
+export interface OrderParams<T = Account>
+  extends OrderParamsBase<T>,
+    OrderParamsAccounts<T> {
   replaceIfExists?: boolean;
 }
 
@@ -1619,7 +1635,9 @@ export class Orderbook {
     for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].eq(price)) {
-        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(quantity);
+        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(
+          quantity,
+        );
       } else if (levels.length === depth) {
         break;
       } else {
