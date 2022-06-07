@@ -15,7 +15,11 @@ import {
   TransactionInstruction,
   TransactionSignature,
 } from '@solana/web3.js';
-import { decodeEventQueue, decodeRequestQueue } from './queue';
+import {
+  decodeEventQueue,
+  decodeEventsSince,
+  decodeRequestQueue,
+} from './queue';
 import { Buffer } from 'buffer';
 import { getFeeTier, supportsSrmFeeDiscounts } from './fees';
 import {
@@ -1241,6 +1245,18 @@ export class Market {
       await connection.getAccountInfo(this._decoded.eventQueue),
     );
     const events = decodeEventQueue(data, limit);
+    return this.parseFillEvents(events);
+  }
+
+  async loadFillsSince(connection: Connection, lastSeqNum: number) {
+    const { data } = throwIfNull(
+      await connection.getAccountInfo(this._decoded.eventQueue),
+    );
+    const events = decodeEventsSince(data, lastSeqNum);
+    return this.parseFillEvents(events);
+  }
+
+  parseFillEvents(events) {
     return events
       .filter(
         (event) => event.eventFlags.fill && event.nativeQuantityPaid.gtn(0),
