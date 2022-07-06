@@ -262,7 +262,7 @@ export function rustEnum<T>(
   property?: string,
   discriminant?: Layout<any>,
 ): EnumLayout<T> {
-  const unionLayout = union(discriminant ?? u8(), property);
+  const unionLayout = union(discriminant ?? u8(), undefined, property);
   variants.forEach((variant, index) =>
     unionLayout.addVariant(index, variant, variant.property),
   );
