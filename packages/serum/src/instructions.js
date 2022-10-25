@@ -1,21 +1,18 @@
-import { struct, u16, u32, u8, union, seq } from 'buffer-layout';
 import {
-  orderTypeLayout,
+  PublicKey, SYSVAR_RENT_PUBKEY,
+  TransactionInstruction
+} from '@solana/web3.js';
+import BN from 'bn.js';
+import { seq, struct, u16, u32, u8, union } from 'buffer-layout';
+import {
+  i64, orderTypeLayout,
   publicKeyLayout,
   selfTradeBehaviorLayout,
   sideLayout,
   u128,
-  u64,
-  i64,
-  VersionedLayout,
+  u64, VersionedLayout
 } from './layout';
-import {
-  SYSVAR_RENT_PUBKEY,
-  TransactionInstruction,
-  PublicKey,
-} from '@solana/web3.js';
 import { TOKEN_PROGRAM_ID } from './token-instructions';
-import BN from 'bn.js';
 
 // NOTE: Update these if the position of arguments for the settleFunds instruction changes
 export const SETTLE_FUNDS_BASE_WALLET_INDEX = 5;
@@ -96,6 +93,19 @@ INSTRUCTION_LAYOUT.inner.addVariant(
   12,
   struct([u64('clientId')]),
   'cancelOrderByClientIdV2',
+);
+INSTRUCTION_LAYOUT.inner.addVariant(
+  13,
+  struct([
+    sideLayout('side'),
+    u64('limitPrice'),
+    u64('maxBaseQuantity'),
+    u64('maxQuoteQuantity'),
+    u64('minBaseQuantity'),
+    u64('minQuoteQuantity'),
+    u16('limit'),
+  ]),
+  'sendTake'
 );
 INSTRUCTION_LAYOUT.inner.addVariant(14, struct([]), 'closeOpenOrders');
 INSTRUCTION_LAYOUT.inner.addVariant(15, struct([]), 'initOpenOrders');
@@ -344,6 +354,66 @@ export class DexInstructions {
         },
       }),
     });
+  }
+
+  static sendTake({
+    market,
+    requestQueue,
+    eventQueue,
+    bids,
+    asks,
+    baseWallet,
+    quoteWallet,
+    owner,
+    baseVault,
+    quoteVault,
+    vaultSigner,
+    side,
+    limitPrice,
+    maxBaseQuantity,
+    maxQuoteQuantity,
+    minBaseQuantity,
+    minQuoteQuantity,
+    limit,
+    programId,
+    feeDiscountPubkey = null,
+  }) {
+    const keys = [
+      { pubkey: market, isSigner: false, isWritable: true },
+      { pubkey: requestQueue, isSigner: false, isWritable: true },
+      { pubkey: eventQueue, isSigner: false, isWritable: true },
+      { pubkey: bids, isSigner: false, isWritable: true },
+      { pubkey: asks, isSigner: false, isWritable: true },
+      { pubkey: baseWallet, isSigner: false, isWritable: true },
+      { pubkey: quoteWallet, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+      { pubkey: baseVault, isSigner: false, isWritable: true },
+      { pubkey: quoteVault, isSigner: false, isWritable: true },
+      { pubkey: TOKEN_PROGRAM_ID, isSigner: false, isWritable: false },
+      { pubkey: vaultSigner, isSigner: false, isWritable: false },
+    ];
+    if (feeDiscountPubkey) {
+      keys.push({
+        pubkey: feeDiscountPubkey,
+        isSigner: false,
+        isWritable: false,
+      });
+    }
+    return new TransactionInstruction({
+      keys,
+      programId,
+      data: encodeInstruction({
+        sendTake: {
+          side,
+          limitPrice,
+          maxBaseQuantity,
+          maxQuoteQuantity,
+          minBaseQuantity,
+          minQuoteQuantity,
+          limit,
+        }
+      })
+    })
   }
 
   static replaceOrdersByClientIds({
