@@ -1,8 +1,3 @@
-import { blob, seq, struct, u8 } from 'buffer-layout';
-import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
-import { Slab, SLAB_LAYOUT } from './slab';
-import { DexInstructions } from './instructions';
-import BN from 'bn.js';
 import {
   Account,
   AccountInfo,
@@ -13,11 +8,16 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction,
-  TransactionSignature,
+  TransactionSignature
 } from '@solana/web3.js';
-import { decodeEventQueue, decodeRequestQueue } from './queue';
+import BN from 'bn.js';
 import { Buffer } from 'buffer';
+import { blob, seq, struct, u8 } from 'buffer-layout';
 import { getFeeTier, supportsSrmFeeDiscounts } from './fees';
+import { DexInstructions } from './instructions';
+import { accountFlagsLayout, publicKeyLayout, u128, u64 } from './layout';
+import { decodeEventQueue, decodeRequestQueue } from './queue';
+import { Slab, SLAB_LAYOUT } from './slab';
 import {
   closeAccount,
   initializeAccount,
@@ -26,7 +26,7 @@ import {
   SRM_DECIMALS,
   SRM_MINT,
   TOKEN_PROGRAM_ID,
-  WRAPPED_SOL_MINT,
+  WRAPPED_SOL_MINT
 } from './token-instructions';
 import { getLayoutVersion } from './tokens_and_markets';
 
@@ -480,6 +480,44 @@ export class Market {
     ]);
   }
 
+  async sendTake(
+    connection: Connection,
+    {
+      owner,
+      baseWallet,
+      quoteWallet,
+      side,
+      price,
+      maxBaseSize,
+      maxQuoteSize,
+      minBaseSize,
+      minQuoteSize,
+      limit = 65535,
+      programId = undefined,
+      feeDiscountPubkey = undefined,
+    }: SendTakeParams,
+  ) {
+    const { transaction, signers } = await this.makeSendTakeTransaction<Account>(
+      connection, {
+      owner,
+      baseWallet,
+      quoteWallet,
+      side,
+      price,
+      maxBaseSize,
+      maxQuoteSize,
+      minBaseSize,
+      minQuoteSize,
+      limit,
+      programId,
+      feeDiscountPubkey,
+    });
+    return await this._sendTransaction(connection, transaction, [
+      owner,
+      ...signers
+    ]);
+  }
+
   getSplTokenBalanceFromAccountInfo(
     accountInfo: AccountInfo<Buffer>,
     decimals: number,
@@ -863,6 +901,134 @@ export class Market {
       // @ts-ignore
       maxTs,
       replaceIfExists,
+    });
+  }
+
+  async makeSendTakeTransaction<T extends PublicKey | Account>(
+    connection: Connection,
+    {
+      owner,
+      baseWallet,
+      quoteWallet,
+      side,
+      price,
+      maxBaseSize,
+      maxQuoteSize,
+      minBaseSize,
+      minQuoteSize,
+      limit = 65535,
+      programId = undefined,
+      feeDiscountPubkey = undefined,
+    }: SendTakeParams<T>,
+    feeDiscountPubkeyCacheDurationMs = 0
+  ) {
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
+    const transaction = new Transaction();
+    const signers: Account[] = [];
+
+    // @ts-ignore
+    const vaultSigner = await PublicKey.createProgramAddress(
+      [
+        this.address.toBuffer(),
+        this._decoded.vaultSignerNonce.toArrayLike(Buffer, 'le', 8),
+      ],
+      this._programId,
+    );
+
+    // Fetch an SRM fee discount key if the market supports discounts and it is not supplied
+    let useFeeDiscountPubkey: PublicKey | null;
+    if (feeDiscountPubkey) {
+      useFeeDiscountPubkey = feeDiscountPubkey;
+    } else if (
+      feeDiscountPubkey === undefined &&
+      this.supportsSrmFeeDiscounts
+    ) {
+      useFeeDiscountPubkey = (
+        await this.findBestFeeDiscountKey(
+          connection,
+          ownerAddress,
+          feeDiscountPubkeyCacheDurationMs,
+        )
+      ).pubkey;
+    } else {
+      useFeeDiscountPubkey = null;
+    }
+
+    const sendTakeInstruction = this.makeSendTakeInstruction({
+      owner,
+      baseWallet,
+      quoteWallet,
+      vaultSigner,
+      side,
+      price,
+      maxBaseSize,
+      maxQuoteSize,
+      minBaseSize,
+      minQuoteSize,
+      limit,
+      programId,
+      feeDiscountPubkey: useFeeDiscountPubkey,
+    });
+    transaction.add(sendTakeInstruction);
+
+    return { transaction, signers, payer: owner };
+  }
+
+  makeSendTakeInstruction<T extends PublicKey | Account>(
+    params: SendTakeParams<T>,
+  ): TransactionInstruction {
+    const {
+      owner,
+      baseWallet,
+      quoteWallet,
+      vaultSigner,
+      side,
+      price,
+      maxBaseSize,
+      maxQuoteSize,
+      minBaseSize,
+      minQuoteSize,
+      limit = 65535,
+      programId,
+      feeDiscountPubkey = null,
+    } = params;
+    // @ts-ignore
+    const ownerAddress: PublicKey = owner.publicKey ?? owner;
+
+    if (this.baseSizeNumberToLots(maxBaseSize).lte(new BN(0))) {
+      throw new Error('size too small');
+    }
+    if (this.quoteSizeNumberToLots(maxQuoteSize).lte(new BN(0))) {
+      throw new Error('size too small');
+    }
+    if (this.priceNumberToLots(price).lte(new BN(0))) {
+      throw new Error('invalid price');
+    }
+    return DexInstructions.sendTake({
+      market: this.address,
+      requestQueue: this._decoded.requestQueue,
+      eventQueue: this._decoded.eventQueue,
+      bids: this._decoded.bids,
+      asks: this._decoded.asks,
+      baseWallet,
+      quoteWallet,
+      owner: ownerAddress,
+      baseVault: this._decoded.baseVault,
+      quoteVault: this._decoded.quoteVault,
+      vaultSigner,
+      side,
+      limitPrice: this.priceNumberToLots(price),
+      maxBaseQuantity: this.baseSizeNumberToLots(maxBaseSize),
+      maxQuoteQuantity: this.quoteSizeNumberToLots(maxQuoteSize),
+      minBaseQuantity: this.baseSizeNumberToLots(minBaseSize),
+      minQuoteQuantity: this.quoteSizeNumberToLots(minQuoteSize),
+      limit,
+      programId: programId ? programId : this._programId,
+      // @ts-ignore
+      feeDiscountPubkey: this.supportsSrmFeeDiscounts
+        ? feeDiscountPubkey
+        : null,
     });
   }
 
@@ -1349,8 +1515,7 @@ export class Market {
     const native = new BN(
       Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)),
     );
-    // rounds down to the nearest lot size
-    return native.div(this._decoded.quoteLotSize);
+    return native;
   }
 
   get minOrderSize() {
@@ -1393,6 +1558,27 @@ export interface OrderParamsAccounts<T = Account> {
 export interface OrderParams<T = Account> extends OrderParamsBase<T>, OrderParamsAccounts<T> {
   replaceIfExists?: boolean;
 }
+
+export interface SendTakeParamsBase<T = Account> {
+  side: 'buy' | 'sell';
+  price: number;
+  maxBaseSize: number;
+  maxQuoteSize: number;
+  minBaseSize: number;
+  minQuoteSize: number;
+  limit?: number;
+}
+
+export interface SendTakeParamsAccounts<T = Account> {
+  owner: T;
+  baseWallet: PublicKey;
+  quoteWallet: PublicKey;
+  vaultSigner?: PublicKey;
+  feeDiscountPubkey?: PublicKey | null;
+  programId?: PublicKey;
+}
+
+export interface SendTakeParams<T = Account> extends SendTakeParamsBase<T>, SendTakeParamsAccounts<T> { }
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([
   blob(5),
