@@ -999,7 +999,7 @@ export class Market {
     if (this.baseSizeNumberToLots(maxBaseSize).lte(new BN(0))) {
       throw new Error('size too small');
     }
-    if (this.quoteSizeNumberToLots(maxQuoteSize).lte(new BN(0))) {
+    if (this.quoteSizeNumberToSplSize(maxQuoteSize).lte(new BN(0))) {
       throw new Error('size too small');
     }
     if (this.priceNumberToLots(price).lte(new BN(0))) {
@@ -1020,9 +1020,9 @@ export class Market {
       side,
       limitPrice: this.priceNumberToLots(price),
       maxBaseQuantity: this.baseSizeNumberToLots(maxBaseSize),
-      maxQuoteQuantity: this.quoteSizeNumberToLots(maxQuoteSize),
+      maxQuoteQuantity: this.quoteSizeNumberToSplSize(maxQuoteSize),
       minBaseQuantity: this.baseSizeNumberToLots(minBaseSize),
-      minQuoteQuantity: this.quoteSizeNumberToLots(minQuoteSize),
+      minQuoteQuantity: this.quoteSizeNumberToSplSize(minQuoteSize),
       limit,
       programId: programId ? programId : this._programId,
       // @ts-ignore
@@ -1347,6 +1347,7 @@ export class Market {
             : quoteWallet,
         vaultSigner,
         programId: this._programId,
+        // @ts-ignore
         referrerQuoteWallet,
       }),
     );
@@ -1489,6 +1490,14 @@ export class Market {
     return divideBnToNumber(size, this._quoteSplTokenMultiplier);
   }
 
+  baseSizeNumberToSplSize(size: number) {
+    return new BN(Math.round(size * Math.pow(10, this._baseSplTokenDecimals)),);
+  }
+
+  quoteSizeNumberToSplSize(size: number) {
+    return new BN(Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)),);
+  }
+
   baseSizeLotsToNumber(size: BN) {
     return divideBnToNumber(
       size.mul(this._decoded.baseLotSize),
@@ -1515,7 +1524,8 @@ export class Market {
     const native = new BN(
       Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)),
     );
-    return native;
+    // roudns down to the nearest lot size
+    return native.div(this._decoded.quoteLotSize);
   }
 
   get minOrderSize() {
