@@ -1654,5 +1654,11 @@
     "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
     "deprecated": false,
     "address": "5F7LGsP1LPtaRV7vVKgxwNYX4Vf22xvuzyXjyar7jJqp"
+  },
+  {
+    "name": "LSTAR/USDC",
+    "programId": "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin",
+    "deprecated": false,
+    "address": "C6y1AH1A9Q3Xdk5yxCj5XEQaG2mmXzaqQWq5HLhjpWiT"
   }
 ]
