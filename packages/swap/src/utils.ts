@@ -3,7 +3,7 @@ import { PublicKey } from '@solana/web3.js';
 
 // Serum DEX program id on mainnet-beta.
 export const DEX_PID = new PublicKey(
-  '9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin',
+  'srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX',
 );
 
 // Swap program id on mainnet-beta.
