@@ -9,9 +9,9 @@ export async function getOwnedTokenAccounts(
   connection: Connection,
   publicKey: PublicKey,
 ): Promise<ProgramAccount<TokenAccount>[]> {
-  let filters = getOwnedAccountsFilters(publicKey);
+  const filters = getOwnedAccountsFilters(publicKey);
   // @ts-ignore
-  let resp = await connection._rpcRequest('getProgramAccounts', [
+  const resp = await connection._rpcRequest('getProgramAccounts', [
     TokenInstructions.TOKEN_PROGRAM_ID.toBase58(),
     {
       commitment: connection.commitment,
@@ -54,7 +54,7 @@ export const MINT_LAYOUT = BufferLayout.struct([
 
 export function parseTokenAccountData(data: any) {
   // @ts-ignore
-  let { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
+  const { mint, owner, amount } = ACCOUNT_LAYOUT.decode(data);
   return {
     mint: new PublicKey(mint),
     owner: new PublicKey(owner),
@@ -65,7 +65,7 @@ export function parseTokenAccountData(data: any) {
 // @ts-ignore
 export function parseMintData(data) {
   // @ts-ignore
-  let { decimals } = MINT_LAYOUT.decode(data);
+  const { decimals } = MINT_LAYOUT.decode(data);
   return { decimals };
 }
 

@@ -155,8 +155,10 @@ export function getLayoutForProgramId(programId: PublicKey): Structure {
   return TokenSwapLayoutLegacyV0;
 }
 
-export function getCreateInitSwapInstructionV2Layout(config: PoolConfig): Structure {
-    const fields = [
+export function getCreateInitSwapInstructionV2Layout(
+  config: PoolConfig,
+): Structure {
+  const fields = [
     u8('instruction'),
     u8('nonce'),
     nu64('tradeFeeNumerator'),
