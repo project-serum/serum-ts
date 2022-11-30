@@ -28,7 +28,10 @@ import {
   WRAPPED_SOL_MINT,
   LATEST_VERSION,
   getLayoutForProgramId,
-  deserializeMint, PROGRAM_ID, depositExactOneInstruction, withdrawExactOneInstruction,
+  deserializeMint,
+  PROGRAM_ID,
+  depositExactOneInstruction,
+  withdrawExactOneInstruction,
 } from './instructions';
 import { PoolConfig, PoolOptions, TokenAccount } from './types';
 import { divideBnToNumber, timeMs } from './utils';
@@ -225,7 +228,7 @@ export class Pool {
       tokenAccountA = account.publicKey;
       signers.push(account);
       instructions.push(...createWrappedSolInstructions);
-      cleanUpInstructions.push(...removeWrappedSolInstructions)
+      cleanUpInstructions.push(...removeWrappedSolInstructions);
     } else {
       tokenAccountA = tokenAccounts.find(a =>
         a.info.mint.equals(accountA.info.mint),
@@ -248,7 +251,7 @@ export class Pool {
       tokenAccountB = account.publicKey;
       signers.push(account);
       instructions.push(...createWrappedSolInstructions);
-      cleanUpInstructions.push(...removeWrappedSolInstructions)
+      cleanUpInstructions.push(...removeWrappedSolInstructions);
     } else {
       tokenAccountB = tokenAccounts.find(a =>
         a.info.mint.equals(accountB.info.mint),
@@ -486,7 +489,10 @@ export class Pool {
     },
     poolTokenAccount?: PublicKey,
   ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
-    assert(this._decoded.curve.constantPrice, 'Only implemented for constant price pools');
+    assert(
+      this._decoded.curve.constantPrice,
+      'Only implemented for constant price pools',
+    );
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const instructions: TransactionInstruction[] = [];
@@ -519,18 +525,22 @@ export class Pool {
     const reserve1 = accountB.info.amount.toNumber();
     const supply = poolMint.supply.toNumber();
 
-    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price
+    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price;
     let price;
     if (sourceTokenAccount.mint.equals(this.tokenMints[1])) {
       price = tokenBPrice;
     } else {
       price = 1;
     }
-    const sourceAmountPostFees = sourceTokenAccount.amount - (
-      Math.max(1, sourceTokenAccount.amount / 2) *
-      this._decoded.fees.tradeFeeNumerator / this._decoded.fees.tradeFeeDenominator
-    )
-    const liquidity = Math.floor((sourceAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice));
+    const sourceAmountPostFees =
+      sourceTokenAccount.amount -
+      (Math.max(1, sourceTokenAccount.amount / 2) *
+        this._decoded.fees.tradeFeeNumerator) /
+        this._decoded.fees.tradeFeeDenominator;
+    const liquidity = Math.floor(
+      (sourceAmountPostFees * price * supply) /
+        (reserve0 + reserve1 * tokenBPrice),
+    );
 
     let fromKey: PublicKey;
     if (sourceTokenAccount.mint.equals(WRAPPED_SOL_MINT)) {
@@ -618,7 +628,10 @@ export class Pool {
     },
     poolTokenAccount: PublicKey,
   ): Promise<{ transaction: Transaction; signers: Account[]; payer: T }> {
-    assert(this._decoded.curve.constantPrice, 'Only implemented for constant price pools');
+    assert(
+      this._decoded.curve.constantPrice,
+      'Only implemented for constant price pools',
+    );
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
     const instructions: TransactionInstruction[] = [];
@@ -644,35 +657,38 @@ export class Pool {
       this._holdingAccounts[1],
     );
 
-    const reserve0 = accountA.info.mint.equals(destinationTokenAccount.mint) ?
-      accountA.info.amount.toNumber() - destinationTokenAccount.amount :
-      accountA.info.amount.toNumber();
-    const reserve1 = accountB.info.mint.equals(destinationTokenAccount.mint) ?
-      accountB.info.amount.toNumber() - destinationTokenAccount.amount :
-      accountB.info.amount.toNumber();
+    const reserve0 = accountA.info.mint.equals(destinationTokenAccount.mint)
+      ? accountA.info.amount.toNumber() - destinationTokenAccount.amount
+      : accountA.info.amount.toNumber();
+    const reserve1 = accountB.info.mint.equals(destinationTokenAccount.mint)
+      ? accountB.info.amount.toNumber() - destinationTokenAccount.amount
+      : accountB.info.amount.toNumber();
     const supply = poolMint.supply.toNumber();
 
-    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price
+    const tokenBPrice = this._decoded.curve.constantPrice.token_b_price;
     let price;
     if (destinationTokenAccount.mint.equals(this.tokenMints[1])) {
       price = tokenBPrice;
     } else {
       price = 1;
     }
-    const destinationAmountPostFees = destinationTokenAccount.amount - (
-      Math.max(1, destinationTokenAccount.amount / 2) *
-      this._decoded.fees.tradeFeeNumerator / this._decoded.fees.tradeFeeDenominator
-    )
+    const destinationAmountPostFees =
+      destinationTokenAccount.amount -
+      (Math.max(1, destinationTokenAccount.amount / 2) *
+        this._decoded.fees.tradeFeeNumerator) /
+        this._decoded.fees.tradeFeeDenominator;
     const liquidityPreWithdrawalFee = Math.ceil(
-      (destinationAmountPostFees * price * supply) / (reserve0 + reserve1 * tokenBPrice)
+      (destinationAmountPostFees * price * supply) /
+        (reserve0 + reserve1 * tokenBPrice),
     );
     let liquidity = liquidityPreWithdrawalFee;
     if (this._decoded.fees.ownerWithdrawFeeDenominator > 0) {
-      liquidity += liquidityPreWithdrawalFee * (
-        this._decoded.fees.ownerWithdrawFeeNumerator / this._decoded.fees.ownerWithdrawFeeDenominator
-      )
+      liquidity +=
+        liquidityPreWithdrawalFee *
+        (this._decoded.fees.ownerWithdrawFeeNumerator /
+          this._decoded.fees.ownerWithdrawFeeDenominator);
     } else {
-      liquidity += 1
+      liquidity += 1;
     }
 
     const transferAuthority = approveTransfer(
@@ -928,7 +944,11 @@ export class Pool {
     } else if (seed) {
       // Only works when owner is of type Account
       tokenSwapAccountSigner = owner;
-      tokenSwapAccountPubkey = await PublicKey.createWithSeed(ownerAddress, seed, tokenSwapProgram);
+      tokenSwapAccountPubkey = await PublicKey.createWithSeed(
+        ownerAddress,
+        seed,
+        tokenSwapProgram,
+      );
     } else {
       tokenSwapAccountSigner = new Account();
       tokenSwapAccountPubkey = tokenSwapAccountSigner.pubkey;
@@ -1000,17 +1020,19 @@ export class Pool {
 
     let initializeTokenSwapAccountInstruction;
     if (seed) {
-      initializeTokenSwapAccountInstruction = SystemProgram.createAccountWithSeed({
-        fromPubkey: ownerAddress,
-        basePubkey: ownerAddress,
-        newAccountPubkey: tokenSwapAccountPubkey,
-        seed: seed,
-        lamports: await connection.getMinimumBalanceForRentExemption(
-          getLayoutForProgramId(tokenSwapProgram).span
-        ),
-        space: getLayoutForProgramId(tokenSwapProgram).span,
-        programId: tokenSwapProgram,
-      });
+      initializeTokenSwapAccountInstruction = SystemProgram.createAccountWithSeed(
+        {
+          fromPubkey: ownerAddress,
+          basePubkey: ownerAddress,
+          newAccountPubkey: tokenSwapAccountPubkey,
+          seed: seed,
+          lamports: await connection.getMinimumBalanceForRentExemption(
+            getLayoutForProgramId(tokenSwapProgram).span,
+          ),
+          space: getLayoutForProgramId(tokenSwapProgram).span,
+          programId: tokenSwapProgram,
+        },
+      );
     } else {
       initializeTokenSwapAccountInstruction = SystemProgram.createAccount({
         fromPubkey: ownerAddress,
@@ -1020,7 +1042,7 @@ export class Pool {
         ),
         space: getLayoutForProgramId(tokenSwapProgram).span,
         programId: tokenSwapProgram,
-      })
+      });
     }
     initializePoolInstructions.push(initializeTokenSwapAccountInstruction);
 

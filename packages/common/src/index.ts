@@ -55,7 +55,7 @@ export async function createMintInstructions(
   mint: PublicKey,
   decimals?: number,
 ): Promise<TransactionInstruction[]> {
-  let instructions = [
+  const instructions = [
     SystemProgram.createAccount({
       fromPubkey: provider.wallet.publicKey,
       newAccountPubkey: mint,
@@ -188,7 +188,7 @@ export async function getMintInfo(
   provider: Provider,
   addr: PublicKey,
 ): Promise<MintInfo> {
-  let depositorAccInfo = await provider.connection.getAccountInfo(addr);
+  const depositorAccInfo = await provider.connection.getAccountInfo(addr);
   if (depositorAccInfo === null) {
     throw new Error('Failed to find token account');
   }
@@ -207,7 +207,7 @@ export async function getTokenAccount(
   provider: Provider,
   addr: PublicKey,
 ): Promise<AccountInfo> {
-  let depositorAccInfo = await provider.connection.getAccountInfo(addr);
+  const depositorAccInfo = await provider.connection.getAccountInfo(addr);
   if (depositorAccInfo === null) {
     throw new Error('Failed to find token account');
   }

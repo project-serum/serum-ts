@@ -8,6 +8,8 @@ import {
   sendAndConfirmRawTransaction,
 } from '@solana/web3.js';
 import { simulateTransaction } from './simulate-transaction';
+import { readFileSync } from 'fs';
+import { homedir } from 'os';
 
 export class Provider {
   constructor(
@@ -93,8 +95,8 @@ export class Provider {
       opts.preflightCommitment,
     );
 
-    let txs = reqs.map(r => {
-      let tx = r.tx;
+    const txs = reqs.map(r => {
+      const tx = r.tx;
       let signers = r.signers;
 
       if (signers === undefined) {
@@ -160,12 +162,9 @@ export class NodeWallet implements Wallet {
     const payer = new Account(
       Buffer.from(
         JSON.parse(
-          require('fs').readFileSync(
-            require('os').homedir() + '/.config/solana/id.json',
-            {
-              encoding: 'utf-8',
-            },
-          ),
+          readFileSync(homedir() + '/.config/solana/id.json', {
+            encoding: 'utf-8',
+          }),
         ),
       ),
     );

@@ -8,7 +8,7 @@ import {
   SystemProgram,
   Transaction,
   TransactionInstruction,
-  TransactionSignature
+  TransactionSignature,
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { Buffer } from 'buffer';
@@ -26,7 +26,7 @@ import {
   SRM_DECIMALS,
   SRM_MINT,
   TOKEN_PROGRAM_ID,
-  WRAPPED_SOL_MINT
+  WRAPPED_SOL_MINT,
 } from './token-instructions';
 import { getLayoutVersion } from './tokens_and_markets';
 
@@ -425,7 +425,8 @@ export class Market {
     cacheDurationMs = 0,
   ) {
     if (!accounts.openOrdersAccount && !accounts.openOrdersAddressKey) {
-      const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
+      const ownerAddress: PublicKey =
+        accounts.owner.publicKey ?? accounts.owner;
       const openOrdersAccounts = await this.findOpenOrdersAccountsForOwner(
         connection,
         ownerAddress,
@@ -435,7 +436,9 @@ export class Market {
     }
 
     const transaction = new Transaction();
-    transaction.add(this.makeReplaceOrdersByClientIdsInstruction(accounts, orders));
+    transaction.add(
+      this.makeReplaceOrdersByClientIdsInstruction(accounts, orders),
+    );
     return await this._sendTransaction(connection, transaction, [
       accounts.owner,
     ]);
@@ -497,8 +500,9 @@ export class Market {
       feeDiscountPubkey = undefined,
     }: SendTakeParams,
   ) {
-    const { transaction, signers } = await this.makeSendTakeTransaction<Account>(
-      connection, {
+    const { transaction, signers } = await this.makeSendTakeTransaction<
+      Account
+    >(connection, {
       owner,
       baseWallet,
       quoteWallet,
@@ -514,7 +518,7 @@ export class Market {
     });
     return await this._sendTransaction(connection, transaction, [
       owner,
-      ...signers
+      ...signers,
     ]);
   }
 
@@ -920,7 +924,7 @@ export class Market {
       programId = undefined,
       feeDiscountPubkey = undefined,
     }: SendTakeParams<T>,
-    feeDiscountPubkeyCacheDurationMs = 0
+    feeDiscountPubkeyCacheDurationMs = 0,
   ) {
     // @ts-ignore
     const ownerAddress: PublicKey = owner.publicKey ?? owner;
@@ -1033,7 +1037,8 @@ export class Market {
   }
 
   makeReplaceOrdersByClientIdsInstruction<T extends PublicKey | Account>(
-    accounts: OrderParamsAccounts<T>, orders: OrderParamsBase<T>[],
+    accounts: OrderParamsAccounts<T>,
+    orders: OrderParamsBase<T>[],
   ): TransactionInstruction {
     // @ts-ignore
     const ownerAddress: PublicKey = accounts.owner.publicKey ?? accounts.owner;
@@ -1055,12 +1060,14 @@ export class Market {
       feeDiscountPubkey: this.supportsSrmFeeDiscounts
         ? accounts.feeDiscountPubkey
         : null,
-      orders: orders.map(order => ({
+      orders: orders.map((order) => ({
         side: order.side,
         limitPrice: this.priceNumberToLots(order.price),
         maxBaseQuantity: this.baseSizeNumberToLots(order.size),
         maxQuoteQuantity: new BN(this._decoded.quoteLotSize.toNumber()).mul(
-          this.baseSizeNumberToLots(order.size).mul(this.priceNumberToLots(order.price)),
+          this.baseSizeNumberToLots(order.size).mul(
+            this.priceNumberToLots(order.price),
+          ),
         ),
         orderType: order.orderType,
         clientId: order.clientId,
@@ -1068,7 +1075,7 @@ export class Market {
         selfTradeBehavior: order.selfTradeBehavior,
         // @ts-ignore
         maxTs: order.maxTs,
-      }))
+      })),
     });
   }
 
@@ -1476,8 +1483,8 @@ export class Market {
         (price *
           Math.pow(10, this._quoteSplTokenDecimals) *
           this._decoded.baseLotSize.toNumber()) /
-        (Math.pow(10, this._baseSplTokenDecimals) *
-          this._decoded.quoteLotSize.toNumber()),
+          (Math.pow(10, this._baseSplTokenDecimals) *
+            this._decoded.quoteLotSize.toNumber()),
       ),
     );
   }
@@ -1491,11 +1498,11 @@ export class Market {
   }
 
   baseSizeNumberToSplSize(size: number) {
-    return new BN(Math.round(size * Math.pow(10, this._baseSplTokenDecimals)),);
+    return new BN(Math.round(size * Math.pow(10, this._baseSplTokenDecimals)));
   }
 
   quoteSizeNumberToSplSize(size: number) {
-    return new BN(Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)),);
+    return new BN(Math.round(size * Math.pow(10, this._quoteSplTokenDecimals)));
   }
 
   baseSizeLotsToNumber(size: BN) {
@@ -1549,10 +1556,10 @@ export interface OrderParamsBase<T = Account> {
   orderType?: 'limit' | 'ioc' | 'postOnly';
   clientId?: BN;
   selfTradeBehavior?:
-  | 'decrementTake'
-  | 'cancelProvide'
-  | 'abortTransaction'
-  | undefined;
+    | 'decrementTake'
+    | 'cancelProvide'
+    | 'abortTransaction'
+    | undefined;
   maxTs?: number | null;
 }
 
@@ -1565,7 +1572,9 @@ export interface OrderParamsAccounts<T = Account> {
   programId?: PublicKey;
 }
 
-export interface OrderParams<T = Account> extends OrderParamsBase<T>, OrderParamsAccounts<T> {
+export interface OrderParams<T = Account>
+  extends OrderParamsBase<T>,
+    OrderParamsAccounts<T> {
   replaceIfExists?: boolean;
 }
 
@@ -1588,7 +1597,9 @@ export interface SendTakeParamsAccounts<T = Account> {
   programId?: PublicKey;
 }
 
-export interface SendTakeParams<T = Account> extends SendTakeParamsBase<T>, SendTakeParamsAccounts<T> { }
+export interface SendTakeParams<T = Account>
+  extends SendTakeParamsBase<T>,
+    SendTakeParamsAccounts<T> {}
 
 export const _OPEN_ORDERS_LAYOUT_V1 = struct([
   blob(5),
@@ -1815,7 +1826,9 @@ export class Orderbook {
     for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].eq(price)) {
-        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(quantity);
+        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(
+          quantity,
+        );
       } else if (levels.length === depth) {
         break;
       } else {
