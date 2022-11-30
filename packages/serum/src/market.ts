@@ -30,7 +30,6 @@ import {
 } from './token-instructions';
 import { getLayoutVersion } from './tokens_and_markets';
 import { Token, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
-import { connect } from 'http2';
 
 export const _MARKET_STAT_LAYOUT_V1 = struct([
   blob(5),
