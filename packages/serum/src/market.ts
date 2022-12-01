@@ -29,7 +29,6 @@ import {
   WRAPPED_SOL_MINT,
 } from './token-instructions';
 import { getLayoutVersion } from './tokens_and_markets';
-import { Token, ASSOCIATED_TOKEN_PROGRAM_ID } from '@solana/spl-token';
 
 export const _MARKET_STAT_LAYOUT_V1 = struct([
   blob(5),
@@ -1311,29 +1310,31 @@ export class Market {
     const transaction = new Transaction();
     const signers: Account[] = [];
 
-    let wrappedSolAccount: PublicKey | null = null;
+    let wrappedSolAccount: Account | null = null;
     if (
       (this.baseMintAddress.equals(WRAPPED_SOL_MINT) &&
         baseWallet.equals(openOrders.owner)) ||
       (this.quoteMintAddress.equals(WRAPPED_SOL_MINT) &&
         quoteWallet.equals(openOrders.owner))
     ) {
-      wrappedSolAccount = await Token.getAssociatedTokenAddress(
-        ASSOCIATED_TOKEN_PROGRAM_ID,
-        TOKEN_PROGRAM_ID,
-        WRAPPED_SOL_MINT,
-        openOrders.owner,
+      wrappedSolAccount = new Account();
+      transaction.add(
+        SystemProgram.createAccount({
+          fromPubkey: openOrders.owner,
+          newAccountPubkey: wrappedSolAccount.publicKey,
+          lamports: await connection.getMinimumBalanceForRentExemption(165),
+          space: 165,
+          programId: TOKEN_PROGRAM_ID,
+        }),
       );
       transaction.add(
-        Token.createAssociatedTokenAccountInstruction(
-          ASSOCIATED_TOKEN_PROGRAM_ID,
-          TOKEN_PROGRAM_ID,
-          WRAPPED_SOL_MINT,
-          wrappedSolAccount,
-          openOrders.owner,
-          openOrders.owner,
-        ),
+        initializeAccount({
+          account: wrappedSolAccount.publicKey,
+          mint: WRAPPED_SOL_MINT,
+          owner: openOrders.owner,
+        }),
       );
+      signers.push(wrappedSolAccount);
     }
 
     transaction.add(
@@ -1345,11 +1346,11 @@ export class Market {
         quoteVault: this._decoded.quoteVault,
         baseWallet:
           baseWallet.equals(openOrders.owner) && wrappedSolAccount
-            ? wrappedSolAccount
+            ? wrappedSolAccount.publicKey
             : baseWallet,
         quoteWallet:
           quoteWallet.equals(openOrders.owner) && wrappedSolAccount
-            ? wrappedSolAccount
+            ? wrappedSolAccount.publicKey
             : quoteWallet,
         vaultSigner,
         programId: this._programId,
@@ -1357,6 +1358,16 @@ export class Market {
         referrerQuoteWallet,
       }),
     );
+
+    if (wrappedSolAccount) {
+      transaction.add(
+        closeAccount({
+          source: wrappedSolAccount.publicKey,
+          destination: openOrders.owner,
+          owner: openOrders.owner,
+        }),
+      );
+    }
 
     return { transaction, signers, payer: openOrders.owner };
   }
