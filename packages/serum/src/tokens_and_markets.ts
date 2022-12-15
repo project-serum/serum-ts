@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import Markets from './markets.json';
-import TokenMints from './token-mints.json';
+import Tokens from '@project-serum/tokens/src/mainnet-beta.json';
 
 export const PROGRAM_LAYOUT_VERSIONS = {
   '4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn': 1,
@@ -16,10 +16,10 @@ export function getLayoutVersion(programId: PublicKey) {
 export const TOKEN_MINTS: Array<{
   address: PublicKey;
   name: string;
-}> = TokenMints.map((mint) => {
+}> = Tokens.map((token) => {
   return {
-    address: new PublicKey(mint.address),
-    name: mint.name,
+    address: new PublicKey(token.mintAddress),
+    name: token.tokenSymbol,
   };
 });
 
