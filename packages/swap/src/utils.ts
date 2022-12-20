@@ -35,7 +35,7 @@ export async function getVaultOwnerAndNonce(
         dexProgramId,
       );
       return [vaultOwner, nonce];
-    } catch (e) {
+    } catch (e: any) {
       nonce.iaddn(1);
     }
   }
