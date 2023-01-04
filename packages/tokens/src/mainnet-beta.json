@@ -396,5 +396,10 @@
     "tokenName": "Lido Staked SOL",
     "tokenSymbol": "stSOL",
     "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj/logo.png"
+  },
+  {
+    "mintAddress": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "tokenName": "Bonk",
+    "tokenSymbol": "BONK"
   }
 ]
