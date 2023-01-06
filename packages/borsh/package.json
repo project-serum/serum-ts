@@ -19,7 +19,7 @@
     "docs": "typedoc --out ../../docs/borsh --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "",
     "clean": "rm -rf dist",
-    "prepare": "run-s clean build"
+    "postinstall": "run-s clean build"
   },
   "dependencies": {
     "bn.js": "^5.1.2",
