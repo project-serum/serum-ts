@@ -66,6 +66,12 @@
     "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
   },
   {
+    "address": "GfVBNfqWbEUpJcjDbxUcnzRZcPvyt85o2K4Y6tMUifCT",
+    "deprecated": false,
+    "name": "XSB/USDC",
+    "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
+  },
+  {
     "address": "8PhnCfgqpgFM7ZJvttGdBVMXHuU4Q23ACxCvWkbs1M71",
     "deprecated": false,
     "name": "BONK/USDC",
