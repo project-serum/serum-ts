@@ -153,9 +153,8 @@ export class PoolTransactions {
     };
 
     const mintAccountSpace = 82;
-    const mintAccountLamports = await connection.getMinimumBalanceForRentExemption(
-      mintAccountSpace,
-    );
+    const mintAccountLamports =
+      await connection.getMinimumBalanceForRentExemption(mintAccountSpace);
 
     // Initialize pool token.
     setup.transaction.add(
@@ -379,8 +378,7 @@ export class PoolTransactions {
     if (wrappedSolAccount) {
       transaction.add(
         TokenInstructions.closeAccount({
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-          source: wrappedSolAccount!.publicKey,
+          source: (wrappedSolAccount as Account | null)!.publicKey,
           destination: user.owner,
           owner: delegate.publicKey,
         }),
