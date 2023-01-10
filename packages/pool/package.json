@@ -20,7 +20,7 @@
     "build": "tsc",
     "start": "tsc --watch",
     "clean": "rm -rf dist",
-    "postinstall": "rm -rf dist && yarn tsc",
+    "postinstall": "run-s clean build",
     "docs": "typedoc --out ../../docs/pool --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "run-s test:build test:unit test:lint",
     "test:build": "run-s build",
@@ -36,7 +36,7 @@
     "buffer-layout": "^1.2.0"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.66.2"
   },
   "devDependencies": {
     "@solana/web3.js": "^1.70.0",
