@@ -19,7 +19,7 @@
     "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
-    "postinstall": "npm run clean && npm run build"
+    "pack": "run-s clean build"
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.21",
