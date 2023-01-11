@@ -21,7 +21,7 @@
     "start": "tsc --watch",
     "test": "",
     "clean": "rm -rf dist",
-    "pack": "run-s clean build"
+    "prepack": "run-s clean build"
   },
   "dependencies": {
     "@project-serum/borsh": "^0.0.1-beta.0",
