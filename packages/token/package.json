@@ -21,7 +21,7 @@
     "start": "tsc --watch",
     "test": "",
     "clean": "rm -rf dist",
-    "postinstall": "yarn clean && yarn build"
+    "postinstall": "rm -rf dist && yarn tsc"
   },
   "dependencies": {
     "@project-serum/borsh": "^0.0.1-beta.0",
