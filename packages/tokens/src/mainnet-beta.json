@@ -401,5 +401,11 @@
     "mintAddress": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
     "tokenName": "Bonk",
     "tokenSymbol": "BONK"
+  },
+  {
+    "mintAddress": "GFX1ZjR2P15tmrSwow6FjyDYcEkoFb4p4gJCpLBjaxHD",
+    "tokenName": "GooseFX",
+    "tokenSymbol": "GOFX",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/GFX1ZjR2P15tmrSwow6FjyDYcEkoFb4p4gJCpLBjaxHD/logo.png"
   }
 ]
