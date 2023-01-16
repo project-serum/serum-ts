@@ -19,7 +19,7 @@
     "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
-    "postinstall": "run-s clean build"
+    "postinstall": "yarn clean && yarn build"
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.21",
