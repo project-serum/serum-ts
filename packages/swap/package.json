@@ -15,7 +15,7 @@
     "start": "tsc --watch",
     "clean": "rm -rf lib",
     "docs": "typedoc --excludePrivate --out ../../docs/swap src/index.ts --includeVersion --readme none",
-    "prepack": "run-s clean build",
+    "postinstall": "run-s clean build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await"
   },
   "devDependencies": {
