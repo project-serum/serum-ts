@@ -29,9 +29,9 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@project-serum/associated-token": "^0.1.1",
-    "@project-serum/borsh": "^0.0.1-beta.0",
-    "@project-serum/token": "^0.0.1-alpha.2",
+    "@project-serum/associated-token": "trezm/serum-ts#workspace=@project-serum/associated-token&head=bug/fix_the_dang_import",
+    "@project-serum/borsh": "trezm/serum-ts#workspace=@project-serum/borsh&head=bug/fix_the_dang_import",
+    "@project-serum/token": "trezm/serum-ts#workspace=@project-serum/token&head=bug/fix_the_dang_import",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },
