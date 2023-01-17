@@ -23,10 +23,10 @@
     "prepack": "npm run clean && npm run build"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "devDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "files": [
     "dist"

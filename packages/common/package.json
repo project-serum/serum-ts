@@ -27,7 +27,7 @@
     "superstruct": "0.8.3"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "files": [
     "dist"
