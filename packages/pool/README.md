@@ -30,7 +30,7 @@ Fetch and decode pool state:
 
 ```js
 import { Connection, PublicKey } from '@solana/web3.js';
-import { loadPoolInfo, PoolTransactions } from '@project-serum/pool';
+import { loadPoolInfo, PoolTransactions } from '@openbook-dex/pool';
 
 let connection = new Connection('...');
 let poolAddress = new PublicKey('...'); // Address of the pool.
@@ -47,7 +47,7 @@ and [`decodePoolState()`](https://project-serum.github.io/serum-ts/pool/modules/
 directly.
 
 ```js
-import { decodePoolState } from '@project-serum/pool';
+import { decodePoolState } from '@openbook-dex/pool';
 
 // Pool state account data, e.g. from Connection.getAccountInfo or Connection.onAccountChange
 let data = new Buffer('...');
@@ -67,7 +67,7 @@ or the quantity of each token received for redeeming N pool tokens).
 
 ```js
 import { Connection, PublicKey } from '@solana/web3.js';
-import { loadPoolInfo, getPoolBasket } from '@project-serum/pool';
+import { loadPoolInfo, getPoolBasket } from '@openbook-dex/pool';
 import BN from 'bn.js';
 
 let connection = new Connection('...');
@@ -92,7 +92,7 @@ Send a transaction to create pool tokens:
 
 ```js
 import { Account, Connection, PublicKey } from '@solana/web3.js';
-import { loadPoolInfo, PoolTransactions } from '@project-serum/pool';
+import { loadPoolInfo, PoolTransactions } from '@openbook-dex/pool';
 import BN from 'bn.js';
 
 let connection = new Connection('...');
@@ -128,7 +128,7 @@ Send a transaction to redeem pool tokens:
 
 ```js
 import { Account, Connection, PublicKey } from '@solana/web3.js';
-import { loadPoolInfo, PoolTransactions } from '@project-serum/pool';
+import { loadPoolInfo, PoolTransactions } from '@openbook-dex/pool';
 import BN from 'bn.js';
 
 let connection = new Connection('...');

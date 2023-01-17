@@ -12,7 +12,7 @@ import {
   struct,
   u8,
   EnumLayout,
-} from '@project-serum/borsh';
+} from '@openbook-dex/borsh';
 
 export const TOKEN_PROGRAM_ID = new PublicKey(
   'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA',
@@ -46,8 +46,8 @@ export type TokenInstructionLayout =
   | { mintToChecked: { amount: BN; decimals: number } }
   | { burnChecked: { amount: BN; decimals: number } };
 
-export const TokenInstructionLayout: EnumLayout<TokenInstructionLayout> = rustEnum(
-  [
+export const TokenInstructionLayout: EnumLayout<TokenInstructionLayout> =
+  rustEnum([
     struct(
       [
         u8('decimals'),
@@ -74,8 +74,7 @@ export const TokenInstructionLayout: EnumLayout<TokenInstructionLayout> = rustEn
     struct([u64('amount'), u8('decimals')], 'approveChecked'),
     struct([u64('amount'), u8('decimals')], 'mintToChecked'),
     struct([u64('amount'), u8('decimals')], 'burnChecked'),
-  ],
-);
+  ]);
 
 const instructionMaxSpan = Math.max(
   ...Object.values(TokenInstructionLayout.registry).map(r => r.span),

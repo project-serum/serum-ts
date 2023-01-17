@@ -1,7 +1,7 @@
 {
-  "name": "@project-serum/borsh",
-  "version": "0.2.5",
-  "description": "Serum Borsh",
+  "name": "@openbook-dex/borsh",
+  "version": "0.0.2",
+  "description": "Openbook Borsh",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "exports": {
@@ -19,7 +19,7 @@
     "docs": "typedoc --out ../../docs/borsh --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "",
     "clean": "rm -rf dist",
-    "postinstall": "npm run clean && npm run build"
+    "prepack": "npm run clean && npm run build"
   },
   "dependencies": {
     "bn.js": "^5.1.2",
@@ -30,5 +30,8 @@
   },
   "files": [
     "dist"
-  ]
+  ],
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1"
+  }
 }

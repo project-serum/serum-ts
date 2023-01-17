@@ -1,8 +1,8 @@
 {
-  "name": "@project-serum/pool",
-  "version": "0.2.3",
-  "description": "Library for interacting with the serum pools",
-  "repository": "project-serum/serum-ts",
+  "name": "@openbook-dex/pool",
+  "version": "0.0.2",
+  "description": "Library for interacting with the openbook pools",
+  "repository": "openbook-dex/openbook-ts",
   "main": "dist/lib/index.js",
   "source": "src/index.js",
   "types": "dist/lib/index.d.ts",
@@ -20,7 +20,7 @@
     "build": "tsc",
     "start": "tsc --watch",
     "clean": "rm -rf dist",
-    "postinstall": "npm run clean && npm run build",
+    "prepack": "npm run clean && npm run build",
     "docs": "typedoc --out ../../docs/pool --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "run-s test:build test:unit test:lint",
     "test:build": "run-s build",
@@ -29,9 +29,9 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@project-serum/associated-token": "https://gitpkg.now.sh/trezm/serum-ts/packages/associated-token?bug/fix_the_dang_import",
-    "@project-serum/borsh": "https://gitpkg.now.sh/trezm/serum-ts/packages/borsh?bug/fix_the_dang_import",
-    "@project-serum/token": "https://gitpkg.now.sh/trezm/serum-ts/packages/token?bug/fix_the_dang_import",
+    "@openbook-dex/associated-token": "0.0.1",
+    "@openbook-dex/borsh": "0.0.2",
+    "@openbook-dex/token": "0.0.2",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },

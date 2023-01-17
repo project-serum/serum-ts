@@ -5,14 +5,14 @@ import {
   SystemProgram,
   Transaction,
 } from '@solana/web3.js';
-import { TOKEN_PROGRAM_ID, TokenInstructions } from '@project-serum/token';
+import { TOKEN_PROGRAM_ID, TokenInstructions } from '@openbook-dex/token';
 import { promisify } from 'util';
 import { homedir } from 'os';
 import { readFile } from 'fs';
 import BN from 'bn.js';
 import { PoolTransactions } from '../transactions';
 import { getPoolBasket, loadPoolInfo, PoolInfo, UserInfo } from '../index';
-import { getAssociatedTokenAddress } from '@project-serum/associated-token';
+import { getAssociatedTokenAddress } from '@openbook-dex/associated-token';
 
 const POOL_PROGRAM_ID = new PublicKey(
   'ERvQUuLLY89DcwiUYemUgogdt2TFh7CG7cNW1fEFzeMJ',
@@ -33,20 +33,18 @@ async function doStuff() {
   const [mint1, vault1] = await createMint(connection, payer);
   const [mint2, vault2] = await createMint(connection, payer);
 
-  const [
-    poolAddress,
-    transactions,
-  ] = await PoolTransactions.initializeSimplePool({
-    connection,
-    assetMints: [mint1, mint2],
-    creator: payer.publicKey,
-    creatorAssets: [vault1, vault2],
-    initialAssetQuantities: [new BN(100), new BN(300)],
-    poolStateSpace: 1000,
-    programId: POOL_PROGRAM_ID,
-    poolName: 'Test Pool',
-    feeRate: 2500,
-  });
+  const [poolAddress, transactions] =
+    await PoolTransactions.initializeSimplePool({
+      connection,
+      assetMints: [mint1, mint2],
+      creator: payer.publicKey,
+      creatorAssets: [vault1, vault2],
+      initialAssetQuantities: [new BN(100), new BN(300)],
+      poolStateSpace: 1000,
+      programId: POOL_PROGRAM_ID,
+      poolName: 'Test Pool',
+      feeRate: 2500,
+    });
   console.log('Pool address:', poolAddress.toBase58());
   for (const { transaction, signers } of transactions) {
     await sendAndConfirmTransaction(connection, transaction, [

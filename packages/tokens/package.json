@@ -1,7 +1,7 @@
 {
-  "name": "@project-serum/tokens",
-  "version": "0.0.7",
-  "description": "Serum tokens",
+  "name": "@openbook-dex/tokens",
+  "version": "0.0.2",
+  "description": "Openbook tokens",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",
   "types": "dist/lib/src/index.d.ts",
@@ -10,11 +10,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "yarn build:node && yarn build:browser",
-    "build:node": "tsc -b && rollup -c rollup/rollup.config.ts",
-    "build:browser": "tsc -b && rollup -c rollup/rollup.config.browser.ts",
-    "coverage": "jest --coverage test",
-    "prepublishOnly": "yarn build"
+    "build": "npm run build:node && npm run build:browser",
+    "build:node": "npx tsc -b && npx rollup -c rollup/rollup.config.ts",
+    "build:browser": "npx tsc -b && npx rollup -c rollup/rollup.config.browser.ts",
+    "coverage": "npx jest --coverage test",
+    "prepack": "npm run build"
   },
   "jest": {
     "transform": {
@@ -31,5 +31,8 @@
   "browser": {
     "./dist/index.umd.js": "./dist/index.browser.umd.js",
     "./dist/index.es5.js": "./dist/index.browser.es5.js"
+  },
+  "devDependencies": {
+    "typescript": "^4.9.4"
   }
 }
