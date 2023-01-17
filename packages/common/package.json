@@ -19,7 +19,7 @@
     "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
-    "prepack": "yarn clean && yarn build"
+    "prepack": "npm run clean && npm run build"
   },
   "dependencies": {
     "@project-serum/serum": "^0.13.21",
