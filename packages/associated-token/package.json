@@ -20,7 +20,7 @@
     "docs": "typedoc --out ../../docs/associated-token --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "",
     "clean": "rm -rf dist",
-    "prepack": "npm run clean && npm run build"
+    "prepare": "npm run clean && npm run build"
   },
   "peerDependencies": {
     "@solana/web3.js": "^1.70.0"

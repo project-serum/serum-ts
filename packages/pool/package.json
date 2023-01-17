@@ -20,7 +20,7 @@
     "build": "tsc",
     "start": "tsc --watch",
     "clean": "rm -rf dist",
-    "prepack": "npm run clean && npm run build",
+    "prepare": "npm run clean && npm run build",
     "docs": "typedoc --out ../../docs/pool --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "run-s test:build test:unit test:lint",
     "test:build": "run-s build",
