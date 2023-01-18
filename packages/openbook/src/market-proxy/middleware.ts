@@ -1,4 +1,4 @@
-import { utils } from '@openbook-dex/anchor';
+import { utils } from '@project-serum/anchor';
 import {
   SystemProgram,
   PublicKey,

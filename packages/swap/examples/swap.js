@@ -1,4 +1,4 @@
-const anchor = require('@openbook-dex/anchor');
+const anchor = require('@project-serum/anchor');
 const Provider = anchor.Provider;
 const Wallet = anchor.Wallet;
 const BN = anchor.BN;

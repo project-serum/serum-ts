@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/token",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Utilities for interacting with SPL Tokens",
   "repository": "openbook-dex/openbook-ts",
   "main": "dist/lib/index.js",
@@ -24,8 +24,11 @@
     "prepack": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@openbook-dex/borsh": "0.0.2",
+    "@openbook-dex/borsh": "0.0.4",
     "bn.js": "^5.1.3"
+  },
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1"
   },
   "peerDependencies": {
     "@solana/web3.js": "^1.70.0"

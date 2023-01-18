@@ -1,4 +1,4 @@
-import { Provider } from '@openbook-dex/anchor';
+import { Provider } from '@project-serum/anchor';
 import { OpenOrders } from '@openbook-dex/openbook';
 import { TokenListContainer } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';

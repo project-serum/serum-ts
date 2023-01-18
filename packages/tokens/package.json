@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/tokens",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Openbook tokens",
   "main": "dist/index.umd.js",
   "module": "dist/index.es5.js",

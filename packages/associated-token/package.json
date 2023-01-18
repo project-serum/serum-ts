@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/associated-token",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Library for interacting with SPL Associated Token Accounts",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",

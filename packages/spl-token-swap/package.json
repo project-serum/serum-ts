@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/spl-token-swap",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Openbook Swap",
   "main": "lib/index.js",
   "types": "lib/src/index.d.ts",
@@ -28,7 +28,7 @@
     ]
   },
   "dependencies": {
-    "@openbook-dex/openbook": "0.0.2",
+    "@openbook-dex/openbook": "0.0.4",
     "@solana/spl-token": "^0.0.13",
     "@solana/spl-token-swap": "0.1.0",
     "bn.js": "^5.1.3",

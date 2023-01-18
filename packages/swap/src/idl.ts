@@ -1,4 +1,4 @@
-import { Idl } from '@openbook-dex/anchor';
+import { Idl } from '@project-serum/anchor';
 
 // Idl for client generation.
 export const IDL: Idl = {

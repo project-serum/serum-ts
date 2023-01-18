@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/pool",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Library for interacting with the openbook pools",
   "repository": "openbook-dex/openbook-ts",
   "main": "dist/lib/index.js",
@@ -29,9 +29,9 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
-    "@openbook-dex/associated-token": "0.0.1",
-    "@openbook-dex/borsh": "0.0.2",
-    "@openbook-dex/token": "0.0.2",
+    "@openbook-dex/associated-token": "0.0.4",
+    "@openbook-dex/borsh": "0.0.4",
+    "@openbook-dex/token": "0.0.4",
     "bn.js": "^5.1.2",
     "buffer-layout": "^1.2.0"
   },

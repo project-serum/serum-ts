@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/borsh",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Openbook Borsh",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",

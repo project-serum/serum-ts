@@ -5,7 +5,7 @@ import {
   TransactionSignature,
   SYSVAR_RENT_PUBKEY,
 } from '@solana/web3.js';
-import { Program, Provider } from '@openbook-dex/anchor';
+import { Program, Provider } from '@project-serum/anchor';
 import { TokenListContainer } from '@solana/spl-token-registry';
 import {
   Account,

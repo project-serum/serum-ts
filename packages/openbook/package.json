@@ -1,6 +1,6 @@
 {
   "name": "@openbook-dex/openbook",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Library for interacting with the openbook dex",
   "license": "MIT",
   "repository": "openbook-dex/openbook-ts",
@@ -25,7 +25,7 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
-    "@openbook-dex/tokens": "0.0.2",
+    "@openbook-dex/tokens": "0.0.4",
     "@tsconfig/node12": "^1.0.7",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^26.0.9",
