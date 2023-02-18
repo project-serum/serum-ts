@@ -461,22 +461,21 @@ export class Market {
       replaceIfExists = false,
     }: OrderParams,
   ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction<
-      Account
-    >(connection, {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType,
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-      feeDiscountPubkey,
-      maxTs,
-      replaceIfExists,
-    });
+    const { transaction, signers } =
+      await this.makePlaceOrderTransaction<Account>(connection, {
+        owner,
+        payer,
+        side,
+        price,
+        size,
+        orderType,
+        clientId,
+        openOrdersAddressKey,
+        openOrdersAccount,
+        feeDiscountPubkey,
+        maxTs,
+        replaceIfExists,
+      });
     return await this._sendTransaction(connection, transaction, [
       owner,
       ...signers,
@@ -500,22 +499,21 @@ export class Market {
       feeDiscountPubkey = undefined,
     }: SendTakeParams,
   ) {
-    const { transaction, signers } = await this.makeSendTakeTransaction<
-      Account
-    >(connection, {
-      owner,
-      baseWallet,
-      quoteWallet,
-      side,
-      price,
-      maxBaseSize,
-      maxQuoteSize,
-      minBaseSize,
-      minQuoteSize,
-      limit,
-      programId,
-      feeDiscountPubkey,
-    });
+    const { transaction, signers } =
+      await this.makeSendTakeTransaction<Account>(connection, {
+        owner,
+        baseWallet,
+        quoteWallet,
+        side,
+        price,
+        maxBaseSize,
+        maxQuoteSize,
+        minBaseSize,
+        minQuoteSize,
+        limit,
+        programId,
+        feeDiscountPubkey,
+      });
     return await this._sendTransaction(connection, transaction, [
       owner,
       ...signers,
@@ -705,11 +703,21 @@ export class Market {
 
     let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
+      const marketAddress = this.address.toBase58();
+      const seed = marketAddress.slice(0, 32);
+
       let account;
+
       if (openOrdersAccount) {
         account = openOrdersAccount;
       } else {
-        account = new Account();
+        account = {
+          publicKey: await PublicKey.createWithSeed(
+            ownerAddress,
+            seed,
+            this.programId,
+          ),
+        };
       }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -718,10 +726,11 @@ export class Market {
           ownerAddress,
           account.publicKey,
           this._programId,
+          seed,
         ),
       );
       openOrdersAddress = account.publicKey;
-      signers.push(account);
+      // signers.push(ownerAddress);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
     } else if (openOrdersAccount) {
@@ -1773,10 +1782,13 @@ export class OpenOrders {
     ownerAddress: PublicKey,
     newAccountAddress: PublicKey,
     programId: PublicKey,
+    seed: string,
   ) {
-    return SystemProgram.createAccount({
+    return SystemProgram.createAccountWithSeed({
       fromPubkey: ownerAddress,
+      basePubkey: ownerAddress,
       newAccountPubkey: newAccountAddress,
+      seed: seed,
       lamports: await connection.getMinimumBalanceForRentExemption(
         this.getLayout(programId).span,
       ),
@@ -1826,9 +1838,8 @@ export class Orderbook {
     for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].eq(price)) {
-        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(
-          quantity,
-        );
+        levels[levels.length - 1][1] =
+          levels[levels.length - 1][1].add(quantity);
       } else if (levels.length === depth) {
         break;
       } else {
