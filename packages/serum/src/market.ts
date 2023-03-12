@@ -396,6 +396,7 @@ export class Market {
     connection: Connection,
     ownerAddress: PublicKey,
     cacheDurationMs = 0,
+    forceSeedAccount: boolean = false,
   ): Promise<OpenOrders[]> {
     const strOwner = ownerAddress.toBase58();
     const now = new Date().getTime();
@@ -410,6 +411,7 @@ export class Market {
       this.address,
       ownerAddress,
       this._programId,
+      forceSeedAccount,
     );
     this._openOrdersAccountsCache[strOwner] = {
       accounts: openOrdersAccountsForOwner,
@@ -703,21 +705,16 @@ export class Market {
 
     let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
-      const marketAddress = this.address.toBase58();
-      const seed = marketAddress.slice(0, 32);
-
       let account;
 
       if (openOrdersAccount) {
         account = openOrdersAccount;
       } else {
-        account = {
-          publicKey: await PublicKey.createWithSeed(
-            ownerAddress,
-            seed,
-            this.programId,
-          ),
-        };
+        account = await OpenOrders.getDerivedOOAccountPubkey(
+          ownerAddress,
+          this.address,
+          this.programId,
+        );
       }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -726,11 +723,10 @@ export class Market {
           ownerAddress,
           account.publicKey,
           this._programId,
-          seed,
+          account.seed,
         ),
       );
       openOrdersAddress = account.publicKey;
-      // signers.push(ownerAddress);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
     } else if (openOrdersAccount) {
@@ -1689,6 +1685,20 @@ export class OpenOrders {
     return _OPEN_ORDERS_LAYOUT_V2;
   }
 
+  static async getDerivedOOAccountPubkey(
+    ownerAddress: PublicKey,
+    marketAddress: PublicKey,
+    programId: PublicKey,
+  ) {
+    const seed = marketAddress.toBase58().slice(0, 32);
+    const publicKey = await PublicKey.createWithSeed(
+      ownerAddress,
+      seed,
+      programId,
+    );
+    return { publicKey, seed };
+  }
+
   static async findForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
@@ -1720,7 +1730,26 @@ export class OpenOrders {
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
     programId: PublicKey,
-  ) {
+    forceSeedAccount: boolean = false,
+  ): Promise<OpenOrders[]> {
+    // Try loading seed based accounts
+    const account = await this.getDerivedOOAccountPubkey(
+      ownerAddress,
+      marketAddress,
+      programId,
+    );
+    const ooAccountInfo = await connection.getAccountInfo(account.publicKey);
+    if (ooAccountInfo) {
+      return [
+        OpenOrders.fromAccountInfo(account.publicKey, ooAccountInfo, programId),
+      ];
+    }
+
+    if (forceSeedAccount) {
+      return [];
+    }
+
+    // Fallback to legacy gPA loading
     const filters = [
       {
         memcmp: {

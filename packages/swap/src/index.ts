@@ -186,10 +186,14 @@ export class Swap {
 
     // Direct swap on USD(x).
     if (fromMint.equals(USDC_PUBKEY) || fromMint.equals(USDT_PUBKEY)) {
-      const openOrders = new Account();
       const marketAddress = await this.swapMarkets.getMarketAddressIfNeeded(
         fromMint,
         toMint,
+      );
+      const openOrders = await OpenOrders.getDerivedOOAccountPubkey(
+        this.program.provider.wallet.publicKey,
+        marketAddress,
+        DEX_PID,
       );
       tx.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -198,9 +202,9 @@ export class Swap {
           this.program.provider.wallet.publicKey,
           openOrders.publicKey,
           DEX_PID,
+          openOrders.seed,
         ),
       );
-      signers.push(openOrders);
       tx.add(
         this.program.instruction.initAccount({
           accounts: {
@@ -215,10 +219,14 @@ export class Swap {
     }
     // Direct swap on USD(x).
     else if (toMint.equals(USDC_PUBKEY) || toMint.equals(USDT_PUBKEY)) {
-      const openOrders = new Account();
       const marketAddress = await this.swapMarkets.getMarketAddressIfNeeded(
         toMint,
         fromMint,
+      );
+      const openOrders = await OpenOrders.getDerivedOOAccountPubkey(
+        this.program.provider.wallet.publicKey,
+        marketAddress,
+        DEX_PID,
       );
       tx.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -227,6 +235,7 @@ export class Swap {
           this.program.provider.wallet.publicKey,
           openOrders.publicKey,
           DEX_PID,
+          openOrders.seed,
         ),
       );
       tx.add(
@@ -240,7 +249,6 @@ export class Swap {
           },
         }),
       );
-      signers.push(openOrders);
     }
     // Transitive swap across USD(x).
     else {
@@ -280,7 +288,11 @@ export class Swap {
 
         // No open orders account for the from market, so make it.
         if (!ooAccsFrom[0]) {
-          const ooFrom = new Account();
+          const ooFrom = await OpenOrders.getDerivedOOAccountPubkey(
+            this.program.provider.wallet.publicKey,
+            marketTo,
+            DEX_PID,
+          );
           ixs.push(
             await OpenOrders.makeCreateAccountTransaction(
               this.program.provider.connection,
@@ -288,6 +300,7 @@ export class Swap {
               this.program.provider.wallet.publicKey,
               ooFrom.publicKey,
               DEX_PID,
+              ooFrom.seed,
             ),
           );
           ixs.push(
@@ -301,12 +314,15 @@ export class Swap {
               },
             }),
           );
-          sigs.push(ooFrom);
         }
 
         // No open orders account for the to market, so make it.
         if (!ooAccsTo[0]) {
-          const ooTo = new Account();
+          const ooTo = await OpenOrders.getDerivedOOAccountPubkey(
+            this.program.provider.wallet.publicKey,
+            marketTo,
+            DEX_PID,
+          );
           ixs.push(
             await OpenOrders.makeCreateAccountTransaction(
               this.program.provider.connection,
@@ -314,6 +330,7 @@ export class Swap {
               this.program.provider.wallet.publicKey,
               ooTo.publicKey,
               DEX_PID,
+              ooTo.seed,
             ),
           );
           ixs.push(
@@ -327,7 +344,6 @@ export class Swap {
               },
             }),
           );
-          sigs.push(ooTo);
         }
 
         // Done.
@@ -679,16 +695,19 @@ export class Swap {
 
     // Create the open orders account, if needed.
     if (needsOpenOrders) {
-      const oo = new Account();
-      signers.push(oo);
-      openOrders = oo.publicKey;
+      const ooAccount = await OpenOrders.getDerivedOOAccountPubkey(
+        this.program.provider.wallet.publicKey,
+        marketClient.address,
+        DEX_PID,
+      );
       ixs.push(
         await OpenOrders.makeCreateAccountTransaction(
           this.program.provider.connection,
           marketClient.address,
           this.program.provider.wallet.publicKey,
-          oo.publicKey,
+          ooAccount.publicKey,
           DEX_PID,
+          ooAccount.seed,
         ),
       );
     }
