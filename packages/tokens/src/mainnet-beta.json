@@ -401,5 +401,11 @@
     "mintAddress": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
     "tokenName": "Bonk",
     "tokenSymbol": "BONK"
+  },
+  {
+    "mintAddress": "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
+    "tokenName": "BlazeStake Staked SOL",
+    "tokenSymbol": "bSOL",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1/logo.png"
   }
 ]

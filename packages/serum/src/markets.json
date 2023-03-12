@@ -76,5 +76,17 @@
     "deprecated": false,
     "name": "BONK/USDC",
     "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
+  },
+  {
+    "address": "6QNusiQ1g7fKierMQhNeAJxfLXomfcAX3tGRMwxfESsw",
+    "deprecated": false,
+    "name": "bSOL/SOL",
+    "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
+  },
+  {
+    "address": "ARjaHVxGCQfTvvKjLd7U7srvk6orthZSE6uqWchCczZc",
+    "deprecated": false,
+    "name": "bSOL/USDC",
+    "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
   }
 ]
