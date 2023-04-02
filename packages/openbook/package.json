@@ -1,19 +1,22 @@
 {
-  "name": "@project-serum/serum",
-  "version": "0.13.65",
-  "description": "Library for interacting with the serum dex",
+  "name": "@openbook-dex/openbook",
+  "version": "0.0.4",
+  "description": "Library for interacting with the openbook dex",
   "license": "MIT",
-  "repository": "project-serum/serum-ts",
+  "repository": "openbook-dex/openbook-ts",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "engines": {
     "node": ">=10"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc",
     "start": "tsc --watch",
     "clean": "rm -rf lib",
-    "postinstall": "run-s clean build",
+    "prepack": "npm run clean && npm run build",
     "shell": "node -e \"$(< shell)\" -i --experimental-repl-await",
     "test": "run-s test:unit test:lint test:build",
     "test:build": "run-s build",
@@ -22,7 +25,7 @@
     "test:watch": "jest --watch"
   },
   "devDependencies": {
-    "@project-serum/tokens": "file:../tokens",
+    "@openbook-dex/tokens": "0.0.4",
     "@tsconfig/node12": "^1.0.7",
     "@types/bn.js": "^4.11.6",
     "@types/jest": "^26.0.9",

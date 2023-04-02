@@ -17,13 +17,13 @@ import {
   TokenInstructions,
   TOKEN_PROGRAM_ID,
   WRAPPED_SOL_MINT,
-} from '@project-serum/token';
+} from '@openbook-dex/token';
 import { Basket, PoolAction } from './schema';
 import BN from 'bn.js';
 import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
-} from '@project-serum/associated-token';
+} from '@openbook-dex/associated-token';
 
 export interface TransactionAndSigners {
   transaction: Transaction;

@@ -11,13 +11,13 @@
     "node": ">=6.0.0"
   },
   "scripts": {
-    "build": "lerna run build",
-    "lint": "eslint 'packages/*/{src,test}/**/*.ts' && prettier -c 'packages/*/{src,test}/**/*.ts'",
-    "lint:fix": "eslint --fix 'packages/*/{src,test}/**/*.ts' && prettier --write 'packages/*/{src,test}/**/*.ts'",
-    "deploy": "run-s deploy:docs build deploy:apps && gh-pages -d docs",
-    "deploy:docs": "lerna run docs",
-    "deploy:apps": "lerna run deploy:app",
-    "test": "lerna run test --concurrency 1 --stream"
+    "build": "npx lerna run build",
+    "lint": "npx eslint 'packages/*/{src,test}/**/*.ts' && npx prettier -c 'packages/*/{src,test}/**/*.ts'",
+    "lint:fix": "npx eslint --fix 'packages/*/{src,test}/**/*.ts' && npx prettier --write 'packages/*/{src,test}/**/*.ts'",
+    "deploy": "npx run-s deploy:docs build deploy:apps && gh-pages -d docs",
+    "deploy:docs": "npx lerna run docs",
+    "deploy:apps": "npx lerna run deploy:app",
+    "test": "npx lerna run test --concurrency 1 --stream"
   },
   "lint-staged": {
     "packages/*/{src,test}/**/*.ts": [
@@ -26,7 +26,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-commit": "lint-staged"
+      "pre-commit": "npm run lint"
     }
   },
   "prettier": {

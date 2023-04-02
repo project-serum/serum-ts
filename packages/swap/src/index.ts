@@ -17,7 +17,7 @@ import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import * as base64 from 'base64-js';
-import { Market, OpenOrders } from '@project-serum/serum';
+import { Market, OpenOrders } from '@openbook-dex/openbook';
 import { IDL } from './idl';
 import {
   DEX_PID,

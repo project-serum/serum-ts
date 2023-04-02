@@ -1,7 +1,7 @@
 {
-  "name": "@project-serum/common",
-  "version": "0.0.1-beta.3",
-  "description": "Serum common utilities",
+  "name": "@openbook-dex/common",
+  "version": "0.0.4",
+  "description": "Openbook common utilities",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
   "exports": {
@@ -19,17 +19,21 @@
     "watch": "tsc --watch",
     "test": "jest test",
     "clean": "rm -rf dist",
-    "postinstall": "run-s clean build"
+    "prepack": "npm run clean && npm run build"
   },
   "dependencies": {
-    "@project-serum/serum": "^0.13.21",
+    "@openbook-dex/openbook": "0.0.4",
     "bn.js": "^5.1.2",
     "superstruct": "0.8.3"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "files": [
     "dist"
-  ]
+  ],
+  "devDependencies": {
+    "@types/bn.js": "^5.1.1",
+    "@types/bs58": "^4.0.1"
+  }
 }

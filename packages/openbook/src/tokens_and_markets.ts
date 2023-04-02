@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import Markets from './markets.json';
-import Tokens from '@project-serum/tokens/src/mainnet-beta.json';
+import Tokens from '@openbook-dex/tokens/src/mainnet-beta.json';
 
 export const PROGRAM_LAYOUT_VERSIONS = {
   '4ckmDgGdxQoPDLUkDT3vHgSAkzA3QRdNq5ywwY4sUSJn': 1,

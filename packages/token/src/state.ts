@@ -1,6 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import BN from 'bn.js';
-import { bool, Layout, option, publicKey, u64 } from '@project-serum/borsh';
+import { bool, Layout, option, publicKey, u64 } from '@openbook-dex/borsh';
 import { struct, u8 } from 'buffer-layout';
 
 export interface Mint {

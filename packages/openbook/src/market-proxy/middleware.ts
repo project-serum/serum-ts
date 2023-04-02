@@ -40,21 +40,7 @@ export class OpenOrdersPda implements Middleware {
   ): Promise<PublicKey> {
     // b"open-orders-init"
     const openOrdersStr = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
-      45,
-      105,
-      110,
-      105,
+      111, 112, 101, 110, 45, 111, 114, 100, 101, 114, 115, 45, 105, 110, 105,
       116,
     ]);
     const [addr] = await PublicKey.findProgramAddress(
@@ -72,17 +58,7 @@ export class OpenOrdersPda implements Middleware {
   ): Promise<PublicKey> {
     // b"open-orders".
     const openOrdersStr = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
+      111, 112, 101, 110, 45, 111, 114, 100, 101, 114, 115,
     ]);
     const [addr] = await PublicKey.findProgramAddress(
       [
@@ -101,36 +77,12 @@ export class OpenOrdersPda implements Middleware {
     const owner = ix.keys[1].pubkey;
     // b"open-orders"
     const openOrdersSeed = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
+      111, 112, 101, 110, 45, 111, 114, 100, 101, 114, 115,
     ]);
 
     // b"open-orders-init"
     const openOrdersInitSeed = Buffer.from([
-      111,
-      112,
-      101,
-      110,
-      45,
-      111,
-      114,
-      100,
-      101,
-      114,
-      115,
-      45,
-      105,
-      110,
-      105,
+      111, 112, 101, 110, 45, 111, 114, 100, 101, 114, 115, 45, 105, 110, 105,
       116,
     ]);
     const [openOrders, bump] = utils.publicKey.findProgramAddressSync(
