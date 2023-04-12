@@ -407,5 +407,11 @@
     "tokenName": "GooseFX",
     "tokenSymbol": "GOFX",
     "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/GFX1ZjR2P15tmrSwow6FjyDYcEkoFb4p4gJCpLBjaxHD/logo.png"
+  },
+  {
+    "mintAddress": "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
+    "tokenName": "BlazeStake Staked SOL",
+    "tokenSymbol": "bSOL",
+    "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1/logo.png"
   }
 ]

@@ -1,7 +1,7 @@
 import { Connection, PublicKey } from '@solana/web3.js';
 import { ProgramAccount } from './';
 import { AccountInfo as TokenAccount } from '@solana/spl-token';
-import { TokenInstructions } from '@project-serum/serum';
+import { TokenInstructions } from '@openbook-dex/openbook';
 import * as bs58 from 'bs58';
 import * as BufferLayout from 'buffer-layout';
 

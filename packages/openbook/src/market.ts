@@ -396,6 +396,7 @@ export class Market {
     connection: Connection,
     ownerAddress: PublicKey,
     cacheDurationMs = 0,
+    forceSeedAccount: boolean = false,
   ): Promise<OpenOrders[]> {
     const strOwner = ownerAddress.toBase58();
     const now = new Date().getTime();
@@ -410,6 +411,7 @@ export class Market {
       this.address,
       ownerAddress,
       this._programId,
+      forceSeedAccount,
     );
     this._openOrdersAccountsCache[strOwner] = {
       accounts: openOrdersAccountsForOwner,
@@ -461,22 +463,21 @@ export class Market {
       replaceIfExists = false,
     }: OrderParams,
   ) {
-    const { transaction, signers } = await this.makePlaceOrderTransaction<
-      Account
-    >(connection, {
-      owner,
-      payer,
-      side,
-      price,
-      size,
-      orderType,
-      clientId,
-      openOrdersAddressKey,
-      openOrdersAccount,
-      feeDiscountPubkey,
-      maxTs,
-      replaceIfExists,
-    });
+    const { transaction, signers } =
+      await this.makePlaceOrderTransaction<Account>(connection, {
+        owner,
+        payer,
+        side,
+        price,
+        size,
+        orderType,
+        clientId,
+        openOrdersAddressKey,
+        openOrdersAccount,
+        feeDiscountPubkey,
+        maxTs,
+        replaceIfExists,
+      });
     return await this._sendTransaction(connection, transaction, [
       owner,
       ...signers,
@@ -500,22 +501,21 @@ export class Market {
       feeDiscountPubkey = undefined,
     }: SendTakeParams,
   ) {
-    const { transaction, signers } = await this.makeSendTakeTransaction<
-      Account
-    >(connection, {
-      owner,
-      baseWallet,
-      quoteWallet,
-      side,
-      price,
-      maxBaseSize,
-      maxQuoteSize,
-      minBaseSize,
-      minQuoteSize,
-      limit,
-      programId,
-      feeDiscountPubkey,
-    });
+    const { transaction, signers } =
+      await this.makeSendTakeTransaction<Account>(connection, {
+        owner,
+        baseWallet,
+        quoteWallet,
+        side,
+        price,
+        maxBaseSize,
+        maxQuoteSize,
+        minBaseSize,
+        minQuoteSize,
+        limit,
+        programId,
+        feeDiscountPubkey,
+      });
     return await this._sendTransaction(connection, transaction, [
       owner,
       ...signers,
@@ -706,10 +706,15 @@ export class Market {
     let openOrdersAddress: PublicKey;
     if (openOrdersAccounts.length === 0) {
       let account;
+
       if (openOrdersAccount) {
         account = openOrdersAccount;
       } else {
-        account = new Account();
+        account = await OpenOrders.getDerivedOOAccountPubkey(
+          ownerAddress,
+          this.address,
+          this.programId,
+        );
       }
       transaction.add(
         await OpenOrders.makeCreateAccountTransaction(
@@ -718,10 +723,10 @@ export class Market {
           ownerAddress,
           account.publicKey,
           this._programId,
+          account.seed,
         ),
       );
       openOrdersAddress = account.publicKey;
-      signers.push(account);
       // refresh the cache of open order accounts on next fetch
       this._openOrdersAccountsCache[ownerAddress.toBase58()].ts = 0;
     } else if (openOrdersAccount) {
@@ -1680,6 +1685,20 @@ export class OpenOrders {
     return _OPEN_ORDERS_LAYOUT_V2;
   }
 
+  static async getDerivedOOAccountPubkey(
+    ownerAddress: PublicKey,
+    marketAddress: PublicKey,
+    programId: PublicKey,
+  ) {
+    const seed = marketAddress.toBase58().slice(0, 32);
+    const publicKey = await PublicKey.createWithSeed(
+      ownerAddress,
+      seed,
+      programId,
+    );
+    return { publicKey, seed };
+  }
+
   static async findForOwner(
     connection: Connection,
     ownerAddress: PublicKey,
@@ -1711,7 +1730,26 @@ export class OpenOrders {
     marketAddress: PublicKey,
     ownerAddress: PublicKey,
     programId: PublicKey,
-  ) {
+    forceSeedAccount: boolean = false,
+  ): Promise<OpenOrders[]> {
+    // Try loading seed based accounts
+    const account = await this.getDerivedOOAccountPubkey(
+      ownerAddress,
+      marketAddress,
+      programId,
+    );
+    const ooAccountInfo = await connection.getAccountInfo(account.publicKey);
+    if (ooAccountInfo) {
+      return [
+        OpenOrders.fromAccountInfo(account.publicKey, ooAccountInfo, programId),
+      ];
+    }
+
+    if (forceSeedAccount) {
+      return [];
+    }
+
+    // Fallback to legacy gPA loading
     const filters = [
       {
         memcmp: {
@@ -1773,10 +1811,13 @@ export class OpenOrders {
     ownerAddress: PublicKey,
     newAccountAddress: PublicKey,
     programId: PublicKey,
+    seed: string,
   ) {
-    return SystemProgram.createAccount({
+    return SystemProgram.createAccountWithSeed({
       fromPubkey: ownerAddress,
+      basePubkey: ownerAddress,
       newAccountPubkey: newAccountAddress,
+      seed: seed,
       lamports: await connection.getMinimumBalanceForRentExemption(
         this.getLayout(programId).span,
       ),
@@ -1826,9 +1867,8 @@ export class Orderbook {
     for (const { key, quantity } of this.slab.items(descending)) {
       const price = getPriceFromKey(key);
       if (levels.length > 0 && levels[levels.length - 1][0].eq(price)) {
-        levels[levels.length - 1][1] = levels[levels.length - 1][1].add(
-          quantity,
-        );
+        levels[levels.length - 1][1] =
+          levels[levels.length - 1][1].add(quantity);
       } else if (levels.length === depth) {
         break;
       } else {

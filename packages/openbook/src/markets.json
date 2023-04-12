@@ -24,7 +24,7 @@
     "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
   },
   {
-    "address": "FZxi3yWkE5mMjyaZj6utmYL54QQYfMCKMcLaQZq4UwnA",
+    "address": "BbJgE7HZMaDp5NTYvRh5jZSkQPVDTU8ubPFtpogUkEj4",
     "deprecated": false,
     "name": "ETH/USDC",
     "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
@@ -81,6 +81,18 @@
     "address": "ACgDPLf4v6HqouPyAcqFo8nMogVo6axn9jmHo58rw6ox",
     "deprecated": false,
     "name": "GOFX/USDC",
+    "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
+  },
+  {
+    "address": "6QNusiQ1g7fKierMQhNeAJxfLXomfcAX3tGRMwxfESsw",
+    "deprecated": false,
+    "name": "bSOL/SOL",
+    "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
+  },
+  {
+    "address": "ARjaHVxGCQfTvvKjLd7U7srvk6orthZSE6uqWchCczZc",
+    "deprecated": false,
+    "name": "bSOL/USDC",
     "programId": "srmqPvymJeFKQ4zGQed1GFppgkRHL9kaELCbyksJtPX"
   }
 ]

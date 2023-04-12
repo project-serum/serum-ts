@@ -1,6 +1,6 @@
 {
-  "name": "@project-serum/associated-token",
-  "version": "0.1.1",
+  "name": "@openbook-dex/associated-token",
+  "version": "0.0.4",
   "description": "Library for interacting with SPL Associated Token Accounts",
   "repository": "project-serum/serum-ts",
   "main": "dist/lib/index.js",
@@ -20,13 +20,13 @@
     "docs": "typedoc --out ../../docs/associated-token --mode library --composite false --rootDir src src/index.ts src/*.d.ts",
     "test": "",
     "clean": "rm -rf dist",
-    "postinstall": "run-s clean build"
+    "prepack": "npm run clean && npm run build"
   },
   "peerDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "devDependencies": {
-    "@solana/web3.js": "^0.90.0"
+    "@solana/web3.js": "^1.70.0"
   },
   "files": [
     "dist"

@@ -1,5 +1,5 @@
 import { Provider } from '@project-serum/anchor';
-import { OpenOrders } from '@project-serum/serum';
+import { OpenOrders } from '@openbook-dex/openbook';
 import { TokenListContainer } from '@solana/spl-token-registry';
 import { PublicKey } from '@solana/web3.js';
 import { DEX_PID, USDC_PUBKEY, USDT_PUBKEY } from './utils';

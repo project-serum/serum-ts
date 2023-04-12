@@ -1,5 +1,5 @@
 import { struct, u32 } from 'buffer-layout';
-import { Layout, rustEnum, tagged, u64 } from '@project-serum/borsh';
+import { Layout, rustEnum, tagged, u64 } from '@openbook-dex/borsh';
 import {
   AccountMeta,
   PublicKey,
@@ -7,7 +7,7 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import { PoolInfo } from './instructions';
-import { TOKEN_PROGRAM_ID } from '@project-serum/token';
+import { TOKEN_PROGRAM_ID } from '@openbook-dex/token';
 
 export type AdminRequest =
   | { pause: any }

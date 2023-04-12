@@ -8,7 +8,7 @@ import {
   vec,
   option,
   struct,
-} from '@project-serum/borsh';
+} from '@openbook-dex/borsh';
 import { u16 } from 'buffer-layout';
 
 const KEY_LAYOUT = rustEnum([

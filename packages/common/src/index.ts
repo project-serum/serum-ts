@@ -13,7 +13,7 @@ import {
   AccountLayout,
   u64,
 } from '@solana/spl-token';
-import { TokenInstructions } from '@project-serum/serum';
+import { TokenInstructions } from '@openbook-dex/openbook';
 import BN from 'bn.js';
 
 export * from './provider';

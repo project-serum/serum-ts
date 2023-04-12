@@ -1,5 +1,5 @@
 import { PublicKey } from '@solana/web3.js';
-import { Basket, PoolRequest, PoolState } from '@project-serum/pool';
+import { Basket, PoolRequest, PoolState } from '@openbook-dex/pool';
 import BN from 'bn.js';
 
 describe('PoolState', () => {

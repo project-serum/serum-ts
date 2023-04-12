@@ -4,8 +4,8 @@ const Wallet = anchor.Wallet;
 const BN = anchor.BN;
 const Connection = require('@solana/web3.js').Connection;
 const PublicKey = require('@solana/web3.js').PublicKey;
-const TokenListProvider = require('@solana/spl-token-registry')
-  .TokenListProvider;
+const TokenListProvider =
+  require('@solana/spl-token-registry').TokenListProvider;
 const Swap = require('..').Swap;
 
 // Mainnet beta addresses.
@@ -37,8 +37,8 @@ async function main() {
     toMint: WBTC,
     amount: toNative(1),
   });
-		console.log('estimate', estimatedBtc.toNumber());
-/*
+  console.log('estimate', estimatedBtc.toNumber());
+  /*
   // Swaps SRM -> USDC on the Serum orderbook. If the resulting USDC is
   // has greater than a 1% error from the estimate, then fails.
   const usdcSwapTx = await client.swap({
@@ -73,8 +73,8 @@ async function main() {
 async function swapClient() {
   const provider = new Provider(
     new Connection('https://api.mainnet-beta.solana.com', 'recent'),
-			Wallet.local(),
-			Provider.defaultOptions(),
+    Wallet.local(),
+    Provider.defaultOptions(),
   );
   const tokenList = await new TokenListProvider().resolve();
   return new Swap(provider, tokenList);
