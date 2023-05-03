@@ -774,9 +774,9 @@ export class Market {
           }),
         );
         signers.push(wrappedSolAccount);
-      } else {
-        throw new Error('Invalid payer account');
       }
+    } else {
+      throw new Error('Invalid payer account');
     }
 
     const placeOrderInstruction = this.makePlaceOrderInstruction(connection, {
