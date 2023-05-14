@@ -1930,11 +1930,45 @@ function getPriceFromKey(key) {
   return key.ushrn(64);
 }
 
+
 function divideBnToNumber(numerator: BN, denominator: BN): number {
-  const quotient = numerator.div(denominator).toNumber();
-  const rem = numerator.umod(denominator);
-  const gcd = rem.gcd(denominator);
-  return quotient + rem.div(gcd).toNumber() / denominator.div(gcd).toNumber();
+  if (numerator.bitLength() <= 53 && denominator.bitLength() <= 53)
+    return numerator.toNumber() / denominator.toNumber();
+
+  // we can try to shorten this fraction with the gcd, most likely
+  // these have a large power of 10 as common factor
+  const gcd_nd = numerator.gcd(denominator);
+
+  // don't update these two yet inplace as they are passed by ref
+  numerator = numerator.div(gcd_nd);
+  denominator = denominator.div(gcd_nd);
+
+  if (numerator.bitLength() <= 53 && denominator.bitLength() <= 53)
+    return numerator.toNumber() / denominator.toNumber();
+
+  // only one of them can be still even at this point as we did already eliminate gcds
+  // but if we are lucky there's still room left to pull out a power of 2 factor on
+  // either side which we can multiply back in possibly saving some precision bc.
+  // we only need to modify the exponent
+  const numerator_shift = numerator.zeroBits();
+  if (numerator_shift > 0) {
+    numerator.ishrn(numerator_shift);
+  }
+  const denominator_shift = denominator.zeroBits();
+  if (denominator_shift > 0) {
+    denominator.ishrn(denominator_shift);
+  }
+  const exponent_bias = Math.pow(2, numerator_shift - denominator_shift);
+
+  if (numerator.bitLength() <= 53 && denominator.bitLength() <= 53)
+    // brackets are important to retain precision
+    return exponent_bias * (numerator.toNumber() / denominator.toNumber());
+
+  // now we are looking add at least one giant odd number, can't do a lot
+  // but convert to strings and let JS figure out a solution
+  const string_math =
+    (numerator.toString() as any) / (denominator.toString() as any);
+  return exponent_bias * string_math;
 }
 
 const MINT_LAYOUT = struct([blob(44), u8('decimals'), blob(37)]);
