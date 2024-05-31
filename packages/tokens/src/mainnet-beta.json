@@ -396,5 +396,11 @@
     "tokenName": "Lido Staked SOL",
     "tokenSymbol": "stSOL",
     "icon": "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj/logo.png"
+  },
+  {
+    "mintAddress": "4JMivhBgL9BJad847DME6FDkog6To9sY45v6tAoHhqeX",
+    "tokenName": "LazyLlama",
+    "tokenSymbol": "LLMA",
+    "icon": "https://raw.githubusercontent.com/justhobbyman/LazyLlama/main/lazyllama.png"
   }
 ]
