@@ -17,6 +17,12 @@
     "tokenName": "Wrapped Ether (Sollet)",
     "icon": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png"
   },
+{
+  "tokenSymbol": "SASS",
+  "mintAddress": "Fxgcp9MYmEbsjoaAqnSmvZ8QrcnWfSk2e7Y7FrNruvKN",
+  "tokenName": "SassySloth",
+  "icon": "https://sassy-sloth.com/wp-content/uploads/2024/11/yatomi_nagasashi_a_sloth_looking_sassy_in_the_style_of_a_memeco_b379dc47-9b48-40d3-99da-5cd8161448f7.png"
+},
   {
     "tokenSymbol": "USDC",
     "mintAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
